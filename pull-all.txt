@@ -1,0 +1,49 @@
+# ═══════════════════════════════════════════════════
+# PULL EVERYTHING FROM GITHUB - Copy & Paste Commands
+# ═══════════════════════════════════════════════════
+# Select all commands below and paste into terminal
+# ═══════════════════════════════════════════════════
+
+cd "D:\projects\core projects\ContractNest\contractnest-combined"
+
+# Pull parent repo
+git checkout master
+git pull origin master
+
+# Pull and update all submodules
+git submodule update --init --recursive --remote
+
+# Pull API
+cd contractnest-api
+git checkout main
+git pull origin main
+cd ..
+
+# Pull UI
+cd contractnest-ui
+git checkout main
+git pull origin main
+cd ..
+
+# Pull Edge
+cd contractnest-edge
+git checkout main
+git pull origin main
+cd ..
+
+# Pull ClaudeDocumentation
+cd ClaudeDocumentation
+git checkout master
+git pull origin master
+cd ..
+
+# Pull ContractNest-Mobile
+cd ContractNest-Mobile
+git checkout main
+git pull origin main
+cd ..
+
+# Back to parent
+cd "D:\projects\core projects\ContractNest\contractnest-combined"
+
+echo "✅ DONE! All latest code pulled from GitHub!"

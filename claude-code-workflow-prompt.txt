@@ -1,0 +1,145 @@
+Perfect! Here's **THE ULTIMATE PROMPT** to give Claude Code at the start of every session:
+
+---
+
+# 📋 PROMPT FOR CLAUDE CODE (Copy this to Claude Developer)
+
+```
+IMPORTANT CONTEXT:
+I'm working with a multi-repo setup using git submodules:
+- Parent repo: contractnest-combined
+- Submodules: contractnest-api, contractnest-ui, contractnest-edge, ClaudeDocumentation, ContractNest-Mobile
+
+CRITICAL: You cannot push to GitHub due to authentication. Instead, after making changes:
+
+1. Create a folder called MANUAL_COPY_FILES/ with all modified files
+2. Include a COPY_INSTRUCTIONS.txt with exact paths
+3. Provide me with THE COMPLETE WORKFLOW below
+
+REQUIRED OUTPUT FORMAT:
+After you finish making changes, provide this exact format:
+
+═══════════════════════════════════════════════════
+📦 CHANGES SUMMARY
+═══════════════════════════════════════════════════
+Branch: [branch-name]
+Files Changed: [list files with their purposes]
+
+═══════════════════════════════════════════════════
+💻 STEP-BY-STEP COMMANDS (Windows PowerShell)
+═══════════════════════════════════════════════════
+
+STEP 1: Pull the Feature Branch
+─────────────────────────────────
+cd "D:\projects\core projects\ContractNest\contractnest-combined"
+git fetch origin
+git checkout [branch-name]
+git pull origin [branch-name]
+
+STEP 2: Verify Files Received
+─────────────────────────────────
+ls MANUAL_COPY_FILES
+type MANUAL_COPY_FILES\COPY_INSTRUCTIONS.txt
+
+STEP 3: Copy All Files (PowerShell)
+─────────────────────────────────
+[Provide exact Copy-Item commands for each file]
+Copy-Item "MANUAL_COPY_FILES\[file]" -Destination "[exact-path]" -Force
+
+Write-Host "✅ All files copied!" -ForegroundColor Green
+
+STEP 4: Commit UI Changes
+─────────────────────────────────
+cd contractnest-ui
+git status
+git add .
+git commit -m "[descriptive message]"
+git push origin main
+cd ..
+
+STEP 5: Commit Edge Changes (if applicable)
+─────────────────────────────────
+cd contractnest-edge
+git status
+git add .
+git commit -m "[descriptive message]"
+git push origin main
+cd ..
+
+STEP 6: Commit API Changes (if applicable)
+─────────────────────────────────
+cd contractnest-api
+git status
+git add .
+git commit -m "[descriptive message]"
+git push origin main
+cd ..
+
+STEP 7: Update Parent Repo Submodule References
+─────────────────────────────────
+git add contractnest-ui contractnest-edge contractnest-api ClaudeDocumentation ContractNest-Mobile
+git commit -m "Update submodules with [feature description]"
+git push origin [branch-name]
+
+STEP 8: Merge to Master
+─────────────────────────────────
+git checkout master
+git merge [branch-name]
+
+# If merge conflicts in submodules:
+cd [conflicted-submodule]
+git checkout main
+git pull origin main
+cd ..
+git add [conflicted-submodule]
+
+git commit -m "Merge [branch-name] with [feature description]"
+git push origin master
+
+STEP 9: Verify Everything is Clean
+─────────────────────────────────
+git status
+# Should show: "nothing to commit, working tree clean"
+
+STEP 10: Restart Dev Server & Test
+─────────────────────────────────
+cd contractnest-ui
+npm run dev
+# Hard refresh browser: Ctrl+F5
+
+═══════════════════════════════════════════════════
+🧪 TESTING CHECKLIST
+═══════════════════════════════════════════════════
+Test these specific features:
+- [ ] [Feature 1]
+- [ ] [Feature 2]
+- [ ] [Feature 3]
+
+═══════════════════════════════════════════════════
+
+REMINDER: 
+- Provide ALL commands in copy-paste ready format
+- Include exact file paths in COPY_INSTRUCTIONS.txt
+- Specify which submodules were modified
+- Include descriptive commit messages
+- Add testing checklist for new features
+```
+
+---
+
+## 🎯 HOW TO USE THIS PROMPT:
+
+1. **Copy the entire prompt above**
+2. **At the START of every Claude Code session**, paste it and say:
+   > "Follow this format for all changes. After you make changes, provide the complete step-by-step commands."
+
+3. **When Claude Code finishes work**, it will give you:
+   - ✅ Complete pull commands
+   - ✅ All copy commands
+   - ✅ All commit/push commands  
+   - ✅ Merge commands
+   - ✅ Testing checklist
+
+4. **You just copy-paste and execute** - no thinking required!
+
+

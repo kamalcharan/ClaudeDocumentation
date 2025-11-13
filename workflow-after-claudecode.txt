@@ -1,0 +1,62 @@
+# ═══════════════════════════════════════════════════
+# AFTER CLAUDE CODE SESSION - Complete Workflow
+# ═══════════════════════════════════════════════════
+# Replace <BRANCH-NAME> with actual branch name
+# ═══════════════════════════════════════════════════
+
+cd "D:\projects\core projects\ContractNest\contractnest-combined"
+
+# STEP 1: Pull feature branch
+git fetch origin
+git checkout <BRANCH-NAME>
+git pull origin <BRANCH-NAME>
+
+# STEP 2: Check for manual copy files
+ls MANUAL_COPY_FILES
+type MANUAL_COPY_FILES\COPY_INSTRUCTIONS.txt
+
+# STEP 3: Copy files (get commands from COPY_INSTRUCTIONS.txt)
+# Example:
+# Copy-Item "MANUAL_COPY_FILES\file.tsx" -Destination "contractnest-ui\src\..." -Force
+
+# STEP 4: Commit UI changes
+cd contractnest-ui
+git add .
+git commit -m "Add new features from Claude Code"
+git push origin main
+cd ..
+
+# STEP 5: Commit Edge changes (if needed)
+cd contractnest-edge
+git add .
+git commit -m "Add new features from Claude Code"
+git push origin main
+cd ..
+
+# STEP 6: Commit API changes (if needed)
+cd contractnest-api
+git add .
+git commit -m "Add new features from Claude Code"
+git push origin main
+cd ..
+
+# STEP 7: Update parent repo
+git add .
+git commit -m "Update submodules with new features"
+git push origin <BRANCH-NAME>
+
+# STEP 8: Merge to master
+git checkout master
+git merge <BRANCH-NAME>
+
+# If conflicts in submodules:
+cd contractnest-edge
+git checkout main
+git pull origin main
+cd ..
+git add contractnest-edge
+
+git commit -m "Merge feature branch"
+git push origin master
+
+echo "✅ DONE! All changes merged to master!"

@@ -1,0 +1,61 @@
+# ═══════════════════════════════════════════════════
+# PUSH EVERYTHING TO GITHUB - Copy & Paste Commands
+# ═══════════════════════════════════════════════════
+# Select all commands below and paste into terminal
+# ═══════════════════════════════════════════════════
+
+cd "D:\projects\core projects\ContractNest\contractnest-combined"
+
+# Push API
+cd contractnest-api
+git checkout main
+git pull origin main
+git add .
+git commit -m "Update API" --allow-empty
+git push origin main
+cd ..
+
+# Push UI
+cd contractnest-ui
+git checkout main
+git pull origin main
+git add .
+git commit -m "Update UI" --allow-empty
+git push origin main
+cd ..
+
+# Push Edge
+cd contractnest-edge
+git checkout main
+git pull origin main
+git add .
+git commit -m "Update Edge" --allow-empty
+git push origin main
+cd ..
+
+# Push ClaudeDocumentation
+cd ClaudeDocumentation
+git checkout master
+git pull origin master
+git add .
+git commit -m "Update Documentation" --allow-empty
+git push origin master
+cd ..
+
+# Push ContractNest-Mobile
+cd ContractNest-Mobile
+git checkout main
+git pull origin main
+git add .
+git commit -m "Update Mobile" --allow-empty
+git push origin main
+cd ..
+
+# Update parent repo
+git checkout master
+git pull origin master
+git add .
+git commit -m "Update submodule references" --allow-empty
+git push origin master
+
+echo "✅ DONE! Everything pushed to GitHub!"
