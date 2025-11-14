@@ -1,0 +1,1797 @@
+{
+  "name": "BBBWhatsApp",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "profile-ingest",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -816,
+        -208
+      ],
+      "id": "62885874-c4ec-4c9b-b267-60cf8a676126",
+      "name": "ProfileInput",
+      "webhookId": "5b63d9ec-1781-4ddb-b0a9-c7b100d75190"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/embeddings",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "text-embedding-ada-002"
+            },
+            {
+              "name": "input",
+              "value": "={{ $json.input }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -528,
+        -176
+      ],
+      "id": "8140eeaa-0a1a-4140-abf6-ea0b640ba840",
+      "name": "HTTP Request",
+      "credentials": {
+        "openAiApi": {
+          "id": "C9VLFiOsIFD3YGQP",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  model: \"text-embedding-ada-002\",\n  input: $input.item.json.body.profile_text\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -656,
+        -272
+      ],
+      "id": "f849de0f-8d11-45b1-8326-92f7b79d4a9d",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "content": "Profile Ingesion",
+        "height": 240,
+        "width": 1264
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -832,
+        -288
+      ],
+      "typeVersion": 1,
+      "id": "bf0d2a72-783f-4b14-b7c3-255a052de292",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "search",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -672,
+        16
+      ],
+      "id": "6d46c7d6-c4ea-4c6a-8923-bc59fc46c534",
+      "name": "SearchEndpoint",
+      "webhookId": "59765d36-02f9-4b4e-b734-4534e1030d1c"
+    },
+    {
+      "parameters": {
+        "jsCode": "const profileText = $node[\"ProfileInput\"].json.body.profile_text;\n\nreturn {\n  model: \"gpt-3.5-turbo\",\n  messages: [\n    {\n      role: \"system\",\n      content: \"Extract keywords and suggest related search terms. Return ONLY valid JSON.\"\n    },\n    {\n      role: \"user\",\n      content: `Extract keywords from this business profile: ${profileText}\\n\\nReturn JSON format: {\"keywords\": [\"keyword1\", \"keyword2\"], \"related_terms\": [\"term1\", \"term2\"]}`\n    }\n  ],\n  temperature: 0.3,\n  max_tokens: 150\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -368,
+        -256
+      ],
+      "id": "fcee4564-8d28-4d72-a2d2-dba982dfa553",
+      "name": "cluster generator"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -224,
+        -176
+      ],
+      "id": "6d453fce-ebde-43ec-9a13-e7d2aa3d15af",
+      "name": "GenerateKeywords",
+      "credentials": {
+        "openAiApi": {
+          "id": "C9VLFiOsIFD3YGQP",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the OpenAI response\nconst openAIResponse = $input.item.json;\n\n// Extract the content string\nconst contentString = openAIResponse.choices[0].message.content;\n\n// Parse the JSON string to get actual keywords\nlet keywords = [];\nlet relatedTerms = [];\n\ntry {\n  const parsed = JSON.parse(contentString);\n  keywords = parsed.keywords || [];\n  relatedTerms = parsed.related_terms || [];\n} catch (error) {\n  console.log(\"Failed to parse keywords:\", error);\n  keywords = [\"parsing_failed\"];\n  relatedTerms = [];\n}\n\n// Get original data from webhook and embedding\nconst webhookData = $node[\"ProfileInput\"].json.body;\nconst embedding = $node[\"HTTP Request\"].json.data[0].embedding; // Adjust node name\n\n// Prepare final data for Supabase\nreturn {\n  chapter: webhookData.chapter,\n  raw_data: webhookData.profile_text,\n  suggested_keywords: keywords,\n  approved_keywords: keywords, // Auto-approve for now\n  structured_data: {\n    keywords: keywords,\n    related_terms: relatedTerms\n  },\n  embedding: embedding,\n  is_active: true\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -80,
+        -272
+      ],
+      "id": "5d233db8-46e3-4501-8e2d-ac57d88a2112",
+      "name": "ParseKeywords"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get parsed data from previous node\nconst profileData = $input.item.json;\n\n// Extract mobile number from raw text using regex\nconst rawText = profileData.raw_data;\nconst mobileRegex = /\\b[6-9]\\d{9}\\b/g;\nconst mobiles = rawText.match(mobileRegex);\nconst mobileNumber = mobiles ? mobiles[0] : null;\n\n// Prepare data for upsert (insert or update)\nreturn {\n  mobile_number: mobileNumber,\n  chapter: profileData.chapter,\n  raw_data: profileData.raw_data,\n  suggested_keywords: profileData.suggested_keywords,\n  approved_keywords: profileData.approved_keywords,\n  structured_data: profileData.structured_data,\n  embedding: profileData.embedding,\n  is_active: true,\n  updated_at: new Date().toISOString()\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        64,
+        -192
+      ],
+      "id": "2ba63440-5499-4830-a5ec-6ad6cd5d58b6",
+      "name": "Check Duplicate & Prepare Upsert"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://zyojayipbjhxxxxbohlo.supabase.co/rest/v1/profiles?on_conflict=mobile_number",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "on_conflict",
+              "value": "mobile_number"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=representation"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "=mobile_number",
+              "value": "={{ $json.data.mobile_number }}"
+            },
+            {
+              "name": "company_name",
+              "value": "={{ $json.data.company_name }}"
+            },
+            {
+              "name": "chapter",
+              "value": "={{ $json.data.chapter }}"
+            },
+            {
+              "name": "raw_data",
+              "value": "={{ $json.data.raw_data }}"
+            },
+            {
+              "name": "embedding",
+              "value": "={{ $json.data.embedding }}"
+            },
+            {
+              "name": "suggested_keywords",
+              "value": "={{ $json.data.suggested_keywords }}"
+            },
+            {
+              "name": "structured_data",
+              "value": "={{ $json.data.structured_data }}"
+            },
+            {
+              "name": "email_id",
+              "value": "={{ $json.data.email_id }}"
+            },
+            {
+              "name": "is_active",
+              "value": "={{ $json.data.is_active }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        320,
+        -176
+      ],
+      "id": "03c65271-bbe3-4fae-86b5-5ba639d9abd9",
+      "name": "UpsertProfile",
+      "credentials": {
+        "supabaseApi": {
+          "id": "ewu4kB7kEnyq0ifp",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all previous data\nconst profileData = $input.item.json;\nconst webhookData = $node[\"ProfileInput\"].json.body;\n\n// Extract mobile number from raw text\nconst rawText = profileData.raw_data || webhookData.profile_text;\nconst mobileRegex = /\\b[6-9]\\d{9}\\b/g;\nconst mobiles = rawText.match(mobileRegex);\nconst mobileNumber = mobiles ? mobiles[0] : null;\n\nif (!mobileNumber) {\n  throw new Error(\"No mobile number found in profile text\");\n}\n\n// Extract email if present\nconst emailRegex = /\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Z|a-z]{2,}\\b/g;\nconst emails = rawText.match(emailRegex);\n\n// Get company name from webhook\nconst companyName = webhookData.company_name || null;\n\n// Prepare complete profile data\nconst upsertData = {\n  mobile_number: mobileNumber,\n  chapter: profileData.chapter,\n  company_name: companyName,\n  raw_data: profileData.raw_data,\n  suggested_keywords: profileData.suggested_keywords || [],\n  approved_keywords: profileData.approved_keywords || [],\n  structured_data: profileData.structured_data || {},\n  embedding: profileData.embedding,\n  email_id: emails ? emails[0] : null,\n  is_active: true,\n  updated_at: new Date().toISOString()\n};\n\nreturn {\n  data: upsertData,\n  mobile: mobileNumber\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        192,
+        -272
+      ],
+      "id": "a8e0aba5-746d-42d8-bc50-f8d60bb8563b",
+      "name": "Prepare Upsert Data"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "generate-clusters",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -848,
+        416
+      ],
+      "id": "e7f8dd28-affc-4bf4-bf3b-28fcca7d095e",
+      "name": "Cluster Generator",
+      "webhookId": "05d95752-eb34-4ec8-9c47-db54dff9ec78"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "gpt-3.5-turbo"
+            },
+            {
+              "name": "messages",
+              "value": "={{ $json.messages }}"
+            },
+            {
+              "name": "temperature",
+              "value": "={{ $json.temperature }}"
+            },
+            {
+              "name": "max_tokens",
+              "value": "={{ $json.max_tokens }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -560,
+        432
+      ],
+      "id": "63a39793-281c-4de7-b1f6-c1eafb38b3e1",
+      "name": "HTTP Request3",
+      "credentials": {
+        "openAiApi": {
+          "id": "C9VLFiOsIFD3YGQP",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.item.json.body || $input.item.json;\nconst profileText = input.profile_text;\nconst keywords = input.keywords || [];\n\n// Create detailed prompt for semantic analysis\nconst prompt = `Analyze this business profile and generate semantic clusters:\n\nProfile: ${profileText}\nCurrent Keywords: ${keywords.join(', ')}\n\nGenerate semantic relationships for search optimization. Consider:\n1. Industry-specific terms and their variations\n2. Common misspellings (e.g., \"network\" vs \"netwrok\")\n3. Regional terms (Indian English variations)\n4. Product/service alternatives\n5. What customers might search for\n\nReturn JSON format:\n{\n  \"clusters\": [\n    {\n      \"primary_term\": \"extracted main term\",\n      \"related_terms\": [\"10-15 related/similar terms\"],\n      \"category\": \"Technology/Healthcare/Services/Manufacturing/Trading\"\n    }\n  ]\n}`;\n\nreturn {\n  model: \"gpt-3.5-turbo\",\n  messages: [\n    {\n      role: \"system\",\n      content: \"You are a semantic analysis expert for Indian business directory. Generate comprehensive search clusters.\"\n    },\n    {\n      role: \"user\",\n      content: prompt\n    }\n  ],\n  temperature: 0.4,\n  max_tokens: 500\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -688,
+        496
+      ],
+      "id": "e1e8f3c5-fba0-48be-aeed-4545646f12df",
+      "name": "Prepare OpenAI Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get profile_id from webhook\nconst profileId = $node[\"Cluster Generator\"].json.body.profile_id;\n\n// Rest of existing code...\nconst content = $input.first().json.choices[0].message.content;\nlet clusters = [];\n\ntry {\n  const parsed = JSON.parse(content);\n  clusters = parsed.clusters || [];\n} catch (error) {\n  clusters = [];\n}\n\n// Add profile_id to each cluster\nreturn clusters.map(cluster => ({\n  primary_term: cluster.primary_term,\n  related_terms: cluster.related_terms,\n  category: cluster.category,\n  is_active: true,\n  profile_id: profileId  // ← ADD THIS\n}));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -416,
+        384
+      ],
+      "id": "be83b5ae-95da-4941-bbb8-977f939ba285",
+      "name": "Parse Clusters"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -272,
+        416
+      ],
+      "id": "f818010e-9b5a-46b0-bf94-466c2ecc24e4",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Replace Me",
+      "typeVersion": 1,
+      "position": [
+        -128,
+        496
+      ],
+      "id": "ceeb48d0-a7a4-4065-a030-d0602dabc482"
+    },
+    {
+      "parameters": {
+        "content": "Generate Clusters",
+        "height": 384,
+        "width": 1184,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -896,
+        320
+      ],
+      "typeVersion": 1,
+      "id": "843c1dd6-7235-49f0-99a7-0726a53f9c67",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get query from normalized cache miss data or webhook\nconst query = $json.original_query || $node[\"SearchEndpoint\"].json.body.query;\n\nreturn {\n  model: \"text-embedding-ada-002\",\n  input: query\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        32,
+        160
+      ],
+      "id": "ef1f1955-a870-4a6f-99fe-d792ee4b6486",
+      "name": "prepare query"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the query_embedding from Process Cluster Data\nconst embedding = $input.item.json.query_embedding;\n\n// Return ONLY the query_embedding parameter for Supabase function\nreturn {\n  query_embedding: embedding\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        944,
+        160
+      ],
+      "id": "8b2d0094-fb9c-48ae-be8e-f7d617233ee1",
+      "name": "prepare search"
+    },
+    {
+      "parameters": {
+        "jsCode": "\n\nconst searchResults = $input.all();\n\n// DEBUG - what are we receiving?\nconsole.log(\"Search Results:\", JSON.stringify(searchResults));\nconsole.log(\"Number of items:\", searchResults.length);\n\nconst query = $node[\"SearchEndpoint\"].json.body.query;\nconst clusterData = $node[\"Process Cluster Data\"].json;\n\n// Dynamic threshold (INCREASED because clusters boost real matches)\nconst queryWords = query.trim().split(/\\s+/).length;\nlet SIMILARITY_THRESHOLD;\n\nif (queryWords <= 2) {\n  SIMILARITY_THRESHOLD = 0.85;\n} else if (queryWords <= 4) {\n  SIMILARITY_THRESHOLD = 0.82;\n} else {\n  SIMILARITY_THRESHOLD = 0.80;\n}\n\n// Filter by threshold\n// Filter by threshold\nlet qualityResults = searchResults\n  .map(item => item.json)  \n  .filter(item => item.similarity >= SIMILARITY_THRESHOLD)\n  .sort((a, b) => b.similarity - a.similarity);\n\n// For single-word queries, only return if there's a clear winner (>5% gap)\nif (queryWords <= 2 && qualityResults.length > 1) {\n  const topScore = qualityResults[0].similarity;\n  const secondScore = qualityResults[1].similarity;\n  const gap = topScore - secondScore;\n  \n  if (gap < 0.05) {\n    qualityResults = [];\n  } else {\n    qualityResults = [qualityResults[0]];\n  }\n}\n\n// Map to output format\nconst formattedResults = qualityResults.map((item, index) => {\n  const result = {\n    rank: index + 1,\n    chapter: item.chapter,\n    profile: item.raw_data,\n    similarity_score: `${(item.similarity * 100).toFixed(1)}%`\n  };\n  \n  // Include boost info for debugging\n  if (item.similarity_original) {\n    result.original_score = `${(item.similarity_original * 100).toFixed(1)}%`;\n    result.boost_applied = `+${((item.similarity - item.similarity_original) * 100).toFixed(1)}%`;\n  }\n  \n  return result;\n});\n\n// Return response\nif (formattedResults.length === 0) {\n  return {\n    success: true,\n    query: query,\n    results_found: 0,\n    cluster_enhancement: clusterData.has_clusters,\n    message: queryWords <= 2 \n      ? \"Query too short or ambiguous. Try using 2-3 words for better results.\"\n      : \"No matching profiles found. Try different keywords.\",\n    profiles: []\n  };\n} else {\n  return {\n    success: true,\n    query: query,\n    results_found: formattedResults.length,\n    cluster_enhancement: clusterData.has_clusters,\n    profiles: formattedResults\n  };\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1408,
+        0
+      ],
+      "id": "5081ecd2-acde-4666-98a7-009099890547",
+      "name": "format results"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://zyojayipbjhxxxxbohlo.supabase.co/rest/v1/rpc/vector_search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1152,
+        16
+      ],
+      "id": "f2073008-7fac-486e-8342-8bb43b4e832c",
+      "name": "supabase search",
+      "credentials": {
+        "supabaseApi": {
+          "id": "ewu4kB7kEnyq0ifp",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://zyojayipbjhxxxxbohlo.supabase.co/rest/v1/query_cache",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "query_normalized",
+              "value": "=eq.{{ $json.body.query.toLowerCase().trim() }}"
+            },
+            {
+              "name": "select",
+              "value": "*"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -528,
+        144
+      ],
+      "id": "78ca6b46-967d-4a2e-a0fc-f356b2d63496",
+      "name": "Check Cache",
+      "retryOnFail": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "ewu4kB7kEnyq0ifp",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "752e1b3b-d4ce-458b-b7ac-d5d5c829f06e",
+              "leftValue": "={{ $json.query_text }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -176,
+        80
+      ],
+      "id": "973eb719-9dc2-4d0f-8523-d6093097e329",
+      "name": "Cache Decision"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get normalized data from Cache Normalizer\nconst normalized = $input.item.json;\n\n// Return the cached results in proper format\nreturn {\n  success: true,\n  query: normalized.original_query,\n  from_cache: true,\n  cached_at: normalized.created_at,\n  results_found: normalized.results.results_found,\n  profiles: normalized.results.profiles\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        16,
+        0
+      ],
+      "id": "670d1e06-22ec-4fbe-9630-c6c4bfca2788",
+      "name": "Return Cached Results"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://zyojayipbjhxxxxbohlo.supabase.co/rest/v1/query_cache?on_conflict=query_normalized,chapter",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "prefer",
+              "value": "resolution=merge-duplicates"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  query_text: $json.query_text,\n  query_normalized: $json.query_normalized,\n  chapter: $json.chapter,\n  embedding: $json.embedding,\n  results: $json.results,\n  hit_count: $json.hit_count,\n  expires_at: $json.expires_at\n}) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2032,
+        32
+      ],
+      "id": "baa43944-7fb9-4e31-8859-6994c73d93a1",
+      "name": "Store in Cache",
+      "credentials": {
+        "supabaseApi": {
+          "id": "ewu4kB7kEnyq0ifp",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const query = $node[\"SearchEndpoint\"].json.body.query;\nconst chapter = $node[\"SearchEndpoint\"].json.body.chapter || \"Bhagyanagar\";\nconst embedding = $node[\"Process Cluster Data\"].json.query_embedding;\nconst formattedResults = $node[\"format results\"].json;\n\nreturn [{\n  json: {\n    query_text: query,\n    query_normalized: query.toLowerCase().trim(),\n    chapter: chapter,\n    embedding: embedding,\n    results: formattedResults,\n    hit_count: 1,\n    expires_at: new Date(Date.now() + 30*24*60*60*1000).toISOString()\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1840,
+        144
+      ],
+      "id": "68cd070f-b670-4b49-8b63-37e52113874c",
+      "name": "Prepare Cache Data"
+    },
+    {
+      "parameters": {
+        "content": "whatsapp bot",
+        "height": 656,
+        "width": 2192
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -752,
+        752
+      ],
+      "typeVersion": 1,
+      "id": "52e4af20-771c-4481-8d09-954a1dab49d0",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "search panel",
+        "height": 304,
+        "width": 3328,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -688,
+        -16
+      ],
+      "typeVersion": 1,
+      "id": "647464c8-eb54-4909-8e18-d462f8620ede",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const cacheResults = $input.all();\n\nconst originalQuery = $node[\"SearchEndpoint\"].json.body.query;\nconst chapter = $node[\"SearchEndpoint\"].json.body.chapter || \"Bhagyanagar\";\n\nif (cacheResults.length === 0 || !cacheResults[0].json) {\n  return {\n    cache_hit: false,\n    query_text: \"\",\n    original_query: originalQuery,\n    chapter: chapter\n  };\n} else {\n  const cached = cacheResults[0].json;\n  return {\n    cache_hit: true,\n    query_text: cached.query_text,\n    query_normalized: cached.query_normalized,\n    chapter: cached.chapter,\n    results: cached.results,\n    original_query: originalQuery,\n    created_at: cached.created_at\n  };\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -368,
+        48
+      ],
+      "id": "972fffa4-a00b-46d1-b398-5946fc65f543",
+      "name": "Cache Normalizer"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/embeddings",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "text-embedding-ada-002"
+            },
+            {
+              "name": "input",
+              "value": "={{ $json.input }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        208,
+        128
+      ],
+      "id": "15052cd5-1c25-4479-ad29-fe746679e848",
+      "name": "openAI embed",
+      "credentials": {
+        "openAiApi": {
+          "id": "C9VLFiOsIFD3YGQP",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the formatted search results from earlier in the workflow\nconst searchResults = $node[\"format results\"].json;\n\n// Add cache indicator for non-cached results\nreturn {\n  ...searchResults,\n  from_cache: false\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2464,
+        96
+      ],
+      "id": "24aec13e-d465-423c-9a15-b2f2455db4c8",
+      "name": "Return Search Results"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "whatsapp-msg91",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "6a1a2b6a-4ce0-490e-b6f4-43a06b1b195f",
+      "name": "MSG91 Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -720,
+        896
+      ],
+      "webhookId": "e4df8df7-ae7f-400a-ae6f-e6773c530e3f"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "=($json.error ≠ true AND $json.message_type = text) OR $json.is_button_click = true",
+              "operation": "notEqual",
+              "value2": "true"
+            },
+            {
+              "value1": "={{ $json.message_type }}",
+              "value2": "text"
+            }
+          ]
+        }
+      },
+      "id": "85a5bd97-5c2f-4919-a403-37c6c0424f2c",
+      "name": "Validate Message",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -288,
+        928
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": true, \"message\": \"Message received\" } }}",
+        "options": {}
+      },
+      "id": "925a575e-7046-4152-8ea7-b1bdcce7be45",
+      "name": "Respond to MSG91",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1232,
+        864
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extract message data from MSG91 webhook\nconst body = $input.item.json.body || $input.item.json;\n\n// ===== NEW: Handle Button Clicks from messages field =====\nif (body.messages && body.contentType === \"interactive\") {\n  try {\n    // Parse the messages JSON string\n    const messages = JSON.parse(body.messages);\n    const firstMessage = messages[0];\n    \n    // Check if it's a button reply\n    if (firstMessage.type === \"interactive\" && \n        firstMessage.interactive && \n        firstMessage.interactive.type === \"button_reply\") {\n      \n      const buttonReply = firstMessage.interactive.button_reply;\n      const buttonId = buttonReply.id;\n      const userNumber = (body.customerNumber || body.from || '').replace(/\\+/g, '');\n      \n      // Handle different button types\n      if (buttonId.startsWith(\"call_\")) {\n        const phone = buttonId.replace(\"call_\", \"\");\n        return {\n          user_number: userNumber,\n          is_button_click: true,\n          button_action: \"call\",\n          response_message: `📞 *Call Now:*\\n\\n+91${phone}\\n\\nTap the number above to call directly!`,\n          message_type: \"text\"\n        };\n      }\n      \n      if (buttonId.startsWith(\"email_\")) {\n        const email = buttonId.replace(\"email_\", \"\");\n        return {\n          user_number: userNumber,\n          is_button_click: true,\n          button_action: \"email\",\n          response_message: `✉️ *Email:*\\n\\n${email}\\n\\nTap to send an email!`,\n          message_type: \"text\"\n        };\n      }\n      \n      if (buttonId.startsWith(\"share_\")) {\n  const phone = buttonId.replace(\"share_\", \"\");\n  \n  // Need to fetch full profile details - set flag for special handling\n  return {\n    user_number: userNumber,\n    is_button_click: true,\n    button_action: \"share\",\n    share_phone: phone,\n    needs_profile_lookup: true,  // Flag to lookup profile\n    message_type: \"text\"\n  };\n}\n    }\n  } catch (error) {\n    // If parsing fails, continue to regular message handling\n    console.log(\"Failed to parse messages:\", error);\n  }\n}\n// ===== End Button Click Handler =====\n\n// Regular message handling\nlet userNumber = body.customerNumber || body.from;\nlet messageText = body.text || '';\n\n// If text is still an object with body property, extract it\nif (typeof messageText === 'object' && messageText.body) {\n  messageText = messageText.body;\n}\n\nlet messageType = body.contentType || body.type || 'text';\n\n// Clean phone number (remove + if present)\nif (userNumber) {\n  userNumber = userNumber.replace(/\\+/g, '');\n}\n\n// Validate\nif (!userNumber || !messageText) {\n  return {\n    error: true,\n    message: 'Invalid message format',\n    debug: { userNumber, messageText, body }\n  };\n}\n\n  // Return clean data\nreturn {\n  user_number: userNumber,\n  query: messageText.trim(),\n  message_type: messageType,\n  timestamp: new Date().toISOString()\n};"
+      },
+      "id": "69d12483-47d7-4f0d-a5a2-26accad29773",
+      "name": "Extract Message1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -512,
+        912
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n.srv1017206.hstgr.cloud/webhook/search",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "={{ $json.query }}"
+            },
+            {
+              "name": "chapter",
+              "value": "Bhagyanagar"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "eefb614a-231c-4b80-91c8-8843d11225d1",
+      "name": "Call Search API1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        256,
+        1040
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get search results\nconst searchData = $input.item.json;\nconst userNumber = $node[\"Extract Message1\"].json.user_number;\nconst query = $node[\"Extract Message1\"].json.query;\n\n// Check if results found - profiles is at top level!\nif (!searchData.profiles || searchData.profiles.length === 0) {\n  return {\n    message_type: \"text\",\n    user_number: userNumber,\n    message: `❌ No businesses found for \"${query}\" in Bhagyanagar chapter.\\n\\nTry:\\n• Different keywords\\n• Broader search terms\\n• Check spelling`\n  };\n}\n\n// Get first result (best match) for interactive card\nconst profile = searchData.profiles[0];\nconst profileText = profile.profile;\n\n// Extract business name (first sentence)\nconst lines = profileText.split('.');\nconst businessName = lines[0] ? lines[0].trim() : \"Business\";\nconst description = lines.slice(1, 3).join('. ').trim();\n\n// Extract contact info\nconst phoneMatch = profileText.match(/(\\d{10})/);\nconst emailMatch = profileText.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\\.[a-zA-Z0-9_-]+)/);\nconst phone = phoneMatch ? phoneMatch[1] : null;\nconst email = emailMatch ? emailMatch[1] : null;\n\n// Build interactive message\nconst interactiveMessage = {\n  type: \"button\",\n  header: {\n    type: \"text\",\n    text: `✨ ${businessName}`\n  },\n  body: {\n    text: `${description}\\n\\n📍 ${profile.chapter}\\n⭐ ${profile.similarity_score} Match`\n  },\n  footer: {\n    text: \"🔍 BBB Business Directory\"\n  },\n  action: {\n    buttons: []\n  }\n};\n\n// Add buttons (max 3)\nif (phone) {\n  interactiveMessage.action.buttons.push({\n    type: \"reply\",\n    reply: {\n      id: `call_${phone}`,\n      title: \"📞 Call\"\n    }\n  });\n}\n\nif (email) {\n  interactiveMessage.action.buttons.push({\n    type: \"reply\",\n    reply: {\n      id: `email_${email}`,\n      title: \"✉️ Email\"\n    }\n  });\n}\n\n// Add share button\nif (interactiveMessage.action.buttons.length < 3) {\n  interactiveMessage.action.buttons.push({\n    type: \"reply\",\n    reply: {\n      id: `share_${phone || 'business'}`,\n      title: \"📤 Share\"\n    }\n  });\n}\n\nreturn {\n  message_type: \"interactive\",\n  interactive_message: {\n    interactive: interactiveMessage\n  },\n  user_number: userNumber,\n  results_count: searchData.profiles.length\n};"
+      },
+      "id": "192804e0-f132-4abe-9b6d-bc7ee407bfea",
+      "name": "Format WhatsApp Response1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        1088
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.msg91.com/api/v5/whatsapp/whatsapp-outbound-message/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "authkey",
+              "value": "473091Ajj9po1JhFB56901978eP1"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "e416a886-50a2-4381-8853-ec27a8725dc6",
+      "name": "Send WhatsApp Message1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1040,
+        1216
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get user number from Extract Message if possible\nconst extractData = $node[\"Extract Message1\"].json;\nconst userNumber = extractData.debug?.body?.from || extractData.user_number || \"919885164233\";\n\n// Return complete MSG91 format (bypassing Prepare MSG91 Payload)\nreturn {\n  integrated_number: \"917702864233\",\n  recipient_number: userNumber,\n  content_type: \"text\",\n  type: \"text\",\n  text: \"❌ Sorry, I could not process your request. Please try again or contact support.\"\n};"
+      },
+      "id": "f2277a3f-0253-4db9-9aba-992b4f609227",
+      "name": "Error Handler1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        1200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const userNumber = $json.user_number;\nconst messageType = $json.message_type || \"text\";\n\n// Handle interactive message format\nif (messageType === \"interactive\" && $json.interactive_message) {\n  return {\n    integrated_number: \"917702864233\",\n    recipient_number: userNumber,\n    content_type: \"interactive\",\n    type: \"interactive\",\n    interactive: $json.interactive_message.interactive\n  };\n}\n\n// Plain text format (default for everything else)\nconst message = $json.message || $json.text;\nreturn {\n  integrated_number: \"917702864233\",\n  recipient_number: userNumber,\n  content_type: \"text\",\n  type: \"text\",\n  text: message\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        928,
+        1024
+      ],
+      "id": "547e29e7-63f2-4d1d-b0a6-e4bd8efbd803",
+      "name": "Prepare MSG91 Payload"
+    },
+    {
+      "parameters": {
+        "jsCode": "const query = $node[\"SearchEndpoint\"].json.body.query;\nconst queryLower = query.toLowerCase().trim();\nconst queryWords = queryLower.split(/\\s+/);\n\n// Filter out common stop words\nconst stopWords = ['who', 'is', 'are', 'the', 'a', 'an', 'into', 'for', 'with', 'from', 'to'];\nconst meaningfulWords = queryWords.filter(word => !stopWords.includes(word));\n\n// Use first meaningful word for search, fallback to first word\nconst searchWord = meaningfulWords.length > 0 ? meaningfulWords[0] : queryWords[0];\n\nreturn {\n  original_query: query,\n  query_words: queryWords,\n  meaningful_words: meaningfulWords,\n  search_word: searchWord,\n  query_embedding: $input.item.json.data[0].embedding\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        352,
+        0
+      ],
+      "id": "d0a3a17a-31b5-48c4-870c-300de70c4be0",
+      "name": "Lookup Semantic Clusters"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the cluster data from previous node\nconst clusterResults = $input.all();\n\n// If no clusters found, return empty enhancement\nif (!clusterResults || clusterResults.length === 0 || !clusterResults[0].json) {\n  return [{\n    json: {\n      query_embedding: $node[\"openAI embed\"].json.data[0].embedding,\n      cluster_enhancement: false,\n      profile_ids: [],\n      boost_terms: []\n    }\n  }];\n}\n\n// Extract profile IDs and boost terms\nconst profileIds = new Set();\nconst boostTerms = new Set();\n\nclusterResults.forEach(item => {\n  if (item.json && item.json.profile_id) {\n    profileIds.add(item.json.profile_id);\n    \n    // Add primary term\n    if (item.json.primary_term) {\n      boostTerms.add(item.json.primary_term.toLowerCase());\n    }\n    \n    // Add related terms\n    if (item.json.related_terms && Array.isArray(item.json.related_terms)) {\n      item.json.related_terms.forEach(term => {\n        if (term) {\n          boostTerms.add(term.toLowerCase());\n        }\n      });\n    }\n  }\n});\n\nreturn [{\n  json: {\n    query_embedding: $node[\"openAI embed\"].json.data[0].embedding,\n    cluster_enhancement: profileIds.size > 0,\n    profile_ids: Array.from(profileIds),\n    boost_terms: Array.from(boostTerms)\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        768,
+        0
+      ],
+      "id": "eb6edc8f-613e-4ca7-a2f5-0d1ae6f1bc5a",
+      "name": "Process Cluster Data"
+    },
+    {
+      "parameters": {
+        "jsCode": "const searchResults = $input.all();\nconst clusterData = $node[\"Process Cluster Data\"].json;\n\n// If no clusters, pass through unchanged\nif (!clusterData.has_clusters) {\n  return searchResults.map(r => r.json);\n}\n\n// Apply boost to results\nconst boostedResults = searchResults.map(result => {\n  const profile = result.json;\n  let finalScore = profile.similarity;\n  \n  // BOOST 1: Profile has semantic clusters for this query (+15%)\n  if (clusterData.profile_ids.includes(profile.id)) {\n    finalScore = Math.min(1.0, finalScore + 0.15);\n    profile.boost_reason = \"semantic_cluster_match\";\n  }\n  \n  // BOOST 2: Raw data contains cluster-related terms (+5% per term, max +10%)\n  const rawDataLower = (profile.raw_data || \"\").toLowerCase();\n  let textMatchBoost = 0;\n  clusterData.boost_terms.forEach(term => {\n    if (rawDataLower.includes(term)) {\n      textMatchBoost += 0.05;\n    }\n  });\n  textMatchBoost = Math.min(0.10, textMatchBoost);\n  finalScore = Math.min(1.0, finalScore + textMatchBoost);\n  \n  if (textMatchBoost > 0) {\n    profile.boost_reason = (profile.boost_reason || \"\") + \",text_match\";\n  }\n  \n  // Update similarity with boosted score\n  profile.similarity_original = profile.similarity;\n  profile.similarity = finalScore;\n  \n  return profile;\n});\n\nreturn boostedResults;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        160
+      ],
+      "id": "d5260b44-3963-4e5d-85e8-8d85a84cf645",
+      "name": "Apply Cluster Boost"
+    },
+    {
+      "parameters": {
+        "url": "https://zyojayipbjhxxxxbohlo.supabase.co/rest/v1/semantic_clusters",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "select",
+              "value": "profile_id,primary_term,related_terms,category"
+            },
+            {
+              "name": "is_active",
+              "value": "eq.true"
+            },
+            {
+              "name": "primary_term",
+              "value": "=ilike.*{{ $json.search_word }}*"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        0
+      ],
+      "id": "a69e3f65-c230-4662-bbfb-899cd3150c65",
+      "name": "Fetch Matching Clusters",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "ewu4kB7kEnyq0ifp",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bf2fe414-c4b3-4234-b540-d90dd025b115",
+              "name": "cache_stored",
+              "value": "true",
+              "type": "string"
+            },
+            {
+              "id": "223a8ea9-062a-4b8d-9004-6930400daec8",
+              "name": "query",
+              "value": "={{ $('Prepare Cache Data').item.json.query_text }}",
+              "type": "string"
+            },
+            {
+              "id": "f5db9c76-a990-406b-b8da-714a29eaa6f8",
+              "name": "chapter",
+              "value": "={{ $('Prepare Cache Data').item.json.chapter }}",
+              "type": "string"
+            },
+            {
+              "id": "6bd6ecd0-a5de-4e11-bd43-ded10b26c657",
+              "name": "expires_at",
+              "value": "={{ $('Prepare Cache Data').item.json.expires_at }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2240,
+        32
+      ],
+      "id": "2f61595b-bf93-4815-bdec-dc48d5f8744b",
+      "name": "Format Cache Response"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the search results\nconst results = $json.results;\n\nif (!results || !results.profiles || results.profiles.length === 0) {\n  return [{\n    json: {\n      message_type: \"text\",\n      text: \"😔 No businesses found matching your search. Try different keywords!\"\n    }\n  }];\n}\n\n// Get first result (best match)\nconst profile = results.profiles[0];\n\n// Extract business details from profile text\nconst profileText = profile.profile;\nconst lines = profileText.split('.');\nconst businessName = lines[0] ? lines[0].trim() : \"Business\";\nconst description = lines.slice(1).join('. ').trim();\n\n// Extract contact info\nconst phoneMatch = profileText.match(/(\\d{10})/);\nconst emailMatch = profileText.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\\.[a-zA-Z0-9_-]+)/);\nconst phone = phoneMatch ? phoneMatch[1] : null;\nconst email = emailMatch ? emailMatch[1] : null;\n\n// Build interactive message\nconst interactiveMessage = {\n  type: \"interactive\",\n  interactive: {\n    type: \"button\",\n    header: {\n      type: \"text\",\n      text: `✨ ${businessName}`\n    },\n    body: {\n      text: `${description}\\n\\n📍 ${profile.chapter}\\n⭐ ${profile.similarity_score} Match${profile.boost_applied ? ' (Enhanced)' : ''}`\n    },\n    footer: {\n      text: \"🔍 Powered by BBB Directory\"\n    },\n    action: {\n      buttons: []\n    }\n  }\n};\n\n// Add buttons based on available contact info\nif (phone) {\n  interactiveMessage.interactive.action.buttons.push({\n    type: \"reply\",\n    reply: {\n      id: `call_${phone}`,\n      title: \"📞 Call\"\n    }\n  });\n}\n\nif (email) {\n  interactiveMessage.interactive.action.buttons.push({\n    type: \"reply\",\n    reply: {\n      id: `email_${email}`,\n      title: \"✉️ Email\"\n    }\n  });\n}\n\n// Add share button if we have less than 3 buttons\nif (interactiveMessage.interactive.action.buttons.length < 3) {\n  interactiveMessage.interactive.action.buttons.push({\n    type: \"reply\",\n    reply: {\n      id: `share_${phone || 'business'}`,\n      title: \"📤 Share\"\n    }\n  });\n}\n\n// If more results, add note\nlet additionalText = \"\";\nif (results.profiles.length > 1) {\n  additionalText = `\\n\\n_Found ${results.profiles.length} results. Reply with \"more\" to see others._`;\n}\n\nreturn [{\n  json: {\n    message_type: \"interactive\",\n    interactive_message: interactiveMessage,\n    has_more: results.profiles.length > 1,\n    additional_text: additionalText\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1616,
+        0
+      ],
+      "id": "6edb3687-74a6-4a9d-8b5f-63352a209b37",
+      "name": "Format WhatsApp Interactive Card"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "aa3dd0f3-3efd-4a59-84d9-3567653093af",
+              "leftValue": "={{ $json.is_button_click }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -80,
+        832
+      ],
+      "id": "f5609472-812d-45eb-aa35-d3152571001b",
+      "name": "Check if Button Click"
+    },
+    {
+      "parameters": {
+        "jsCode": "// For share actions, pass through all data\nif ($json.button_action === \"share\") {\n  return {\n    user_number: $json.user_number,\n    button_action: $json.button_action,\n    share_phone: $json.share_phone,\n    needs_profile_lookup: $json.needs_profile_lookup,\n    message_type: \"text\"\n  };\n}\n\n// For call/email actions, format the response message\nreturn {\n  user_number: $json.user_number,\n  message: $json.response_message,\n  message_type: \"text\"\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        144,
+        768
+      ],
+      "id": "93654f1a-b5b4-4548-bc05-b0a98890797c",
+      "name": "Send Button Response"
+    },
+    {
+      "parameters": {
+        "jsCode": "const phone = $json.share_phone;\nconst userNumber = $json.user_number;\n\n// Search the profiles table for this phone number\n// We'll use HTTP Request to Supabase in the next node\nreturn {\n  user_number: userNumber,\n  search_phone: phone\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        544,
+        784
+      ],
+      "id": "75282e70-3776-4292-aff1-a19268019f1f",
+      "name": "Lookup Profile for Share"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://zyojayipbjhxxxxbohlo.supabase.co/rest/v1/semantic_clusters?on_conflict=primary_term",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "primary_term",
+              "value": "={{$json.primary_term}}"
+            },
+            {
+              "name": "related_terms",
+              "value": "={{ $json.related_terms }}"
+            },
+            {
+              "name": "category",
+              "value": "={{ $json.category }}"
+            },
+            {
+              "name": "is_active",
+              "value": "true"
+            },
+            {
+              "name": "suggested_by_ai",
+              "value": "true"
+            },
+            {
+              "name": "profile_id",
+              "value": "={{$json.profile_id}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -16,
+        368
+      ],
+      "id": "82097465-4208-4a87-8d59-68ff2d086646",
+      "name": "HTTP Request4",
+      "credentials": {
+        "supabaseApi": {
+          "id": "ewu4kB7kEnyq0ifp",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// This node formats the share response with card URL\nconst userNumber = $node[\"Extract Message1\"].json.user_number;\nconst extractedData = $node[\"Extract Message1\"].json;\n\n// Get mobile number from button click\nlet mobileNumber = null;\nif (extractedData.share_phone) {\n  mobileNumber = extractedData.share_phone;\n}\n\n// Try to get from profile lookup\nlet profileData = null;\nif ($input.item.json) {\n  if (Array.isArray($input.item.json)) {\n    profileData = $input.item.json[0];\n  } else if ($input.item.json.mobile_number) {\n    profileData = $input.item.json;\n  }\n}\n\nif (profileData && profileData.mobile_number) {\n  mobileNumber = profileData.mobile_number;\n}\n\n// Check if we have mobile number\nif (!mobileNumber) {\n  return {\n    user_number: userNumber,\n    message_type: \"text\",\n    text: \"❌ Unable to generate business card. Please try searching again.\"\n  };\n}\n\n// Get profile details\nconst companyName = profileData ? (profileData.company_name || 'Business') : 'Business';\nconst contactPerson = profileData ? (profileData.contact_person || '') : '';\n\n// Generate card URL\nconst cardUrl = `https://n8n.srv1017206.hstgr.cloud/webhook/card/${mobileNumber}`;\n\n// Format phone\nconst formattedPhone = `+91 ${mobileNumber.slice(0, 5)} ${mobileNumber.slice(5)}`;\n\n// Create simple text message with URL\nconst message = `🎴 *${companyName}* - Digital Business Card\n${contactPerson ? `👤 ${contactPerson}\\n` : ''}\n━━━━━━━━━━━━━━━━━━━━\n\n🔗 *Tap to view interactive card:*\n${cardUrl}\n\n✨ *Card Features:*\n💾 Save to contacts instantly\n📱 QR code for easy sharing  \n📤 Share with anyone\n💼 Professional design\n\n_Powered by BBB Business Directory_ 🔍`;\n\nreturn {\n  user_number: userNumber,\n  message_type: \"text\",\n  text: message\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        784
+      ],
+      "id": "29dd8d2e-5128-4601-a023-f4cedcac0127",
+      "name": "Format Share Message"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5b978c8c-4b2c-4074-a8c8-0cd175ef083e",
+              "leftValue": "={{ $json.needs_profile_lookup }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        368,
+        896
+      ],
+      "id": "e089576d-5099-4d90-81a5-e460a4c83044",
+      "name": "Fetch Profile for Share"
+    },
+    {
+      "parameters": {
+        "url": "https://zyojayipbjhxxxxbohlo.supabase.co/rest/v1/profiles",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "mobile_number",
+              "value": "=eq.{{ $json.search_phone }}"
+            },
+            {
+              "name": "select",
+              "value": "*"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        752,
+        784
+      ],
+      "id": "e5999f60-3257-4740-947b-41b76cc301e6",
+      "name": "Get Profile Details",
+      "credentials": {
+        "supabaseApi": {
+          "id": "ewu4kB7kEnyq0ifp",
+          "name": "Supabase account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "MSG91 Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n.srv1017206.hstgr.cloud",
+            "user-agent": "axios/0.27.2",
+            "content-length": "909",
+            "accept": "application/json, text/plain, */*",
+            "content-type": "application/json",
+            "x-forwarded-for": "34.100.132.154",
+            "x-forwarded-host": "n8n.srv1017206.hstgr.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "cd41370bff67",
+            "x-real-ip": "34.100.132.154",
+            "accept-encoding": "gzip"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "crqid": "",
+            "companyId": "473091",
+            "requestedAt": "2025-10-31T00:50:04+05:30",
+            "customerNumber": "919885164233",
+            "requestId": "",
+            "reason": "",
+            "eventName": "submitted",
+            "uuid": "wamid.HBgMOTE5ODg1MTY0MjMzFQIAEhggQUNBNDdDQjkxNDYyRjc1NUEyNTcwMEQ3QUUyOUU5MjUA_hello",
+            "integratedNumber": "917702864233",
+            "templateName": "",
+            "templateLanguage": "",
+            "replyMsgId": "",
+            "conversationExpTimestamp": "",
+            "pluginsource": "",
+            "customerName": "Kamal Charan",
+            "contentType": "text",
+            "text": "Wellness",
+            "latitude": "",
+            "longitude": "",
+            "caption": "",
+            "filename": "",
+            "url": "",
+            "button": "",
+            "contacts": "[{\"profile\":{\"name\":\"Kamal Charan\"},\"wa_id\":\"919885164233\"}]",
+            "reaction": "",
+            "interactive": "",
+            "orders": "",
+            "messages": "[{\"from\":\"919885164233\",\"id\":\"wamid.HBgMOTE5ODg1MTY0MjMzFQIAEhggQUNBNDdDQjkxNDYyRjc1NUEyNTcwMEQ3QUUyOUU5MjUA\",\"timestamp\":\"1761852003\",\"text\":{\"body\":\"Wellness\"},\"type\":\"text\"}]",
+            "ts": "2025-10-31T00:50:05+05:30"
+          },
+          "webhookUrl": "https://n8n.srv1017206.hstgr.cloud/webhook/whatsapp-msg91",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "ProfileInput": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "cluster generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SearchEndpoint": {
+      "main": [
+        [
+          {
+            "node": "Check Cache",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "cluster generator": {
+      "main": [
+        [
+          {
+            "node": "GenerateKeywords",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GenerateKeywords": {
+      "main": [
+        [
+          {
+            "node": "ParseKeywords",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ParseKeywords": {
+      "main": [
+        [
+          {
+            "node": "Check Duplicate & Prepare Upsert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Duplicate & Prepare Upsert": {
+      "main": [
+        [
+          {
+            "node": "Prepare Upsert Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "UpsertProfile": {
+      "main": [
+        []
+      ]
+    },
+    "Prepare Upsert Data": {
+      "main": [
+        [
+          {
+            "node": "UpsertProfile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cluster Generator": {
+      "main": [
+        [
+          {
+            "node": "Prepare OpenAI Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare OpenAI Request": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request3": {
+      "main": [
+        [
+          {
+            "node": "Parse Clusters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Clusters": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Replace Me",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "prepare query": {
+      "main": [
+        [
+          {
+            "node": "openAI embed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "prepare search": {
+      "main": [
+        [
+          {
+            "node": "supabase search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "supabase search": {
+      "main": [
+        [
+          {
+            "node": "Apply Cluster Boost",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Cache": {
+      "main": [
+        [
+          {
+            "node": "Cache Normalizer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cache Decision": {
+      "main": [
+        [
+          {
+            "node": "Return Cached Results",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "prepare query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "format results": {
+      "main": [
+        [
+          {
+            "node": "Format WhatsApp Interactive Card",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Cache Data": {
+      "main": [
+        [
+          {
+            "node": "Store in Cache",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cache Normalizer": {
+      "main": [
+        [
+          {
+            "node": "Cache Decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "openAI embed": {
+      "main": [
+        [
+          {
+            "node": "Lookup Semantic Clusters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store in Cache": {
+      "main": [
+        [
+          {
+            "node": "Format Cache Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MSG91 Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract Message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Message": {
+      "main": [
+        [
+          {
+            "node": "Check if Button Click",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Error Handler1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Message1": {
+      "main": [
+        [
+          {
+            "node": "Validate Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Search API1": {
+      "main": [
+        [
+          {
+            "node": "Format WhatsApp Response1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format WhatsApp Response1": {
+      "main": [
+        [
+          {
+            "node": "Prepare MSG91 Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send WhatsApp Message1": {
+      "main": [
+        [
+          {
+            "node": "Respond to MSG91",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Handler1": {
+      "main": [
+        [
+          {
+            "node": "Send WhatsApp Message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare MSG91 Payload": {
+      "main": [
+        [
+          {
+            "node": "Send WhatsApp Message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup Semantic Clusters": {
+      "main": [
+        [
+          {
+            "node": "Fetch Matching Clusters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Cluster Data": {
+      "main": [
+        [
+          {
+            "node": "prepare search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apply Cluster Boost": {
+      "main": [
+        [
+          {
+            "node": "format results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Matching Clusters": {
+      "main": [
+        [
+          {
+            "node": "Process Cluster Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Cache Response": {
+      "main": [
+        [
+          {
+            "node": "Return Search Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format WhatsApp Interactive Card": {
+      "main": [
+        [
+          {
+            "node": "Prepare Cache Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if Button Click": {
+      "main": [
+        [
+          {
+            "node": "Send Button Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call Search API1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Button Response": {
+      "main": [
+        [
+          {
+            "node": "Fetch Profile for Share",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup Profile for Share": {
+      "main": [
+        [
+          {
+            "node": "Get Profile Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Profile for Share": {
+      "main": [
+        [
+          {
+            "node": "Lookup Profile for Share",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare MSG91 Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Share Message": {
+      "main": [
+        [
+          {
+            "node": "Prepare MSG91 Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Profile Details": {
+      "main": [
+        [
+          {
+            "node": "Format Share Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Kolkata",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "af60c393-38e2-40fb-808c-aa58eb0be2b0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "65b9aaf639091046937c158fdcd901ecb1baec3dd30dd1f164b954fc7a00f468"
+  },
+  "id": "iG6DKEEuRHpBNmNb",
+  "tags": []
+}
