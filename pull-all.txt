@@ -1,8 +1,6 @@
 # ═══════════════════════════════════════════════════
 # PULL EVERYTHING FROM GITHUB - Copy & Paste Commands
 # ═══════════════════════════════════════════════════
-# Select all commands below and paste into terminal
-# ═══════════════════════════════════════════════════
 
 cd "D:\projects\core projects\ContractNest\contractnest-combined"
 
@@ -39,6 +37,12 @@ cd ..
 
 # Pull ContractNest-Mobile
 cd ContractNest-Mobile
+git checkout main
+git pull origin main
+cd ..
+
+# Pull FamilyKnows
+cd FamilyKnows
 git checkout main
 git pull origin main
 cd ..

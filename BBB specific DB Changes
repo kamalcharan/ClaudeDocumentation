@@ -1,0 +1,936 @@
+BBB Database Schema Summary
+1. Tables Created (New)
+#Table NamePurposeKey FieldsIndexes1t_business_groupsStore business networks/chapters (BBB, associations)id, group_name, group_type, settings (JSONB), member_countgroup_type, is_active2t_group_membershipsTenant membership in groups with BBB profilesid, tenant_id, group_id, status, profile_data (JSONB), embedding (vector)tenant_id, group_id, status, vector index on embedding3t_semantic_clustersAI-generated keyword clusters per memberid, membership_id, primary_term, related_terms[], cluster_embedding (vector)membership_id, primary_term, category4t_search_query_cacheSearch result caching (30-day TTL)id, group_id, query_normalized, results (JSONB), hit_count, expires_atgroup_id, expires_at, query_normalized5t_group_activity_logsActivity tracking and audit logsid, group_id, tenant_id, activity_type, activity_data (JSONB)group_id, activity_type, created_at
+
+2. Tables Updated (Existing)
+Table NameColumns AddedData TypePurposeNullablet_tenant_profilesbusiness_whatsapp_country_codeVARCHAR(10)Country code for WhatsApp numberYES (NULL)t_tenant_profilesbusiness_whatsappVARCHAR(20)WhatsApp number for BBB contactYES (NULL)
+Additional Index Created:
+sqlCREATE INDEX idx_tenant_profiles_whatsapp ON t_tenant_profiles(business_whatsapp);
+
+3. Functions Created
+Function 1: search_group_members()
+Type: PL/pgSQL Function
+Purpose: Hybrid search combining vector similarity + keyword matching
+Returns: TABLE with search results
+Parameters:
+sqlp_group_id UUID
+p_query_embedding vector(1536)
+p_query_keywords TEXT[] DEFAULT NULL
+p_limit INTEGER DEFAULT 5
+p_similarity_threshold FLOAT DEFAULT 0.7
+Returns:
+sqlTABLE(
+  membership_id UUID,
+  tenant_id UUID,
+  business_name VARCHAR,
+  profile_data JSONB,
+  similarity_score FLOAT,
+  match_type VARCHAR
+)
+Usage:
+sqlSELECT * FROM search_group_members(
+  'group-uuid',
+  '[1.2, 3.4, ...]'::vector(1536),
+  ARRAY['networking', 'IT'],
+  5,
+  0.7
+);
+
+Function 2: cleanup_expired_cache()
+Type: PL/pgSQL Function
+Purpose: Remove expired cache entries (intended for daily cron job)
+Returns: INTEGER (count of deleted rows)
+Parameters: None
+Logic:
+sqlDELETE FROM t_search_query_cache 
+WHERE expires_at < CURRENT_TIMESTAMP;
+Usage:
+sql-- Run manually
+SELECT cleanup_expired_cache();
+
+-- Or via pg_cron (if extension available)
+SELECT cron.schedule('cleanup-cache', '0 2 * * *', 'SELECT cleanup_expired_cache()');
+
+Function 3: update_group_member_count()
+Type: Trigger Function
+Purpose: Automatically update t_business_groups.member_count when memberships change
+Returns: TRIGGER
+Logic:
+
+INSERT + status='active' → Increment member_count
+UPDATE status to 'active' → Increment member_count
+UPDATE status from 'active' → Decrement member_count
+DELETE active member → Decrement member_count
+
+Attached to: t_group_memberships (via trigger)
+
+Function 4: update_updated_at_column()
+Type: Trigger Function
+Purpose: Automatically set updated_at = CURRENT_TIMESTAMP on row updates
+Returns: TRIGGER
+Logic:
+sqlNEW.updated_at = CURRENT_TIMESTAMP;
+RETURN NEW;
+Attached to: t_business_groups, t_group_memberships (via triggers)
+
+4. Triggers Created
+#Trigger NameTableEventTimingFunction CalledPurpose1trg_update_group_member_countt_group_membershipsINSERT, UPDATE, DELETEAFTERupdate_group_member_count()Auto-update member count in t_business_groups2trg_business_groups_updated_att_business_groupsUPDATEBEFOREupdate_updated_at_column()Auto-update updated_at timestamp3trg_group_memberships_updated_att_group_membershipsUPDATEBEFOREupdate_updated_at_column()Auto-update updated_at timestamp
+
+5. Constraints & Special Features
+Unique Constraints
+TableConstraintFieldsPurposet_business_groupsgroup_name UNIQUEgroup_nameNo duplicate group namest_group_membershipstenant_group_unique(tenant_id, group_id)One membership per tenant per groupt_search_query_cachequery_group_unique(query_normalized, group_id)One cache entry per query per group
+Check Constraints
+TableFieldConstraintValid Valuest_group_membershipsstatusCHECK'draft', 'pending', 'active', 'inactive', 'suspended'
+Foreign Keys
+TableColumnReferencesOn Deletet_business_groupsadmin_tenant_idt_tenants(id)SET NULLt_group_membershipstenant_idt_tenants(id)CASCADEt_group_membershipsgroup_idt_business_groups(id)CASCADEt_semantic_clustersmembership_idt_group_memberships(id)CASCADEt_search_query_cachegroup_idt_business_groups(id)CASCADEt_group_activity_logsgroup_idt_business_groups(id)SET NULLt_group_activity_logstenant_idt_tenants(id)SET NULLt_group_activity_logsmembership_idt_group_memberships(id)SET NULL
+
+6. Vector Extension Requirement
+CRITICAL: Ensure pgvector extension is installed:
+sqlCREATE EXTENSION IF NOT EXISTS vector;
+Vector Indexes Created:
+TableColumnIndex TypeConfigurationt_group_membershipsembeddingIVFFlatvector_cosine_ops, lists=100
+Purpose: Fast vector similarity search for semantic matching
+
+7. JSONB Fields Structure
+t_business_groups.settings
+json{
+  "chapter": "Bagyanagar",
+  "branch": "bagyanagar",
+  "access": {
+    "type": "password",
+    "user_password": "bagyanagar",
+    "admin_password": "admin2025"
+  },
+  "search_config": { ... },
+  "features": { ... }
+}
+t_group_memberships.profile_data
+json{
+  "mobile_number": "9949701175",
+  "generation_method": "manual",
+  "short_description": "User's 1-2 sentence input",
+  "ai_enhanced_description": "VaNi's 6-8 line expansion",
+  "suggested_keywords": ["IT", "Software"],
+  "approved_keywords": ["IT Services"],
+  "semantic_tags": ["technology"]
+}
+t_search_query_cache.results
+json{
+  "results_count": 5,
+  "members": [
+    {
+      "membership_id": "...",
+      "business_name": "...",
+      "similarity_score": 0.89
+    }
+  ]
+}
+t_group_activity_logs.activity_data
+json{
+  "old_status": "pending",
+  "new_status": "active",
+  "reason": "Approved by admin"
+}
+
+8. Seed Data Inserted
+TableRecordsDescriptiont_business_groups1BBB Bagyanagar Chapter with full settings
+Seed Data Details:
+
+Group Name: "BBB Bagyanagar Chapter"
+Group Type: "bbb_chapter"
+Passwords: user="bagyanagar", admin="admin2025"
+Features: All enabled (AI enhancement, search, WhatsApp, etc.)
+
+
+9. Complete DDL Summary
+Total Database Objects Created/Modified:
+CategoryCountObjectsNew Tables5t_business_groups, t_group_memberships, t_semantic_clusters, t_search_query_cache, t_group_activity_logsModified Tables1t_tenant_profiles (+2 columns)Functions4search_group_members, cleanup_expired_cache, update_group_member_count, update_updated_at_columnTriggers3trg_update_group_member_count, trg_business_groups_updated_at, trg_group_memberships_updated_atIndexes16Regular indexes + 1 vector indexForeign Keys7Referential integrity constraintsUnique Constraints3Business rules enforcementCheck Constraints1Status value validation
+
+10. Verification Queries
+Run these to verify everything is created correctly:
+Check Tables
+sqlSELECT table_name 
+FROM information_schema.tables 
+WHERE table_schema = 'public' 
+  AND table_name LIKE 't_%business%' OR table_name LIKE 't_%group%'
+ORDER BY table_name;
+Check Functions
+sqlSELECT routine_name, routine_type
+FROM information_schema.routines
+WHERE routine_schema = 'public'
+  AND (routine_name LIKE '%group%' OR routine_name LIKE '%cache%')
+ORDER BY routine_name;
+Check Triggers
+sqlSELECT trigger_name, event_object_table, action_timing, event_manipulation
+FROM information_schema.triggers
+WHERE trigger_schema = 'public'
+ORDER BY event_object_table, trigger_name;
+Check Indexes
+sqlSELECT 
+  tablename,
+  indexname,
+  indexdef
+FROM pg_indexes
+WHERE schemaname = 'public'
+  AND (tablename LIKE '%group%' OR tablename LIKE '%semantic%')
+ORDER BY tablename, indexname;
+Check Foreign Keys
+sqlSELECT
+  tc.table_name, 
+  kcu.column_name, 
+  ccu.table_name AS foreign_table_name,
+  ccu.column_name AS foreign_column_name 
+FROM information_schema.table_constraints AS tc 
+JOIN information_schema.key_column_usage AS kcu
+  ON tc.constraint_name = kcu.constraint_name
+JOIN information_schema.constraint_column_usage AS ccu
+  ON ccu.constraint_name = tc.constraint_name
+WHERE tc.constraint_type = 'FOREIGN KEY' 
+  AND tc.table_schema = 'public'
+  AND (tc.table_name LIKE '%group%' OR tc.table_name LIKE '%semantic%')
+ORDER BY tc.table_name;
+
+Summary: The BBB integration adds 5 new tables, modifies 1 existing table, creates 4 functions, 3 triggers, and 16+ indexes including specialized vector search capabilities.
+
+
+------------------------------------------------------------------------------------------------------------------
+
+BBB Database - Complete DDL Script
+sql-- ============================================
+-- BBB Directory Integration - Complete DDL
+-- ============================================
+-- Version: 1.0
+-- Date: 2024-11-19
+-- Purpose: Create all tables, functions, triggers for BBB integration
+-- Prerequisites: PostgreSQL with pgvector extension
+-- ============================================
+
+-- ============================================
+-- SECTION 1: EXTENSIONS
+-- ============================================
+
+-- Enable pgvector extension for vector similarity search
+CREATE EXTENSION IF NOT EXISTS vector;
+
+-- Enable pgcrypto for password hashing (optional for future use)
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- ============================================
+-- SECTION 2: ALTER EXISTING TABLES
+-- ============================================
+
+-- Add WhatsApp fields to tenant profiles
+ALTER TABLE t_tenant_profiles 
+ADD COLUMN IF NOT EXISTS business_whatsapp_country_code VARCHAR(10),
+ADD COLUMN IF NOT EXISTS business_whatsapp VARCHAR(20);
+
+-- Create index on WhatsApp field
+CREATE INDEX IF NOT EXISTS idx_tenant_profiles_whatsapp 
+ON t_tenant_profiles(business_whatsapp);
+
+-- Add comments
+COMMENT ON COLUMN t_tenant_profiles.business_whatsapp_country_code IS 'Country code for WhatsApp number (e.g., +91)';
+COMMENT ON COLUMN t_tenant_profiles.business_whatsapp IS 'WhatsApp number for BBB and group communications';
+
+-- ============================================
+-- SECTION 3: CREATE NEW TABLES
+-- ============================================
+
+-- --------------------------------------------
+-- TABLE 1: Business Groups/Networks
+-- --------------------------------------------
+CREATE TABLE t_business_groups (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    
+    -- Basic Information
+    group_name VARCHAR(255) NOT NULL UNIQUE,
+    group_type VARCHAR(50) NOT NULL, -- 'bbb_chapter', 'tech_forum', 'network', etc.
+    description TEXT,
+    
+    -- Admin Management
+    admin_tenant_id UUID REFERENCES t_tenants(id) ON DELETE SET NULL,
+    
+    -- Flexible Configuration (JSON-first approach)
+    settings JSONB DEFAULT '{}'::jsonb,
+    /* Example structure:
+    {
+      "chapter": "Bagyanagar",
+      "branch": "bagyanagar",
+      "city": "Hyderabad",
+      "state": "Telangana",
+      "access": {
+        "type": "password",
+        "user_password": "bagyanagar",
+        "admin_password": "admin2025"
+      },
+      "profile_fields": {
+        "required": ["short_description", "mobile_number"],
+        "optional": ["member_number", "website_url"],
+        "ai_features": ["enhancement", "keyword_extraction", "semantic_clustering"]
+      },
+      "search_config": {
+        "enabled": true,
+        "search_type": "hybrid",
+        "similarity_threshold": 0.7,
+        "max_results": 10,
+        "cache_enabled": true,
+        "cache_ttl_days": 30
+      },
+      "features": {
+        "whatsapp_integration": true,
+        "website_scraping": true,
+        "ai_enhancement": true,
+        "semantic_search": true,
+        "admin_dashboard": true
+      },
+      "whatsapp": {
+        "trigger_phrase": "Hi BBB",
+        "exit_phrase": "Exit BBB",
+        "bot_enabled": true
+      },
+      "contact": {
+        "admin_name": "Admin Name",
+        "admin_phone": "+91 9999999999",
+        "support_email": "support@example.com"
+      }
+    }
+    */
+    
+    -- Statistics
+    member_count INTEGER DEFAULT 0,
+    
+    -- Status & Timestamps
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes
+CREATE INDEX idx_business_groups_type ON t_business_groups(group_type);
+CREATE INDEX idx_business_groups_active ON t_business_groups(is_active);
+
+-- Comments
+COMMENT ON TABLE t_business_groups IS 'Business networks and communities (BBB chapters, associations, forums)';
+COMMENT ON COLUMN t_business_groups.settings IS 'Flexible JSONB configuration for group-specific features and settings';
+COMMENT ON COLUMN t_business_groups.member_count IS 'Automatically updated by trigger when memberships change';
+
+-- --------------------------------------------
+-- TABLE 2: Group Memberships
+-- --------------------------------------------
+CREATE TABLE t_group_memberships (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    tenant_id UUID NOT NULL REFERENCES t_tenants(id) ON DELETE CASCADE,
+    group_id UUID NOT NULL REFERENCES t_business_groups(id) ON DELETE CASCADE,
+    
+    -- Membership Status
+    status VARCHAR(20) DEFAULT 'draft' 
+        CHECK (status IN ('draft', 'pending', 'active', 'inactive', 'suspended')),
+    joined_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Group-specific Profile Data (JSON-first for flexibility)
+    profile_data JSONB DEFAULT '{}'::jsonb,
+    /* Example structure for BBB member:
+    {
+      "mobile_number": "9949701175",
+      "member_number": "BBB-BG-001",
+      "generation_method": "manual" | "website",
+      "short_description": "User's original 1-2 sentence input",
+      "ai_enhanced_description": "VaNi's expanded 6-8 line version",
+      "website_url": "https://example.com",
+      "website_scraped_data": {
+        "title": "Company Name",
+        "meta_description": "...",
+        "content_snippets": ["...", "..."]
+      },
+      "suggested_keywords": ["IT", "Software", "Cloud"],
+      "approved_keywords": ["IT Services", "Software Development"],
+      "semantic_tags": ["technology", "software", "development"],
+      "last_enhanced_at": "2024-01-15T10:30:00Z"
+    }
+    */
+    
+    -- Vector Embedding for AI Search
+    -- Generated from: business_name + industry + city + ai_enhanced_description
+    embedding vector(1536),
+    
+    -- Metadata
+    metadata JSONB DEFAULT '{}'::jsonb,
+    
+    -- Status & Timestamps
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Constraints
+    UNIQUE(tenant_id, group_id) -- One membership per tenant per group
+);
+
+-- Indexes
+CREATE INDEX idx_group_memberships_tenant ON t_group_memberships(tenant_id);
+CREATE INDEX idx_group_memberships_group ON t_group_memberships(group_id);
+CREATE INDEX idx_group_memberships_status ON t_group_memberships(status, is_active);
+
+-- Vector search index (CRITICAL for performance)
+CREATE INDEX idx_group_memberships_embedding ON t_group_memberships 
+    USING ivfflat (embedding vector_cosine_ops)
+    WITH (lists = 100); -- Adjust based on data size (lists = rows/1000)
+
+-- Comments
+COMMENT ON TABLE t_group_memberships IS 'Tenant memberships in business groups with AI-powered profiles';
+COMMENT ON COLUMN t_group_memberships.profile_data IS 'Group-specific profile data stored as flexible JSONB';
+COMMENT ON COLUMN t_group_memberships.embedding IS 'Vector embedding combining business info + profile description for semantic search';
+COMMENT ON COLUMN t_group_memberships.status IS 'Membership status: draft (just created), pending (awaiting approval), active (approved), inactive (left), suspended (banned)';
+
+-- --------------------------------------------
+-- TABLE 3: Semantic Clusters (Member-specific)
+-- --------------------------------------------
+CREATE TABLE t_semantic_clusters (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    membership_id UUID NOT NULL REFERENCES t_group_memberships(id) ON DELETE CASCADE,
+    
+    -- Cluster Data
+    primary_term VARCHAR(100) NOT NULL,
+    related_terms TEXT[] NOT NULL,
+    category VARCHAR(100),
+    confidence_score FLOAT,
+    
+    -- Vector embedding for the cluster (optional)
+    cluster_embedding vector(1536),
+    
+    -- Status & Timestamps
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes
+CREATE INDEX idx_semantic_clusters_membership ON t_semantic_clusters(membership_id);
+CREATE INDEX idx_semantic_clusters_primary_term ON t_semantic_clusters(primary_term);
+CREATE INDEX idx_semantic_clusters_category ON t_semantic_clusters(category);
+
+-- Comments
+COMMENT ON TABLE t_semantic_clusters IS 'AI-generated keyword clusters for each member (improves search discoverability)';
+COMMENT ON COLUMN t_semantic_clusters.primary_term IS 'Main keyword of the cluster';
+COMMENT ON COLUMN t_semantic_clusters.related_terms IS 'Array of related/synonym terms';
+COMMENT ON COLUMN t_semantic_clusters.confidence_score IS 'AI confidence score (0.0 to 1.0)';
+
+-- --------------------------------------------
+-- TABLE 4: Search Query Cache (30-day TTL)
+-- --------------------------------------------
+CREATE TABLE t_search_query_cache (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    group_id UUID NOT NULL REFERENCES t_business_groups(id) ON DELETE CASCADE,
+    
+    -- Query Data
+    query_text TEXT NOT NULL,
+    query_normalized TEXT NOT NULL, -- Lowercase, trimmed version for matching
+    query_embedding vector(1536),
+    
+    -- Cached Results
+    results JSONB NOT NULL,
+    /* Structure:
+    {
+      "success": true,
+      "results_count": 5,
+      "results": [
+        {
+          "membership_id": "...",
+          "tenant_id": "...",
+          "business_name": "...",
+          "similarity_score": 0.89,
+          "profile_snippet": "..."
+        }
+      ],
+      "search_metadata": {
+        "search_type": "vector" | "hybrid",
+        "keywords_matched": [...]
+      }
+    }
+    */
+    
+    -- Cache Statistics
+    hit_count INTEGER DEFAULT 1,
+    
+    -- Timestamps
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    last_accessed_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP WITH TIME ZONE DEFAULT (CURRENT_TIMESTAMP + INTERVAL '30 days'),
+    
+    -- Constraints
+    UNIQUE(query_normalized, group_id)
+);
+
+-- Indexes
+CREATE INDEX idx_query_cache_group ON t_search_query_cache(group_id);
+CREATE INDEX idx_query_cache_expires ON t_search_query_cache(expires_at);
+CREATE INDEX idx_query_cache_normalized ON t_search_query_cache(query_normalized);
+
+-- Comments
+COMMENT ON TABLE t_search_query_cache IS 'Search query cache with 30-day TTL for performance optimization';
+COMMENT ON COLUMN t_search_query_cache.query_normalized IS 'Normalized query (lowercase, trimmed) for cache matching';
+COMMENT ON COLUMN t_search_query_cache.hit_count IS 'Number of times this cached result was returned';
+
+-- --------------------------------------------
+-- TABLE 5: Activity Logs
+-- --------------------------------------------
+CREATE TABLE t_group_activity_logs (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    group_id UUID REFERENCES t_business_groups(id) ON DELETE SET NULL,
+    tenant_id UUID REFERENCES t_tenants(id) ON DELETE SET NULL,
+    membership_id UUID REFERENCES t_group_memberships(id) ON DELETE SET NULL,
+    
+    -- Activity Details
+    activity_type VARCHAR(50) NOT NULL, 
+    -- Types: 'search', 'profile_create', 'profile_update', 'join', 'leave', 
+    --        'ai_enhance', 'website_scrape', 'status_change', 'error'
+    
+    activity_data JSONB DEFAULT '{}'::jsonb,
+    /* Examples:
+    // Search activity
+    {
+      "query": "networking equipment",
+      "results_count": 3,
+      "search_type": "hybrid",
+      "response_time_ms": 145,
+      "from_cache": true
+    }
+    
+    // Profile creation
+    {
+      "generation_method": "website",
+      "website_url": "https://example.com",
+      "keywords_generated": 5,
+      "processing_time_ms": 3200
+    }
+    
+    // Status change
+    {
+      "old_status": "pending",
+      "new_status": "active",
+      "reason": "Approved by admin",
+      "changed_by": "admin_tenant_id"
+    }
+    
+    // Error
+    {
+      "error_type": "embedding_failed",
+      "error_message": "OpenAI API timeout",
+      "error_stack": "..."
+    }
+    */
+    
+    -- Timestamps
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes
+CREATE INDEX idx_activity_logs_group ON t_group_activity_logs(group_id);
+CREATE INDEX idx_activity_logs_tenant ON t_group_activity_logs(tenant_id);
+CREATE INDEX idx_activity_logs_membership ON t_group_activity_logs(membership_id);
+CREATE INDEX idx_activity_logs_type ON t_group_activity_logs(activity_type);
+CREATE INDEX idx_activity_logs_created ON t_group_activity_logs(created_at DESC);
+
+-- Comments
+COMMENT ON TABLE t_group_activity_logs IS 'Activity tracking and error logging for groups';
+COMMENT ON COLUMN t_group_activity_logs.activity_type IS 'Type of activity: search, profile_create, status_change, error, etc.';
+COMMENT ON COLUMN t_group_activity_logs.activity_data IS 'Flexible JSONB storage for activity-specific data';
+
+-- ============================================
+-- SECTION 4: FUNCTIONS
+-- ============================================
+
+-- --------------------------------------------
+-- FUNCTION 1: Hybrid Search Function
+-- --------------------------------------------
+CREATE OR REPLACE FUNCTION search_group_members(
+    p_group_id UUID,
+    p_query_embedding vector(1536),
+    p_query_keywords TEXT[] DEFAULT NULL,
+    p_limit INTEGER DEFAULT 5,
+    p_similarity_threshold FLOAT DEFAULT 0.7
+)
+RETURNS TABLE(
+    membership_id UUID,
+    tenant_id UUID,
+    business_name VARCHAR,
+    profile_data JSONB,
+    similarity_score FLOAT,
+    match_type VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    gm.id as membership_id,
+    gm.tenant_id,
+    tp.business_name,
+    gm.profile_data,
+    (1 - (gm.embedding <=> p_query_embedding))::FLOAT as similarity_score,
+    CASE 
+      WHEN (1 - (gm.embedding <=> p_query_embedding)) >= p_similarity_threshold 
+        THEN 'vector'
+      WHEN p_query_keywords IS NOT NULL 
+        AND (gm.profile_data->'approved_keywords')::jsonb ?| p_query_keywords
+        THEN 'keyword'
+      ELSE 'semantic'
+    END as match_type
+  FROM t_group_memberships gm
+  JOIN t_tenant_profiles tp ON tp.tenant_id = gm.tenant_id
+  WHERE 
+    gm.group_id = p_group_id
+    AND gm.status = 'active'
+    AND gm.is_active = true
+    AND (
+      -- Vector similarity match
+      (1 - (gm.embedding <=> p_query_embedding)) >= p_similarity_threshold
+      OR
+      -- Keyword match (if keywords provided)
+      (p_query_keywords IS NOT NULL 
+       AND (gm.profile_data->'approved_keywords')::jsonb ?| p_query_keywords)
+    )
+  ORDER BY 
+    similarity_score DESC,
+    tp.business_name ASC
+  LIMIT p_limit;
+END;
+$$;
+
+COMMENT ON FUNCTION search_group_members IS 'Hybrid search combining vector similarity and keyword matching for BBB directory';
+
+-- --------------------------------------------
+-- FUNCTION 2: Cache Cleanup Function
+-- --------------------------------------------
+CREATE OR REPLACE FUNCTION cleanup_expired_cache()
+RETURNS INTEGER
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  deleted_count INTEGER;
+BEGIN
+  DELETE FROM t_search_query_cache 
+  WHERE expires_at < CURRENT_TIMESTAMP;
+  
+  GET DIAGNOSTICS deleted_count = ROW_COUNT;
+  
+  -- Log the cleanup
+  IF deleted_count > 0 THEN
+    RAISE NOTICE 'Cleaned up % expired cache entries', deleted_count;
+  END IF;
+  
+  RETURN deleted_count;
+END;
+$$;
+
+COMMENT ON FUNCTION cleanup_expired_cache IS 'Removes expired cache entries (run daily via cron job)';
+
+-- Optional: Schedule daily cleanup (requires pg_cron extension)
+-- SELECT cron.schedule('cleanup-bbb-cache', '0 2 * * *', 'SELECT cleanup_expired_cache()');
+
+-- --------------------------------------------
+-- FUNCTION 3: Update Group Member Count
+-- --------------------------------------------
+CREATE OR REPLACE FUNCTION update_group_member_count()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  -- Handle INSERT
+  IF TG_OP = 'INSERT' AND NEW.status = 'active' THEN
+    UPDATE t_business_groups 
+    SET 
+      member_count = member_count + 1,
+      updated_at = CURRENT_TIMESTAMP
+    WHERE id = NEW.group_id;
+    
+  -- Handle UPDATE (status changed TO active)
+  ELSIF TG_OP = 'UPDATE' AND OLD.status != 'active' AND NEW.status = 'active' THEN
+    UPDATE t_business_groups 
+    SET 
+      member_count = member_count + 1,
+      updated_at = CURRENT_TIMESTAMP
+    WHERE id = NEW.group_id;
+    
+  -- Handle UPDATE (status changed FROM active)
+  ELSIF TG_OP = 'UPDATE' AND OLD.status = 'active' AND NEW.status != 'active' THEN
+    UPDATE t_business_groups 
+    SET 
+      member_count = member_count - 1,
+      updated_at = CURRENT_TIMESTAMP
+    WHERE id = NEW.group_id;
+    
+  -- Handle DELETE (was active)
+  ELSIF TG_OP = 'DELETE' AND OLD.status = 'active' THEN
+    UPDATE t_business_groups 
+    SET 
+      member_count = member_count - 1,
+      updated_at = CURRENT_TIMESTAMP
+    WHERE id = OLD.group_id;
+  END IF;
+  
+  RETURN COALESCE(NEW, OLD);
+END;
+$$;
+
+COMMENT ON FUNCTION update_group_member_count IS 'Automatically updates member_count in t_business_groups when memberships change';
+
+-- --------------------------------------------
+-- FUNCTION 4: Update Updated_At Timestamp
+-- --------------------------------------------
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  NEW.updated_at = CURRENT_TIMESTAMP;
+  RETURN NEW;
+END;
+$$;
+
+COMMENT ON FUNCTION update_updated_at_column IS 'Automatically sets updated_at to current timestamp on row update';
+
+-- ============================================
+-- SECTION 5: TRIGGERS
+-- ============================================
+
+-- --------------------------------------------
+-- TRIGGER 1: Update Group Member Count
+-- --------------------------------------------
+CREATE TRIGGER trg_update_group_member_count
+AFTER INSERT OR UPDATE OR DELETE ON t_group_memberships
+FOR EACH ROW
+EXECUTE FUNCTION update_group_member_count();
+
+COMMENT ON TRIGGER trg_update_group_member_count ON t_group_memberships IS 
+'Automatically updates member_count in t_business_groups when memberships are added, updated, or removed';
+
+-- --------------------------------------------
+-- TRIGGER 2: Update Business Groups Timestamp
+-- --------------------------------------------
+CREATE TRIGGER trg_business_groups_updated_at
+BEFORE UPDATE ON t_business_groups
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+COMMENT ON TRIGGER trg_business_groups_updated_at ON t_business_groups IS 
+'Automatically updates updated_at timestamp when group record is modified';
+
+-- --------------------------------------------
+-- TRIGGER 3: Update Group Memberships Timestamp
+-- --------------------------------------------
+CREATE TRIGGER trg_group_memberships_updated_at
+BEFORE UPDATE ON t_group_memberships
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();
+
+COMMENT ON TRIGGER trg_group_memberships_updated_at ON t_group_memberships IS 
+'Automatically updates updated_at timestamp when membership record is modified';
+
+-- ============================================
+-- SECTION 6: SEED DATA
+-- ============================================
+
+-- Insert BBB Bagyanagar Chapter
+INSERT INTO t_business_groups (
+    group_name,
+    group_type,
+    description,
+    admin_tenant_id,
+    settings,
+    member_count,
+    is_active
+) VALUES (
+    'BBB Bagyanagar Chapter',
+    'bbb_chapter',
+    'Bagyanagar Business Network - Hyderabad Chapter connecting verified entrepreneurs and service providers through AI-powered directory and WhatsApp integration',
+    NULL, -- Will be set once first admin joins
+    '{
+        "chapter": "Bagyanagar",
+        "branch": "bagyanagar",
+        "city": "Hyderabad",
+        "state": "Telangana",
+        "access": {
+            "type": "password",
+            "user_password": "bagyanagar",
+            "admin_password": "admin2025"
+        },
+        "profile_fields": {
+            "required": ["short_description", "mobile_number"],
+            "optional": ["member_number", "website_url"],
+            "ai_features": ["enhancement", "keyword_extraction", "semantic_clustering"]
+        },
+        "search_config": {
+            "enabled": true,
+            "search_type": "hybrid",
+            "similarity_threshold": 0.7,
+            "max_results": 10,
+            "cache_enabled": true,
+            "cache_ttl_days": 30
+        },
+        "features": {
+            "whatsapp_integration": true,
+            "website_scraping": true,
+            "ai_enhancement": true,
+            "semantic_search": true,
+            "admin_dashboard": true
+        },
+        "onboarding": {
+            "generation_methods": ["manual", "website"],
+            "auto_approve": false,
+            "require_admin_review": true
+        },
+        "whatsapp": {
+            "trigger_phrase": "Hi BBB",
+            "exit_phrase": "Exit BBB",
+            "bot_enabled": true
+        },
+        "branding": {
+            "primary_color": "#1E40AF",
+            "secondary_color": "#7C3AED",
+            "logo_url": null
+        },
+        "contact": {
+            "admin_name": "Charan Kamal",
+            "admin_phone": "+91 9949701175",
+            "support_email": "bbb.bagyanagar@contractnest.com"
+        },
+        "stats": {
+            "founded_date": "2024-01-01",
+            "target_members": 100,
+            "current_focus": "IT Services, Professional Services, Healthcare"
+        }
+    }'::jsonb,
+    0, -- Initial member count
+    true
+)
+ON CONFLICT (group_name) DO NOTHING;
+
+-- ============================================
+-- SECTION 7: VERIFICATION QUERIES
+-- ============================================
+
+-- Verify tables created
+SELECT 
+    'Tables Created' as check_type,
+    COUNT(*) as count
+FROM information_schema.tables 
+WHERE table_schema = 'public' 
+  AND table_name IN (
+    't_business_groups',
+    't_group_memberships',
+    't_semantic_clusters',
+    't_search_query_cache',
+    't_group_activity_logs'
+  );
+
+-- Verify functions created
+SELECT 
+    'Functions Created' as check_type,
+    COUNT(*) as count
+FROM information_schema.routines
+WHERE routine_schema = 'public'
+  AND routine_name IN (
+    'search_group_members',
+    'cleanup_expired_cache',
+    'update_group_member_count',
+    'update_updated_at_column'
+  );
+
+-- Verify triggers created
+SELECT 
+    'Triggers Created' as check_type,
+    COUNT(*) as count
+FROM information_schema.triggers
+WHERE trigger_schema = 'public'
+  AND trigger_name IN (
+    'trg_update_group_member_count',
+    'trg_business_groups_updated_at',
+    'trg_group_memberships_updated_at'
+  );
+
+-- Verify seed data
+SELECT 
+    'Seed Data' as check_type,
+    group_name,
+    group_type,
+    settings->>'chapter' as chapter,
+    member_count,
+    is_active
+FROM t_business_groups
+WHERE group_type = 'bbb_chapter';
+
+-- Verify indexes on t_group_memberships
+SELECT 
+    'Indexes on t_group_memberships' as check_type,
+    indexname,
+    indexdef
+FROM pg_indexes
+WHERE schemaname = 'public'
+  AND tablename = 't_group_memberships'
+ORDER BY indexname;
+
+-- ============================================
+-- END OF SCRIPT
+-- ============================================
+
+-- Success message
+DO $$
+BEGIN
+  RAISE NOTICE '========================================';
+  RAISE NOTICE 'BBB Database Schema Installation Complete!';
+  RAISE NOTICE '========================================';
+  RAISE NOTICE 'Created:';
+  RAISE NOTICE '  - 5 new tables';
+  RAISE NOTICE '  - 1 table modification (t_tenant_profiles)';
+  RAISE NOTICE '  - 4 functions';
+  RAISE NOTICE '  - 3 triggers';
+  RAISE NOTICE '  - 1 seed data record (BBB Bagyanagar)';
+  RAISE NOTICE '========================================';
+  RAISE NOTICE 'Next Steps:';
+  RAISE NOTICE '  1. Run verification queries above';
+  RAISE NOTICE '  2. Get BBB Group ID for frontend';
+  RAISE NOTICE '  3. Build Edge Functions';
+  RAISE NOTICE '  4. Integrate Frontend';
+  RAISE NOTICE '========================================';
+END $$;
+
+Quick Reference Commands
+Get BBB Group ID (for frontend)
+sqlSELECT 
+    id as group_id,
+    group_name,
+    settings->>'branch' as branch,
+    settings->>'chapter' as chapter
+FROM t_business_groups
+WHERE group_type = 'bbb_chapter'
+  AND settings->>'chapter' = 'Bagyanagar';
+Test Vector Search Function
+sql-- Example test (requires actual embedding vector)
+SELECT * FROM search_group_members(
+    'YOUR_GROUP_ID'::uuid,
+    '[0.1, 0.2, ...]'::vector(1536),  -- Replace with actual embedding
+    ARRAY['networking', 'IT'],
+    5,
+    0.7
+);
+Manually Run Cache Cleanup
+sqlSELECT cleanup_expired_cache();
+Check Trigger Status
+sqlSELECT 
+    trigger_name,
+    event_object_table,
+    action_timing,
+    event_manipulation,
+    action_statement
+FROM information_schema.triggers
+WHERE trigger_schema = 'public'
+ORDER BY event_object_table, trigger_name;
+Test Member Count Trigger
+sql-- Get current count
+SELECT group_name, member_count FROM t_business_groups WHERE group_type = 'bbb_chapter';
+
+-- Insert a test membership (replace with actual tenant_id and group_id)
+INSERT INTO t_group_memberships (tenant_id, group_id, status)
+VALUES ('YOUR_TENANT_ID', 'YOUR_GROUP_ID', 'active');
+
+-- Check count again (should be +1)
+SELECT group_name, member_count FROM t_business_groups WHERE group_type = 'bbb_chapter';

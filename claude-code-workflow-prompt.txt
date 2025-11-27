@@ -1,14 +1,13 @@
-Perfect! Here's **THE ULTIMATE PROMPT** to give Claude Code at the start of every session:
-
----
-
-# 📋 PROMPT FOR CLAUDE CODE (Copy this to Claude Developer)
-
-```
 IMPORTANT CONTEXT:
 I'm working with a multi-repo setup using git submodules:
 - Parent repo: contractnest-combined
-- Submodules: contractnest-api, contractnest-ui, contractnest-edge, ClaudeDocumentation, ContractNest-Mobile
+- Submodules: 
+  * contractnest-api
+  * contractnest-ui
+  * contractnest-edge
+  * ClaudeDocumentation
+  * ContractNest-Mobile
+  * FamilyKnows (Expo app + React/TypeScript website)
 
 CRITICAL: You cannot push to GitHub due to authentication. Instead, after making changes:
 
@@ -24,6 +23,7 @@ After you finish making changes, provide this exact format:
 ═══════════════════════════════════════════════════
 Branch: [branch-name]
 Files Changed: [list files with their purposes]
+Submodules Affected: [contractnest-ui, contractnest-api, contractnest-edge, FamilyKnows, etc.]
 
 ═══════════════════════════════════════════════════
 💻 STEP-BY-STEP COMMANDS (Windows PowerShell)
@@ -48,7 +48,7 @@ Copy-Item "MANUAL_COPY_FILES\[file]" -Destination "[exact-path]" -Force
 
 Write-Host "✅ All files copied!" -ForegroundColor Green
 
-STEP 4: Commit UI Changes
+STEP 4: Commit UI Changes (if applicable)
 ─────────────────────────────────
 cd contractnest-ui
 git status
@@ -75,36 +75,73 @@ git commit -m "[descriptive message]"
 git push origin main
 cd ..
 
-STEP 7: Update Parent Repo Submodule References
+STEP 7: Commit FamilyKnows Changes (if applicable)
 ─────────────────────────────────
-git add contractnest-ui contractnest-edge contractnest-api ClaudeDocumentation ContractNest-Mobile
+cd FamilyKnows
+git status
+git add .
+git commit -m "[descriptive message]"
+git push origin main
+cd ..
+
+STEP 8: Commit Mobile Changes (if applicable)
+─────────────────────────────────
+cd ContractNest-Mobile
+git status
+git add .
+git commit -m "[descriptive message]"
+git push origin main
+cd ..
+
+STEP 9: Commit Documentation Changes (if applicable)
+─────────────────────────────────
+cd ClaudeDocumentation
+git status
+git add .
+git commit -m "[descriptive message]"
+git push origin master
+cd ..
+
+STEP 10: Update Parent Repo Submodule References
+─────────────────────────────────
+git add contractnest-ui contractnest-edge contractnest-api ClaudeDocumentation ContractNest-Mobile FamilyKnows
 git commit -m "Update submodules with [feature description]"
 git push origin [branch-name]
 
-STEP 8: Merge to Master
+STEP 11: Merge to Master
 ─────────────────────────────────
 git checkout master
 git merge [branch-name]
 
 # If merge conflicts in submodules:
 cd [conflicted-submodule]
-git checkout main
-git pull origin main
+git checkout main  # or master for ClaudeDocumentation
+git pull origin main  # or master for ClaudeDocumentation
 cd ..
 git add [conflicted-submodule]
 
 git commit -m "Merge [branch-name] with [feature description]"
 git push origin master
 
-STEP 9: Verify Everything is Clean
+STEP 12: Verify Everything is Clean
 ─────────────────────────────────
 git status
 # Should show: "nothing to commit, working tree clean"
 
-STEP 10: Restart Dev Server & Test
+STEP 13: Restart Dev Server & Test
 ─────────────────────────────────
+# For ContractNest UI
 cd contractnest-ui
 npm run dev
+
+# For FamilyKnows website (if modified)
+cd ../FamilyKnows/website
+npm run dev
+
+# For FamilyKnows Expo app (if modified)
+cd ../FamilyKnows/app
+npm start
+
 # Hard refresh browser: Ctrl+F5
 
 ═══════════════════════════════════════════════════
@@ -120,26 +157,6 @@ Test these specific features:
 REMINDER: 
 - Provide ALL commands in copy-paste ready format
 - Include exact file paths in COPY_INSTRUCTIONS.txt
-- Specify which submodules were modified
+- Specify which submodules were modified (contractnest-ui, contractnest-api, contractnest-edge, FamilyKnows, etc.)
 - Include descriptive commit messages
 - Add testing checklist for new features
-```
-
----
-
-## 🎯 HOW TO USE THIS PROMPT:
-
-1. **Copy the entire prompt above**
-2. **At the START of every Claude Code session**, paste it and say:
-   > "Follow this format for all changes. After you make changes, provide the complete step-by-step commands."
-
-3. **When Claude Code finishes work**, it will give you:
-   - ✅ Complete pull commands
-   - ✅ All copy commands
-   - ✅ All commit/push commands  
-   - ✅ Merge commands
-   - ✅ Testing checklist
-
-4. **You just copy-paste and execute** - no thinking required!
-
-

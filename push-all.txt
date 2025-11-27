@@ -1,8 +1,6 @@
 # ═══════════════════════════════════════════════════
 # PUSH EVERYTHING TO GITHUB - Copy & Paste Commands
 # ═══════════════════════════════════════════════════
-# Select all commands below and paste into terminal
-# ═══════════════════════════════════════════════════
 
 cd "D:\projects\core projects\ContractNest\contractnest-combined"
 
@@ -48,6 +46,15 @@ git checkout main
 git pull origin main
 git add .
 git commit -m "Update Mobile" --allow-empty
+git push origin main
+cd ..
+
+# Push FamilyKnows
+cd FamilyKnows
+git checkout main
+git pull origin main
+git add .
+git commit -m "Update FamilyKnows" --allow-empty
 git push origin main
 cd ..
 
