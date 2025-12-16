@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Service Rule Setup</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #F8FAFC; padding: 2rem; display: flex; justify-content: center; }
+        .config-card { width: 500px; background: white; border: 1px solid #E2E8F0; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow: hidden; }
+        .header { padding: 1.5rem; border-bottom: 1px solid #F1F5F9; background: #0F172A; color: white; }
+        .body { padding: 2rem; }
+        
+        /* Rule Section Styles */
+        .rule-section { margin-bottom: 2rem; }
+        .section-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: #64748B; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
+        
+        /* The "Natural Language" Input */
+        .logic-row { background: #F0F9FF; border: 1px solid #BAE6FD; padding: 1rem; border-radius: 8px; font-size: 0.95rem; color: #0C4A6E; line-height: 1.8; }
+        .inline-select { background: white; border: 1px solid #7DD3FC; border-radius: 4px; padding: 4px 8px; color: #0284C7; font-weight: 600; cursor: pointer; outline: none; }
+        
+        /* Toggle Switch */
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 0; border-bottom: 1px dashed #E2E8F0; }
+        .toggle { position: relative; width: 44px; height: 24px; background: #CBD5E1; border-radius: 20px; transition: 0.3s; cursor: pointer; }
+        .toggle::after { content: ''; position: absolute; left: 2px; top: 2px; width: 20px; height: 20px; background: white; border-radius: 50%; transition: 0.3s; }
+        .toggle.active { background: #10B981; }
+        .toggle.active::after { left: 22px; }
+
+        /* Save Button */
+        .btn-save { width: 100%; background: #0F172A; color: white; padding: 1rem; border: none; font-weight: 600; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="config-card">
+    <div class="header">
+        <div style="font-size: 1.1rem; font-weight: 600;">🛠 Service Rules Setup</div>
+        <div style="opacity: 0.7; font-size: 0.85rem;">For Catalog Item: "AC Wet Service"</div>
+    </div>
+    
+    <div class="body">
+        
+        <div class="rule-section">
+            <div class="section-title">📸 Evidence Requirements</div>
+            
+            <div class="toggle-row">
+                <span>Require <strong>"Before & After"</strong> Photos</span>
+                <div class="toggle active" onclick="this.classList.toggle('active')"></div>
+            </div>
+            
+            <div class="toggle-row">
+                <span>Require <strong>GPS Geo-Tag</strong> match</span>
+                <div class="toggle" onclick="this.classList.toggle('active')"></div>
+            </div>
+
+            <div class="toggle-row" style="border-bottom: none;">
+                <span>Require <strong>Client Digital Signature</strong></span>
+                <div class="toggle active" onclick="this.classList.toggle('active')"></div>
+            </div>
+        </div>
+
+        <div class="rule-section">
+            <div class="section-title">⚡ Agentic SLA Logic</div>
+            
+            <div class="logic-row">
+                <span style="font-weight: 700; color: #0369A1;">IF</span> task is not started 
+                <select class="inline-select">
+                    <option>2 hours</option>
+                    <option>4 hours</option>
+                </select>
+                before deadline,
+                <br>
+                <span style="font-weight: 700; color: #0369A1;">THEN</span>
+                <select class="inline-select">
+                    <option>Send WhatsApp Nudge</option>
+                    <option>Call Vendor</option>
+                </select>
+                to the Assignee.
+            </div>
+            
+            <div class="logic-row" style="margin-top: 10px; background: #FEF2F2; border-color: #FECACA; color: #991B1B;">
+                <span style="font-weight: 700; color: #B91C1C;">IF</span> task breaches deadline,
+                <br>
+                <span style="font-weight: 700; color: #B91C1C;">THEN</span>
+                Escalate to
+                <select class="inline-select" style="border-color: #FCA5A5; color: #B91C1C;">
+                    <option>Ops Manager</option>
+                    <option>Admin</option>
+                </select>.
+            </div>
+        </div>
+
+    </div>
+    <button class="btn-save">Save Logic Rules</button>
+</div>
+
+</body>
+</html>

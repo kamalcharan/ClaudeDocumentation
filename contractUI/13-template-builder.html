@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ContractNest - Template Builder</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand: #0F172A;
+            --brand-light: #1E293B;
+            --seller: #7C3AED;
+            --seller-light: #8B5CF6;
+            --seller-bg: #F5F3FF;
+            --seller-border: #DDD6FE;
+            --success: #10B981;
+            --success-bg: #ECFDF5;
+            --warning: #F59E0B;
+            --warning-bg: #FFFBEB;
+            --danger: #EF4444;
+            --danger-bg: #FEF2F2;
+            --info: #0284C7;
+            --info-bg: #F0F9FF;
+            --bg: #F8FAFC;
+            --surface: #FFFFFF;
+            --border: #E2E8F0;
+            --border-light: #F1F5F9;
+            --text: #334155;
+            --text-light: #64748B;
+            --text-muted: #94A3B8;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1);
+            --radius: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+        .app-container { display: flex; min-height: 100vh; }
+
+        /* Sidebar */
+        .sidebar { width: 200px; background: var(--brand); position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
+        .sidebar-header { padding: 1rem; border-bottom: 1px solid var(--brand-light); }
+        .logo { display: flex; align-items: center; gap: 8px; font-size: 0.95rem; font-weight: 800; color: white; }
+        .logo-icon { width: 26px; height: 26px; background: var(--seller); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
+        .sidebar-nav { padding: 0.75rem 0.5rem; }
+        .nav-item { display: flex; align-items: center; gap: 8px; padding: 0.5rem 0.75rem; border-radius: var(--radius); color: var(--text-muted); font-size: 0.7rem; font-weight: 500; cursor: pointer; margin-bottom: 2px; }
+        .nav-item:hover { background: var(--brand-light); color: white; }
+        .nav-item.active { background: var(--seller); color: white; }
+
+        /* Main Content */
+        .main-content { flex: 1; margin-left: 200px; display: flex; flex-direction: column; }
+
+        /* Top Bar */
+        .top-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; }
+        .top-bar-left { display: flex; align-items: center; gap: 1rem; }
+        .back-btn { background: none; border: none; color: var(--text-light); cursor: pointer; font-size: 1.25rem; padding: 0.25rem; }
+        .back-btn:hover { color: var(--seller); }
+        .page-title h1 { font-size: 1rem; font-weight: 700; color: var(--brand); }
+        .page-title p { font-size: 0.65rem; color: var(--text-light); }
+        .top-bar-right { display: flex; align-items: center; gap: 0.5rem; }
+
+        .btn { padding: 0.4rem 0.875rem; border-radius: var(--radius); font-weight: 600; font-size: 0.7rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem; border: none; transition: all 0.2s; }
+        .btn-primary { background: var(--seller); color: white; }
+        .btn-primary:hover { background: var(--seller-light); }
+        .btn-outline { background: var(--surface); border: 1px solid var(--border); color: var(--text); }
+        .btn-outline:hover { border-color: var(--seller); color: var(--seller); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-lg { padding: 0.55rem 1.25rem; font-size: 0.8rem; }
+
+        /* Progress Bar */
+        .progress-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0.75rem 1.5rem; display: flex; justify-content: center; }
+        .progress-steps { display: flex; align-items: center; gap: 0.5rem; }
+        .progress-step { display: flex; align-items: center; gap: 0.4rem; cursor: pointer; }
+        .step-number { width: 26px; height: 26px; border-radius: 50%; background: var(--border); color: var(--text-muted); display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 700; transition: all 0.3s; }
+        .progress-step.active .step-number { background: var(--seller); color: white; }
+        .progress-step.completed .step-number { background: var(--success); color: white; }
+        .step-label { font-size: 0.65rem; font-weight: 600; color: var(--text-muted); }
+        .progress-step.active .step-label { color: var(--seller); }
+        .progress-step.completed .step-label { color: var(--success); }
+        .step-connector { width: 40px; height: 2px; background: var(--border); }
+        .step-connector.completed { background: var(--success); }
+
+        /* Step Content */
+        .step-content { display: none; flex: 1; overflow: hidden; }
+        .step-content.active { display: flex; flex-direction: column; }
+
+        /* Step 1: Template Info */
+        .form-container { max-width: 600px; margin: 0 auto; padding: 1.5rem; overflow-y: auto; flex: 1; }
+        .form-card { background: var(--surface); border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: var(--shadow-md); margin-bottom: 1rem; }
+        .form-card-title { font-size: 0.9rem; font-weight: 700; color: var(--brand); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .form-group { margin-bottom: 0.875rem; }
+        .form-label { display: block; font-size: 0.7rem; font-weight: 600; color: var(--text); margin-bottom: 0.25rem; }
+        .form-label .required { color: var(--danger); }
+        .form-input, .form-select, .form-textarea { width: 100%; padding: 0.5rem 0.65rem; border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.8rem; color: var(--text); font-family: inherit; }
+        .form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: var(--seller); box-shadow: 0 0 0 3px var(--seller-bg); }
+        .form-textarea { resize: vertical; min-height: 80px; }
+        .form-hint { font-size: 0.6rem; color: var(--text-muted); margin-top: 0.2rem; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.875rem; }
+
+        .cover-upload { border: 2px dashed var(--border); border-radius: var(--radius); padding: 1.5rem; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .cover-upload:hover { border-color: var(--seller); background: var(--seller-bg); }
+        .cover-upload-icon { font-size: 2rem; margin-bottom: 0.25rem; }
+        .cover-upload-text { font-size: 0.75rem; color: var(--text-light); }
+
+        /* Step 2: Builder Layout */
+        .builder-layout { display: flex; flex: 1; overflow: hidden; }
+
+        /* Block Library Panel */
+        .block-library-panel { width: 260px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+        .panel-header { padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); }
+        .panel-header h3 { font-size: 0.75rem; font-weight: 700; color: var(--brand); display: flex; align-items: center; gap: 0.4rem; }
+        .panel-search { padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); }
+        .panel-search input { width: 100%; padding: 0.4rem 0.6rem; border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.7rem; }
+        .panel-search input:focus { outline: none; border-color: var(--seller); }
+        .block-categories { display: flex; gap: 0.25rem; padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+        .block-cat-btn { padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.6rem; font-weight: 600; background: var(--bg); color: var(--text-light); border: none; cursor: pointer; }
+        .block-cat-btn.active { background: var(--seller); color: white; }
+        .block-cat-btn:hover { background: var(--seller-bg); color: var(--seller); }
+        .block-list { flex: 1; overflow-y: auto; padding: 0.5rem; }
+
+        .draggable-block { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.6rem; margin-bottom: 0.4rem; cursor: grab; display: flex; align-items: center; gap: 0.5rem; transition: all 0.2s; }
+        .draggable-block:hover { border-color: var(--seller); background: var(--seller-bg); }
+        .draggable-block.dragging { opacity: 0.5; }
+        .drag-icon { font-size: 1rem; }
+        .drag-info { flex: 1; }
+        .drag-name { font-size: 0.7rem; font-weight: 600; color: var(--text); }
+        .drag-meta { font-size: 0.6rem; color: var(--text-muted); }
+        .drag-handle { color: var(--text-muted); font-size: 0.8rem; }
+
+        /* Canvas Area */
+        .canvas-area { flex: 1; background: var(--bg); display: flex; flex-direction: column; overflow: hidden; }
+        .canvas-header { background: var(--surface); padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .canvas-title { font-size: 0.85rem; font-weight: 700; color: var(--brand); }
+        .canvas-subtitle { font-size: 0.65rem; color: var(--text-light); }
+        .canvas-content { flex: 1; overflow-y: auto; padding: 1.25rem; }
+        .template-canvas { background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); min-height: 400px; padding: 1rem; }
+        .canvas-section { margin-bottom: 1rem; }
+        .canvas-section-title { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem; }
+
+        .canvas-drop-zone { border: 2px dashed var(--border); border-radius: var(--radius); padding: 0.75rem; min-height: 60px; display: flex; flex-direction: column; gap: 0.4rem; transition: all 0.2s; }
+        .canvas-drop-zone.drag-over { border-color: var(--seller); background: var(--seller-bg); }
+        .canvas-drop-zone.has-items { border-style: solid; border-color: var(--border-light); background: var(--bg); }
+        .drop-placeholder { text-align: center; padding: 0.75rem; color: var(--text-muted); font-size: 0.7rem; }
+        .drop-placeholder-icon { font-size: 1.25rem; margin-bottom: 0.15rem; }
+
+        .canvas-block { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.6rem; display: flex; align-items: center; gap: 0.6rem; }
+        .canvas-block-icon { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 1rem; background: var(--seller-bg); }
+        .canvas-block-info { flex: 1; }
+        .canvas-block-name { font-size: 0.75rem; font-weight: 600; color: var(--text); }
+        .canvas-block-meta { font-size: 0.6rem; color: var(--text-muted); }
+        .canvas-block-qty { display: flex; align-items: center; gap: 0.25rem; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.15rem; }
+        .qty-btn { width: 22px; height: 22px; border: none; background: var(--surface); border-radius: 4px; cursor: pointer; font-weight: 700; color: var(--text-light); font-size: 0.8rem; }
+        .qty-btn:hover { background: var(--seller-bg); color: var(--seller); }
+        .qty-value { width: 28px; text-align: center; font-size: 0.75rem; font-weight: 700; color: var(--brand); }
+        .canvas-block-price { font-size: 0.75rem; font-weight: 700; color: var(--brand); min-width: 65px; text-align: right; }
+        .canvas-block-remove { color: var(--text-muted); cursor: pointer; font-size: 1rem; padding: 0.2rem; }
+        .canvas-block-remove:hover { color: var(--danger); }
+
+        /* Summary Panel */
+        .summary-panel { width: 260px; background: var(--surface); border-left: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+        .summary-content { flex: 1; overflow-y: auto; padding: 0.875rem; }
+        .summary-section { margin-bottom: 1rem; }
+        .summary-section-title { font-size: 0.6rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.4rem; }
+        .summary-row { display: flex; justify-content: space-between; padding: 0.3rem 0; font-size: 0.7rem; border-bottom: 1px solid var(--border-light); }
+        .summary-row:last-child { border-bottom: none; }
+        .summary-row .label { color: var(--text-light); }
+        .summary-row .value { font-weight: 600; color: var(--text); }
+        .summary-item { font-size: 0.7rem; padding: 0.25rem 0; color: var(--text); display: flex; justify-content: space-between; }
+        .summary-item-qty { color: var(--text-muted); }
+        .summary-total { background: var(--seller-bg); border-radius: var(--radius); padding: 0.65rem; display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; }
+        .summary-total .label { font-size: 0.75rem; font-weight: 600; color: var(--seller); }
+        .summary-total .value { font-size: 1rem; font-weight: 800; color: var(--seller); }
+        .summary-footer { padding: 0.75rem; border-top: 1px solid var(--border); }
+        .summary-footer .btn { width: 100%; justify-content: center; }
+
+        /* Step 3: Configure */
+        .config-container { max-width: 700px; margin: 0 auto; padding: 1.5rem; overflow-y: auto; flex: 1; }
+        .pricing-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem; background: var(--bg); border-radius: var(--radius); margin-bottom: 0.5rem; }
+        .pricing-item-icon { width: 32px; height: 32px; background: var(--seller-bg); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+        .pricing-item-info { flex: 1; }
+        .pricing-item-name { font-size: 0.75rem; font-weight: 600; color: var(--text); }
+        .pricing-item-meta { font-size: 0.6rem; color: var(--text-muted); }
+        .pricing-item-input { width: 100px; padding: 0.35rem 0.5rem; border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.75rem; text-align: right; }
+        .pricing-item-input:focus { outline: none; border-color: var(--seller); }
+
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid var(--border-light); }
+        .toggle-row:last-child { border-bottom: none; }
+        .toggle-label { font-size: 0.75rem; color: var(--text); }
+        .toggle-switch { width: 36px; height: 20px; background: var(--border); border-radius: 10px; position: relative; cursor: pointer; transition: all 0.2s; }
+        .toggle-switch.active { background: var(--seller); }
+        .toggle-switch::after { content: ''; position: absolute; width: 16px; height: 16px; background: white; border-radius: 50%; top: 2px; left: 2px; transition: all 0.2s; box-shadow: var(--shadow-sm); }
+        .toggle-switch.active::after { left: 18px; }
+
+        /* Step 4: Review */
+        .review-container { max-width: 800px; margin: 0 auto; padding: 1.5rem; overflow-y: auto; flex: 1; }
+        .review-card { background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); overflow: hidden; margin-bottom: 1rem; }
+        .review-card-header { padding: 0.875rem 1rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .review-card-title { font-size: 0.8rem; font-weight: 700; color: var(--brand); display: flex; align-items: center; gap: 0.4rem; }
+        .review-card-edit { font-size: 0.65rem; color: var(--seller); cursor: pointer; font-weight: 600; }
+        .review-card-edit:hover { text-decoration: underline; }
+        .review-card-body { padding: 1rem; }
+        .review-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+        .review-info-item { }
+        .review-info-label { font-size: 0.6rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
+        .review-info-value { font-size: 0.8rem; color: var(--text); font-weight: 500; }
+        .review-block-list { display: flex; flex-direction: column; gap: 0.4rem; }
+        .review-block-item { display: flex; align-items: center; gap: 0.65rem; padding: 0.5rem; background: var(--bg); border-radius: var(--radius); }
+        .review-block-icon { width: 32px; height: 32px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 1rem; background: var(--seller-bg); }
+        .review-block-info { flex: 1; }
+        .review-block-name { font-size: 0.75rem; font-weight: 600; color: var(--text); }
+        .review-block-meta { font-size: 0.6rem; color: var(--text-muted); }
+        .review-block-qty { font-size: 0.7rem; color: var(--text-light); background: var(--surface); padding: 0.2rem 0.5rem; border-radius: 4px; }
+        .review-block-price { font-size: 0.8rem; font-weight: 700; color: var(--brand); }
+        .pricing-summary { margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border); }
+        .pricing-row { display: flex; justify-content: space-between; font-size: 0.75rem; padding: 0.25rem 0; }
+        .pricing-row.total { border-top: 2px solid var(--border); padding-top: 0.5rem; margin-top: 0.25rem; font-weight: 700; font-size: 0.9rem; color: var(--brand); }
+
+        /* Step 5: Success */
+        .success-container { max-width: 500px; margin: 0 auto; padding: 3rem 1.5rem; text-align: center; }
+        .success-icon { width: 80px; height: 80px; background: var(--success-bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 1.5rem; }
+        .success-title { font-size: 1.5rem; font-weight: 800; color: var(--brand); margin-bottom: 0.5rem; }
+        .success-message { font-size: 0.9rem; color: var(--text-light); margin-bottom: 2rem; }
+        .success-actions { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
+
+        /* Toast */
+        .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%); background: var(--brand); color: white; padding: 0.6rem 1rem; border-radius: 50px; font-size: 0.75rem; font-weight: 600; box-shadow: var(--shadow-xl); display: none; z-index: 2000; }
+        .toast.show { display: flex; align-items: center; gap: 0.4rem; animation: toastIn 0.3s ease; }
+        @keyframes toastIn { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo"><div class="logo-icon">⚡</div><span>ContractNest</span></div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-item"><span>🧱</span> Block Library</div>
+                <div class="nav-item active"><span>📦</span> Templates</div>
+                <div class="nav-item"><span>📋</span> Contracts</div>
+                <div class="nav-item"><span>📊</span> Dashboard</div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <div class="top-bar-left">
+                    <button class="back-btn" onclick="goBack()">←</button>
+                    <div class="page-title">
+                        <h1 id="pageTitle">Create New Template</h1>
+                        <p>FLOW 1: Build a reusable service package</p>
+                    </div>
+                </div>
+                <div class="top-bar-right">
+                    <button class="btn btn-outline" onclick="saveDraft()">💾 Save Draft</button>
+                    <button class="btn btn-primary" id="nextBtn" onclick="nextStep()">Continue →</button>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress-bar">
+                <div class="progress-steps">
+                    <div class="progress-step active" data-step="1" onclick="goToStep(1)">
+                        <div class="step-number">1</div>
+                        <span class="step-label">Template Info</span>
+                    </div>
+                    <div class="step-connector"></div>
+                    <div class="progress-step" data-step="2" onclick="goToStep(2)">
+                        <div class="step-number">2</div>
+                        <span class="step-label">Assemble Blocks</span>
+                    </div>
+                    <div class="step-connector"></div>
+                    <div class="progress-step" data-step="3" onclick="goToStep(3)">
+                        <div class="step-number">3</div>
+                        <span class="step-label">Configure</span>
+                    </div>
+                    <div class="step-connector"></div>
+                    <div class="progress-step" data-step="4" onclick="goToStep(4)">
+                        <div class="step-number">4</div>
+                        <span class="step-label">Review & Save</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 1: Template Info -->
+            <div class="step-content active" id="step1">
+                <div class="form-container">
+                    <div class="form-card">
+                        <div class="form-card-title">📋 Template Details</div>
+                        <div class="form-group">
+                            <label class="form-label">Template Name <span class="required">*</span></label>
+                            <input type="text" class="form-input" id="templateName" placeholder="e.g., PCOD Balance Program" value="PCOD Balance Program">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-textarea" id="templateDesc" placeholder="Describe what this package includes...">Comprehensive 3-month wellness program for PCOD management including yoga, nutrition, and medical consultations.</textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Category</label>
+                                <select class="form-select" id="templateCategory">
+                                    <option value="">Select category...</option>
+                                    <option value="wellness" selected>Wellness & Health</option>
+                                    <option value="home">Home Services</option>
+                                    <option value="tech">IT & Technology</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Target Audience</label>
+                                <select class="form-select" id="targetAudience">
+                                    <option value="">Select audience...</option>
+                                    <option value="individual" selected>Individuals</option>
+                                    <option value="family">Families</option>
+                                    <option value="business">Businesses</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Cover Image</label>
+                            <div class="cover-upload">
+                                <div class="cover-upload-icon">📷</div>
+                                <div class="cover-upload-text">Click to upload or drag image here</div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tags</label>
+                            <input type="text" class="form-input" placeholder="e.g., PCOD, wellness, women-health" value="PCOD, wellness, women-health, hormonal">
+                            <div class="form-hint">Tags help buyers find your template</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 2: Assemble Blocks -->
+            <div class="step-content" id="step2">
+                <div class="builder-layout">
+                    <!-- Block Library -->
+                    <div class="block-library-panel">
+                        <div class="panel-header"><h3>🧱 Block Library</h3></div>
+                        <div class="panel-search"><input type="text" placeholder="Search blocks..."></div>
+                        <div class="block-categories">
+                            <button class="block-cat-btn active" onclick="filterBlocks('all')">All</button>
+                            <button class="block-cat-btn" onclick="filterBlocks('service')">🎯 Service</button>
+                            <button class="block-cat-btn" onclick="filterBlocks('billing')">💰 Billing</button>
+                            <button class="block-cat-btn" onclick="filterBlocks('text')">📄 Text</button>
+                        </div>
+                        <div class="block-list" id="blockList">
+                            <div class="draggable-block" draggable="true" data-type="service" data-id="yoga" data-name="Yoga Session" data-icon="🧘" data-price="2000" data-meta="60 min">
+                                <span class="drag-icon">🧘</span>
+                                <div class="drag-info"><div class="drag-name">Yoga Session</div><div class="drag-meta">₹2,000 • 60 min</div></div>
+                                <span class="drag-handle">⋮⋮</span>
+                            </div>
+                            <div class="draggable-block" draggable="true" data-type="service" data-id="gynec" data-name="Gynec Consultation" data-icon="🩺" data-price="1500" data-meta="30 min">
+                                <span class="drag-icon">🩺</span>
+                                <div class="drag-info"><div class="drag-name">Gynec Consultation</div><div class="drag-meta">₹1,500 • 30 min</div></div>
+                                <span class="drag-handle">⋮⋮</span>
+                            </div>
+                            <div class="draggable-block" draggable="true" data-type="service" data-id="nutrition" data-name="Nutrition Planning" data-icon="🥗" data-price="1000" data-meta="45 min">
+                                <span class="drag-icon">🥗</span>
+                                <div class="drag-info"><div class="drag-name">Nutrition Planning</div><div class="drag-meta">₹1,000 • 45 min</div></div>
+                                <span class="drag-handle">⋮⋮</span>
+                            </div>
+                            <div class="draggable-block" draggable="true" data-type="service" data-id="ac" data-name="AC Deep Service" data-icon="❄️" data-price="1200" data-meta="90 min">
+                                <span class="drag-icon">❄️</span>
+                                <div class="drag-info"><div class="drag-name">AC Deep Service</div><div class="drag-meta">₹1,200 • 90 min</div></div>
+                                <span class="drag-handle">⋮⋮</span>
+                            </div>
+                            <div class="draggable-block" draggable="true" data-type="billing" data-id="emi3" data-name="3-Month EMI" data-icon="💳" data-price="0" data-meta="3 installments">
+                                <span class="drag-icon">💳</span>
+                                <div class="drag-info"><div class="drag-name">3-Month EMI</div><div class="drag-meta">Payment plan</div></div>
+                                <span class="drag-handle">⋮⋮</span>
+                            </div>
+                            <div class="draggable-block" draggable="true" data-type="billing" data-id="advance" data-name="100% Advance" data-icon="💵" data-price="0" data-meta="Full upfront">
+                                <span class="drag-icon">💵</span>
+                                <div class="drag-info"><div class="drag-name">100% Advance</div><div class="drag-meta">Full payment upfront</div></div>
+                                <span class="drag-handle">⋮⋮</span>
+                            </div>
+                            <div class="draggable-block" draggable="true" data-type="text" data-id="tnc" data-name="Standard T&C" data-icon="📜" data-price="0" data-meta="Legal">
+                                <span class="drag-icon">📜</span>
+                                <div class="drag-info"><div class="drag-name">Standard T&C</div><div class="drag-meta">Terms & conditions</div></div>
+                                <span class="drag-handle">⋮⋮</span>
+                            </div>
+                            <div class="draggable-block" draggable="true" data-type="text" data-id="cancel" data-name="Cancellation Policy" data-icon="🚫" data-price="0" data-meta="Policy">
+                                <span class="drag-icon">🚫</span>
+                                <div class="drag-info"><div class="drag-name">Cancellation Policy</div><div class="drag-meta">24-hour notice</div></div>
+                                <span class="drag-handle">⋮⋮</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Canvas -->
+                    <div class="canvas-area">
+                        <div class="canvas-header">
+                            <div>
+                                <div class="canvas-title" id="canvasTitle">PCOD Balance Program</div>
+                                <div class="canvas-subtitle">Drag blocks from library → Drop into sections below</div>
+                            </div>
+                        </div>
+                        <div class="canvas-content">
+                            <div class="template-canvas">
+                                <div class="canvas-section">
+                                    <div class="canvas-section-title">🎯 Services</div>
+                                    <div class="canvas-drop-zone" id="servicesZone" data-section="service"></div>
+                                </div>
+                                <div class="canvas-section">
+                                    <div class="canvas-section-title">💰 Payment Terms</div>
+                                    <div class="canvas-drop-zone" id="billingZone" data-section="billing"></div>
+                                </div>
+                                <div class="canvas-section">
+                                    <div class="canvas-section-title">📄 Terms & Policies</div>
+                                    <div class="canvas-drop-zone" id="textZone" data-section="text"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Summary -->
+                    <div class="summary-panel">
+                        <div class="panel-header"><h3>📊 Summary</h3></div>
+                        <div class="summary-content">
+                            <div class="summary-section">
+                                <div class="summary-section-title">Services Added</div>
+                                <div id="serviceSummary"><div style="font-size:0.7rem;color:var(--text-muted);padding:0.4rem 0;">Drag services to canvas</div></div>
+                            </div>
+                            <div class="summary-section">
+                                <div class="summary-section-title">Pricing</div>
+                                <div class="summary-row"><span class="label">Subtotal</span><span class="value" id="subtotal">₹0</span></div>
+                                <div class="summary-row"><span class="label">Tax (18%)</span><span class="value" id="tax">₹0</span></div>
+                                <div class="summary-total"><span class="label">Total</span><span class="value" id="total">₹0</span></div>
+                            </div>
+                            <div class="summary-section">
+                                <div class="summary-section-title">Payment</div>
+                                <div id="paymentSummary" style="font-size:0.7rem;color:var(--text-muted);">Add billing block</div>
+                            </div>
+                        </div>
+                        <div class="summary-footer">
+                            <button class="btn btn-primary btn-lg" onclick="nextStep()">Continue →</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 3: Configure -->
+            <div class="step-content" id="step3">
+                <div class="config-container">
+                    <div class="form-card">
+                        <div class="form-card-title">💰 Pricing Configuration</div>
+                        <div class="summary-section">
+                            <div class="summary-section-title">Block Pricing</div>
+                            <div id="pricingList"></div>
+                        </div>
+                        <div class="form-row" style="margin-top:1rem;">
+                            <div class="form-group">
+                                <label class="form-label">Default Currency</label>
+                                <select class="form-select"><option selected>🇮🇳 INR</option><option>🇺🇸 USD</option><option>🇪🇺 EUR</option><option>🇬🇧 GBP</option></select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Tax Rate</label>
+                                <select class="form-select"><option>0%</option><option>5%</option><option>12%</option><option selected>18%</option></select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-card">
+                        <div class="form-card-title">🎛️ Template Settings</div>
+                        <div class="toggle-row"><span class="toggle-label">📅 Buyer can request specific dates</span><div class="toggle-switch active" onclick="this.classList.toggle('active')"></div></div>
+                        <div class="toggle-row"><span class="toggle-label">🔢 Buyer can modify quantities</span><div class="toggle-switch" onclick="this.classList.toggle('active')"></div></div>
+                        <div class="toggle-row"><span class="toggle-label">💬 Allow buyer notes/requests</span><div class="toggle-switch active" onclick="this.classList.toggle('active')"></div></div>
+                        <div class="toggle-row"><span class="toggle-label">🎁 Show on public catalog</span><div class="toggle-switch active" onclick="this.classList.toggle('active')"></div></div>
+                    </div>
+                    <div class="form-card">
+                        <div class="form-card-title">🏷️ Discount Rules</div>
+                        <div class="toggle-row"><span class="toggle-label">Allow discounts on this template</span><div class="toggle-switch active" onclick="this.classList.toggle('active')"></div></div>
+                        <div class="form-row" style="margin-top:0.75rem;">
+                            <div class="form-group"><label class="form-label">Max Discount</label><input type="text" class="form-input" value="20%"></div>
+                            <div class="form-group"><label class="form-label">Approval</label><select class="form-select"><option selected>Auto within limit</option><option>Needs approval</option></select></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 4: Review -->
+            <div class="step-content" id="step4">
+                <div class="review-container">
+                    <div class="review-card">
+                        <div class="review-card-header">
+                            <div class="review-card-title">📋 Template Info</div>
+                            <span class="review-card-edit" onclick="goToStep(1)">✏️ Edit</span>
+                        </div>
+                        <div class="review-card-body">
+                            <div class="review-info-grid">
+                                <div class="review-info-item"><div class="review-info-label">Name</div><div class="review-info-value" id="reviewName">PCOD Balance Program</div></div>
+                                <div class="review-info-item"><div class="review-info-label">Category</div><div class="review-info-value" id="reviewCategory">Wellness & Health</div></div>
+                                <div class="review-info-item"><div class="review-info-label">Audience</div><div class="review-info-value" id="reviewAudience">Individuals</div></div>
+                                <div class="review-info-item"><div class="review-info-label">Tags</div><div class="review-info-value" id="reviewTags">PCOD, wellness</div></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="review-card">
+                        <div class="review-card-header">
+                            <div class="review-card-title">🎯 Included Blocks</div>
+                            <span class="review-card-edit" onclick="goToStep(2)">✏️ Edit</span>
+                        </div>
+                        <div class="review-card-body">
+                            <div class="review-block-list" id="reviewBlocks"></div>
+                            <div class="pricing-summary">
+                                <div class="pricing-row"><span>Subtotal</span><span id="reviewSubtotal">₹0</span></div>
+                                <div class="pricing-row"><span>Tax (18%)</span><span id="reviewTax">₹0</span></div>
+                                <div class="pricing-row total"><span>Total</span><span id="reviewTotal">₹0</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="review-card">
+                        <div class="review-card-header">
+                            <div class="review-card-title">⚙️ Settings</div>
+                            <span class="review-card-edit" onclick="goToStep(3)">✏️ Edit</span>
+                        </div>
+                        <div class="review-card-body">
+                            <div class="review-info-grid">
+                                <div class="review-info-item"><div class="review-info-label">Currency</div><div class="review-info-value">INR (₹)</div></div>
+                                <div class="review-info-item"><div class="review-info-label">Tax Rate</div><div class="review-info-value">18% GST</div></div>
+                                <div class="review-info-item"><div class="review-info-label">Max Discount</div><div class="review-info-value">20%</div></div>
+                                <div class="review-info-item"><div class="review-info-label">Public Catalog</div><div class="review-info-value">Yes</div></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="text-align:center;padding:1rem;">
+                        <button class="btn btn-success btn-lg" onclick="saveTemplate()">✓ Save Template</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 5: Success -->
+            <div class="step-content" id="step5">
+                <div class="success-container">
+                    <div class="success-icon">✓</div>
+                    <div class="success-title">Template Created!</div>
+                    <div class="success-message">Your "PCOD Balance Program" template is ready to use. You can now create contracts from it or share it with buyers.</div>
+                    <div class="success-actions">
+                        <button class="btn btn-primary btn-lg" onclick="createContract()">📋 Create Contract from This</button>
+                        <button class="btn btn-outline btn-lg" onclick="viewTemplates()">📦 View All Templates</button>
+                        <button class="btn btn-outline btn-lg" onclick="shareTemplate()">🔗 Copy Share Link</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="toast" id="toast">✓ Saved!</div>
+
+    <script>
+        // State
+        let currentStep = 1;
+        const totalSteps = 5;
+        let canvasBlocks = { service: [], billing: [], text: [] };
+        let draggedBlock = null;
+
+        // Navigation
+        function goToStep(step) {
+            if (step > currentStep && currentStep < 5) return; // Can only go back, not skip forward
+            currentStep = step;
+            updateUI();
+        }
+
+        function nextStep() {
+            if (currentStep < totalSteps) {
+                if (currentStep === 4) {
+                    saveTemplate();
+                    return;
+                }
+                currentStep++;
+                updateUI();
+            }
+        }
+
+        function goBack() {
+            if (currentStep > 1) {
+                currentStep--;
+                updateUI();
+            } else {
+                window.history.back();
+            }
+        }
+
+        function updateUI() {
+            // Update steps
+            document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(`step${currentStep}`).classList.add('active');
+
+            // Update progress
+            document.querySelectorAll('.progress-step').forEach((step, i) => {
+                step.classList.remove('active', 'completed');
+                if (i + 1 < currentStep) step.classList.add('completed');
+                else if (i + 1 === currentStep) step.classList.add('active');
+            });
+            document.querySelectorAll('.step-connector').forEach((conn, i) => {
+                conn.classList.toggle('completed', i + 1 < currentStep);
+            });
+
+            // Update button
+            const nextBtn = document.getElementById('nextBtn');
+            if (currentStep === 4) nextBtn.textContent = '✓ Save Template';
+            else if (currentStep === 5) nextBtn.style.display = 'none';
+            else { nextBtn.textContent = 'Continue →'; nextBtn.style.display = ''; }
+
+            // Update canvas title
+            const name = document.getElementById('templateName').value || 'New Template';
+            document.getElementById('canvasTitle').textContent = name;
+
+            // Update review
+            if (currentStep === 4) updateReview();
+
+            // Update pricing list
+            if (currentStep === 3) updatePricingList();
+        }
+
+        // Drag & Drop
+        function initDragDrop() {
+            document.querySelectorAll('.draggable-block').forEach(block => {
+                block.addEventListener('dragstart', handleDragStart);
+                block.addEventListener('dragend', handleDragEnd);
+            });
+
+            document.querySelectorAll('.canvas-drop-zone').forEach(zone => {
+                zone.addEventListener('dragover', handleDragOver);
+                zone.addEventListener('dragleave', handleDragLeave);
+                zone.addEventListener('drop', handleDrop);
+            });
+        }
+
+        function handleDragStart(e) {
+            draggedBlock = {
+                id: this.dataset.id,
+                type: this.dataset.type,
+                name: this.dataset.name,
+                icon: this.dataset.icon,
+                price: parseInt(this.dataset.price) || 0,
+                meta: this.dataset.meta
+            };
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'copy';
+        }
+
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+            document.querySelectorAll('.canvas-drop-zone').forEach(z => z.classList.remove('drag-over'));
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            if (draggedBlock && this.dataset.section === draggedBlock.type) {
+                this.classList.add('drag-over');
+            }
+        }
+
+        function handleDragLeave(e) {
+            this.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+            
+            if (!draggedBlock || this.dataset.section !== draggedBlock.type) return;
+
+            // Check if already added
+            const existing = canvasBlocks[draggedBlock.type].find(b => b.id === draggedBlock.id);
+            if (existing) {
+                existing.qty++;
+            } else {
+                canvasBlocks[draggedBlock.type].push({ ...draggedBlock, qty: 1 });
+            }
+
+            renderCanvasBlocks();
+            updateSummary();
+        }
+
+        function renderCanvasBlocks() {
+            ['service', 'billing', 'text'].forEach(type => {
+                const zone = document.getElementById(`${type === 'service' ? 'services' : type}Zone`);
+                const blocks = canvasBlocks[type];
+
+                if (blocks.length === 0) {
+                    zone.innerHTML = `<div class="drop-placeholder"><div class="drop-placeholder-icon">${type === 'service' ? '📥' : type === 'billing' ? '💳' : '📄'}</div><div>Drag ${type} blocks here</div></div>`;
+                    zone.classList.remove('has-items');
+                } else {
+                    zone.innerHTML = blocks.map((b, i) => `
+                        <div class="canvas-block">
+                            <div class="canvas-block-icon">${b.icon}</div>
+                            <div class="canvas-block-info">
+                                <div class="canvas-block-name">${b.name}</div>
+                                <div class="canvas-block-meta">${b.meta}</div>
+                            </div>
+                            ${b.price > 0 ? `
+                            <div class="canvas-block-qty">
+                                <button class="qty-btn" onclick="changeQty('${type}', ${i}, -1)">−</button>
+                                <span class="qty-value">${b.qty}</span>
+                                <button class="qty-btn" onclick="changeQty('${type}', ${i}, 1)">+</button>
+                            </div>
+                            <div class="canvas-block-price">₹${(b.price * b.qty).toLocaleString()}</div>
+                            ` : ''}
+                            <span class="canvas-block-remove" onclick="removeBlock('${type}', ${i})">×</span>
+                        </div>
+                    `).join('');
+                    zone.classList.add('has-items');
+                }
+            });
+        }
+
+        function changeQty(type, index, delta) {
+            const block = canvasBlocks[type][index];
+            block.qty = Math.max(1, block.qty + delta);
+            renderCanvasBlocks();
+            updateSummary();
+        }
+
+        function removeBlock(type, index) {
+            canvasBlocks[type].splice(index, 1);
+            renderCanvasBlocks();
+            updateSummary();
+        }
+
+        function updateSummary() {
+            // Service summary
+            const serviceSummary = document.getElementById('serviceSummary');
+            if (canvasBlocks.service.length === 0) {
+                serviceSummary.innerHTML = '<div style="font-size:0.7rem;color:var(--text-muted);padding:0.4rem 0;">Drag services to canvas</div>';
+            } else {
+                serviceSummary.innerHTML = canvasBlocks.service.map(b => 
+                    `<div class="summary-item"><span>${b.icon} ${b.name}</span><span class="summary-item-qty">×${b.qty}</span></div>`
+                ).join('');
+            }
+
+            // Pricing
+            const subtotal = canvasBlocks.service.reduce((sum, b) => sum + (b.price * b.qty), 0);
+            const tax = Math.round(subtotal * 0.18);
+            const total = subtotal + tax;
+
+            document.getElementById('subtotal').textContent = `₹${subtotal.toLocaleString()}`;
+            document.getElementById('tax').textContent = `₹${tax.toLocaleString()}`;
+            document.getElementById('total').textContent = `₹${total.toLocaleString()}`;
+
+            // Payment
+            const paymentSummary = document.getElementById('paymentSummary');
+            if (canvasBlocks.billing.length > 0) {
+                paymentSummary.innerHTML = canvasBlocks.billing.map(b => `<div style="font-size:0.7rem;color:var(--text);">${b.icon} ${b.name}</div>`).join('');
+            } else {
+                paymentSummary.innerHTML = '<div style="font-size:0.7rem;color:var(--text-muted);">Add billing block</div>';
+            }
+        }
+
+        function updatePricingList() {
+            const list = document.getElementById('pricingList');
+            const allBlocks = [...canvasBlocks.service];
+            if (allBlocks.length === 0) {
+                list.innerHTML = '<div style="font-size:0.75rem;color:var(--text-muted);padding:0.5rem;">No blocks added yet</div>';
+            } else {
+                list.innerHTML = allBlocks.map(b => `
+                    <div class="pricing-item">
+                        <div class="pricing-item-icon">${b.icon}</div>
+                        <div class="pricing-item-info">
+                            <div class="pricing-item-name">${b.name}</div>
+                            <div class="pricing-item-meta">×${b.qty} sessions</div>
+                        </div>
+                        <input type="text" class="pricing-item-input" value="₹${b.price.toLocaleString()}">
+                    </div>
+                `).join('');
+            }
+        }
+
+        function updateReview() {
+            document.getElementById('reviewName').textContent = document.getElementById('templateName').value || '-';
+            
+            const reviewBlocks = document.getElementById('reviewBlocks');
+            const allBlocks = [...canvasBlocks.service, ...canvasBlocks.billing, ...canvasBlocks.text];
+            reviewBlocks.innerHTML = allBlocks.map(b => `
+                <div class="review-block-item">
+                    <div class="review-block-icon">${b.icon}</div>
+                    <div class="review-block-info">
+                        <div class="review-block-name">${b.name}</div>
+                        <div class="review-block-meta">${b.meta}</div>
+                    </div>
+                    ${b.qty > 1 ? `<span class="review-block-qty">×${b.qty}</span>` : ''}
+                    ${b.price > 0 ? `<span class="review-block-price">₹${(b.price * b.qty).toLocaleString()}</span>` : ''}
+                </div>
+            `).join('') || '<div style="color:var(--text-muted);font-size:0.75rem;">No blocks added</div>';
+
+            const subtotal = canvasBlocks.service.reduce((sum, b) => sum + (b.price * b.qty), 0);
+            const tax = Math.round(subtotal * 0.18);
+            document.getElementById('reviewSubtotal').textContent = `₹${subtotal.toLocaleString()}`;
+            document.getElementById('reviewTax').textContent = `₹${tax.toLocaleString()}`;
+            document.getElementById('reviewTotal').textContent = `₹${(subtotal + tax).toLocaleString()}`;
+        }
+
+        function saveTemplate() {
+            currentStep = 5;
+            updateUI();
+            showToast('✓ Template saved successfully!');
+        }
+
+        function saveDraft() {
+            showToast('✓ Draft saved!');
+        }
+
+        function createContract() {
+            window.location.href = '14-direct-contract.html';
+        }
+
+        function viewTemplates() {
+            showToast('Opening template list...');
+        }
+
+        function shareTemplate() {
+            navigator.clipboard.writeText('https://contractnest.app/t/pcod-balance');
+            showToast('🔗 Link copied!');
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function filterBlocks(type) {
+            document.querySelectorAll('.block-cat-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            document.querySelectorAll('.draggable-block').forEach(b => {
+                b.style.display = (type === 'all' || b.dataset.type === type) ? '' : 'none';
+            });
+        }
+
+        // Init
+        initDragDrop();
+        renderCanvasBlocks();
+    </script>
+</body>
+</html>

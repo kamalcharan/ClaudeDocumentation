@@ -1,0 +1,2735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ContractNest - Catalog Studio (Complete)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand: #0F172A;
+            --brand-light: #1E293B;
+            --seller: #7C3AED;
+            --seller-light: #8B5CF6;
+            --seller-bg: #F5F3FF;
+            --seller-border: #DDD6FE;
+            --success: #10B981;
+            --success-bg: #ECFDF5;
+            --warning: #F59E0B;
+            --warning-bg: #FFFBEB;
+            --danger: #EF4444;
+            --danger-bg: #FEF2F2;
+            --info: #0284C7;
+            --info-bg: #F0F9FF;
+            --bg: #F8FAFC;
+            --surface: #FFFFFF;
+            --border: #E2E8F0;
+            --border-light: #F1F5F9;
+            --text: #334155;
+            --text-light: #64748B;
+            --text-muted: #94A3B8;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1);
+            --radius: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+
+            --cat-service: #7C3AED;
+            --cat-service-bg: #F5F3FF;
+            --cat-spare: #0891B2;
+            --cat-spare-bg: #ECFEFF;
+            --cat-text: #64748B;
+            --cat-text-bg: #F8FAFC;
+            --cat-billing: #059669;
+            --cat-billing-bg: #ECFDF5;
+            --cat-video: #DC2626;
+            --cat-video-bg: #FEF2F2;
+            --cat-image: #EA580C;
+            --cat-image-bg: #FFF7ED;
+            --cat-checklist: #0284C7;
+            --cat-checklist-bg: #F0F9FF;
+            --cat-document: #CA8A04;
+            --cat-document-bg: #FEFCE8;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ===== LAYOUT ===== */
+        .app-container { display: flex; min-height: 100vh; }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: 220px;
+            background: var(--brand);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--brand-light);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1rem;
+            font-weight: 800;
+        }
+
+        .logo-icon {
+            width: 28px;
+            height: 28px;
+            background: var(--seller);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+        }
+
+        .sidebar-nav { flex: 1; padding: 0.75rem 0.5rem; overflow-y: auto; }
+
+        .nav-section { margin-bottom: 1.25rem; }
+
+        .nav-section-label {
+            font-size: 0.55rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            padding: 0 0.75rem;
+            margin-bottom: 0.4rem;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0.55rem 0.75rem;
+            border-radius: var(--radius);
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            margin-bottom: 2px;
+            transition: all 0.2s;
+        }
+
+        .nav-item:hover { background: var(--brand-light); color: white; }
+        .nav-item.active { background: var(--seller); color: white; }
+        .nav-item .icon { font-size: 0.9rem; width: 18px; text-align: center; }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            flex: 1;
+            margin-left: 220px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ===== TOP BAR ===== */
+        .top-bar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0.875rem 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .page-title h1 {
+            font-size: 1.125rem;
+            font-weight: 800;
+            color: var(--brand);
+            margin-bottom: 0.1rem;
+        }
+
+        .page-title p { font-size: 0.7rem; color: var(--text-light); }
+
+        .top-actions { display: flex; align-items: center; gap: 0.5rem; }
+
+        .btn {
+            padding: 0.45rem 0.875rem;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            border: none;
+        }
+
+        .btn-primary { background: var(--seller); color: white; }
+        .btn-primary:hover { background: var(--seller-light); }
+        .btn-outline { background: var(--surface); border: 1px solid var(--border); color: var(--text); }
+        .btn-outline:hover { background: var(--bg); border-color: var(--seller); color: var(--seller); }
+        .btn-text { background: transparent; color: var(--text-light); }
+        .btn-text:hover { color: var(--seller); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+
+        /* ===== STUDIO LAYOUT ===== */
+        .studio-layout {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* ===== CATEGORY PANEL ===== */
+        .category-panel {
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .panel-header h3 {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--brand);
+        }
+
+        .category-list { flex: 1; overflow-y: auto; padding: 0.5rem; }
+
+        .category-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.6rem;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 0.2rem;
+            border: 2px solid transparent;
+        }
+
+        .category-item:hover { background: var(--bg); }
+        .category-item.selected { background: var(--seller-bg); border-color: var(--seller); }
+
+        .category-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+        }
+
+        .category-item.service .category-icon { background: var(--cat-service-bg); }
+        .category-item.spare .category-icon { background: var(--cat-spare-bg); }
+        .category-item.text .category-icon { background: var(--cat-text-bg); }
+        .category-item.billing .category-icon { background: var(--cat-billing-bg); }
+        .category-item.video .category-icon { background: var(--cat-video-bg); }
+        .category-item.image .category-icon { background: var(--cat-image-bg); }
+        .category-item.checklist .category-icon { background: var(--cat-checklist-bg); }
+        .category-item.document .category-icon { background: var(--cat-document-bg); }
+
+        .category-info { flex: 1; min-width: 0; }
+        .category-name { font-weight: 600; font-size: 0.7rem; color: var(--text); }
+        .category-count { font-size: 0.6rem; color: var(--text-muted); }
+
+        /* ===== BLOCK LIBRARY ===== */
+        .block-library {
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .library-header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0.75rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .library-title { display: flex; align-items: center; gap: 0.5rem; }
+
+        .library-title-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--cat-service-bg);
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .library-title h2 { font-size: 0.85rem; font-weight: 700; color: var(--brand); }
+        .library-title p { font-size: 0.65rem; color: var(--text-light); }
+
+        .search-input {
+            padding: 0.4rem 0.65rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.7rem;
+            width: 160px;
+            color: var(--text);
+        }
+
+        .search-input:focus { outline: none; border-color: var(--seller); }
+
+        .library-content { flex: 1; overflow-y: auto; padding: 1rem; }
+
+        .blocks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .block-card {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .block-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        .block-card.selected { border-color: var(--seller); }
+
+        .block-card-header { padding: 0.75rem; display: flex; align-items: flex-start; gap: 0.5rem; }
+
+        .block-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.125rem;
+            flex-shrink: 0;
+        }
+
+        .block-card.service .block-icon { background: var(--cat-service-bg); }
+        .block-card.spare .block-icon { background: var(--cat-spare-bg); }
+        .block-card.billing .block-icon { background: var(--cat-billing-bg); }
+        .block-card.text .block-icon { background: var(--cat-text-bg); }
+        .block-card.video .block-icon { background: var(--cat-video-bg); }
+        .block-card.image .block-icon { background: var(--cat-image-bg); }
+        .block-card.checklist .block-icon { background: var(--cat-checklist-bg); }
+        .block-card.document .block-icon { background: var(--cat-document-bg); }
+
+        .block-info { flex: 1; min-width: 0; }
+        .block-name { font-weight: 700; font-size: 0.8rem; color: var(--brand); margin-bottom: 0.15rem; }
+        .block-desc { font-size: 0.65rem; color: var(--text-light); line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+        .block-card-body { padding: 0 0.75rem 0.75rem; }
+
+        .block-meta { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.35rem; }
+        .block-meta-item { font-size: 0.6rem; color: var(--text-light); display: flex; align-items: center; gap: 2px; }
+        .block-meta-item strong { color: var(--text); }
+
+        .block-tags { display: flex; flex-wrap: wrap; gap: 0.2rem; }
+        .block-tag { font-size: 0.5rem; padding: 0.1rem 0.3rem; background: var(--bg); border-radius: 3px; color: var(--text-muted); }
+        .block-tag.evidence { background: var(--success-bg); color: var(--success); }
+
+        .block-usage { padding: 0.35rem 0.75rem; background: var(--bg); border-top: 1px solid var(--border-light); font-size: 0.55rem; color: var(--text-muted); }
+
+        .add-block-card {
+            background: var(--surface);
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem 0.75rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.35rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-height: 130px;
+        }
+
+        .add-block-card:hover { border-color: var(--seller); background: var(--seller-bg); }
+
+        .add-block-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            color: var(--text-muted);
+        }
+
+        .add-block-card:hover .add-block-icon { background: var(--seller); color: white; }
+        .add-block-text { font-size: 0.7rem; font-weight: 600; color: var(--text-light); }
+
+        /* ===== MODAL & WIZARD ===== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.show { display: flex; }
+
+        .wizard-container {
+            background: var(--surface);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-xl);
+            width: 95%;
+            max-width: 880px;
+            max-height: 90vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            animation: modalIn 0.3s ease;
+        }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .wizard-header {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .wizard-header h1 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--brand);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .wizard-header-badge {
+            font-size: 0.6rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .wizard-close {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: none;
+            background: var(--bg);
+            color: var(--text-light);
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .wizard-close:hover { background: var(--danger-bg); color: var(--danger); }
+
+        /* Progress Bar */
+        .wizard-progress {
+            padding: 0.75rem 1.25rem;
+            background: var(--bg);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .progress-steps { display: flex; align-items: center; justify-content: center; gap: 0.35rem; }
+
+        .progress-step { display: flex; align-items: center; gap: 0.35rem; }
+
+        .step-number {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--border);
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            font-weight: 700;
+            transition: all 0.3s;
+        }
+
+        .progress-step.active .step-number { background: var(--seller); color: white; }
+        .progress-step.completed .step-number { background: var(--success); color: white; }
+
+        .step-label { font-size: 0.6rem; font-weight: 600; color: var(--text-muted); display: none; }
+        .progress-step.active .step-label { color: var(--seller); display: block; }
+
+        .step-connector { width: 30px; height: 2px; background: var(--border); }
+        .step-connector.completed { background: var(--success); }
+
+        /* Wizard Body */
+        .wizard-body { flex: 1; overflow-y: auto; padding: 1.25rem; }
+
+        .wizard-step { display: none; animation: fadeIn 0.3s ease; }
+        .wizard-step.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .step-title { font-size: 1rem; font-weight: 700; color: var(--brand); margin-bottom: 0.35rem; }
+        .step-description { font-size: 0.8rem; color: var(--text-light); margin-bottom: 1.25rem; }
+
+        /* Form Elements */
+        .form-section { margin-bottom: 1.25rem; }
+
+        .form-section-title {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 0.65rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .form-group { margin-bottom: 0.875rem; }
+
+        .form-label { display: block; font-size: 0.75rem; font-weight: 600; color: var(--text); margin-bottom: 0.3rem; }
+        .form-label .required { color: var(--danger); }
+        .form-hint { font-size: 0.65rem; color: var(--text-muted); margin-top: 0.2rem; }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 0.5rem 0.65rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.8rem;
+            color: var(--text);
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--seller);
+            box-shadow: 0 0 0 3px var(--seller-bg);
+        }
+
+        .form-textarea { resize: vertical; min-height: 70px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.875rem; }
+        .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.875rem; }
+
+        .input-with-addon { display: flex; }
+
+        .input-addon {
+            padding: 0.5rem 0.65rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-right: none;
+            border-radius: var(--radius) 0 0 var(--radius);
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .input-addon-right { border-right: 1px solid var(--border); border-left: none; border-radius: 0 var(--radius) var(--radius) 0; }
+        .input-with-addon .form-input { border-radius: 0 var(--radius) var(--radius) 0; }
+        .input-with-addon .form-input.has-right-addon { border-radius: 0; }
+
+        /* Type Grid */
+        .type-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.65rem; }
+
+        .type-card {
+            padding: 0.875rem;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .type-card:hover { border-color: var(--seller-border); background: var(--seller-bg); }
+        .type-card.selected { border-color: var(--seller); background: var(--seller-bg); }
+        .type-card-icon { font-size: 1.5rem; margin-bottom: 0.35rem; }
+        .type-card-name { font-size: 0.75rem; font-weight: 700; color: var(--brand); margin-bottom: 0.15rem; }
+        .type-card-desc { font-size: 0.6rem; color: var(--text-light); }
+
+        /* Location Options */
+        .location-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.65rem; }
+
+        .location-option {
+            padding: 0.875rem;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .location-option:hover { border-color: var(--seller-border); background: var(--seller-bg); }
+        .location-option.selected { border-color: var(--seller); background: var(--seller-bg); }
+        .location-option-header { display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.35rem; }
+        .location-option-icon { font-size: 1.125rem; }
+        .location-option-name { font-size: 0.8rem; font-weight: 700; color: var(--brand); }
+        .location-option-desc { font-size: 0.65rem; color: var(--text-light); line-height: 1.4; }
+
+        /* Conditional Fields */
+        .conditional-fields {
+            background: var(--bg);
+            border-radius: var(--radius);
+            padding: 0.875rem;
+            margin-top: 0.875rem;
+            display: none;
+        }
+
+        .conditional-fields.visible { display: block; animation: fadeIn 0.3s ease; }
+        .conditional-fields-title { font-size: 0.7rem; font-weight: 700; color: var(--text); margin-bottom: 0.65rem; display: flex; align-items: center; gap: 0.4rem; }
+
+        /* Currency Selector */
+        .currency-selector { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+
+        .currency-option {
+            padding: 0.4rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .currency-option:hover { border-color: var(--seller); }
+        .currency-option.selected { background: var(--seller); border-color: var(--seller); color: white; }
+
+        /* Evidence List */
+        .evidence-list { display: flex; flex-direction: column; gap: 0.4rem; }
+
+        .evidence-item {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            padding: 0.65rem;
+            background: var(--bg);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            cursor: pointer;
+        }
+
+        .evidence-item.active { background: var(--success-bg); border-color: var(--success); }
+
+        .evidence-checkbox {
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--border);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            color: transparent;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .evidence-item.active .evidence-checkbox { background: var(--success); border-color: var(--success); color: white; }
+        .evidence-icon { font-size: 1.125rem; }
+        .evidence-info { flex: 1; }
+        .evidence-name { font-size: 0.75rem; font-weight: 600; color: var(--text); }
+        .evidence-desc { font-size: 0.65rem; color: var(--text-muted); }
+        .evidence-config { display: flex; align-items: center; gap: 0.4rem; }
+        .evidence-config select { padding: 0.3rem 0.4rem; border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.65rem; background: var(--surface); }
+
+        /* Toggle */
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid var(--border-light); }
+        .toggle-row:last-child { border-bottom: none; }
+        .toggle-label { font-size: 0.75rem; color: var(--text); }
+
+        .toggle-switch {
+            width: 36px;
+            height: 20px;
+            background: var(--border);
+            border-radius: 10px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .toggle-switch.active { background: var(--seller); }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: all 0.2s;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .toggle-switch.active::after { left: 18px; }
+
+        /* Rule Builder */
+        .rule-card {
+            background: var(--bg);
+            border-radius: var(--radius);
+            padding: 0.875rem;
+            margin-bottom: 0.65rem;
+            border: 1px solid var(--border);
+        }
+
+        .rule-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.65rem; }
+
+        .rule-type-badge {
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            background: var(--seller-bg);
+            color: var(--seller);
+        }
+
+        .rule-remove { color: var(--text-muted); cursor: pointer; font-size: 0.9rem; }
+        .rule-remove:hover { color: var(--danger); }
+
+        .rule-content { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; font-size: 0.75rem; }
+        .rule-keyword { font-weight: 700; color: var(--seller); }
+        .rule-select { padding: 0.3rem 0.4rem; border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.7rem; background: var(--surface); }
+
+        .add-rule-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            padding: 0.65rem;
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            background: transparent;
+            color: var(--text-light);
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s;
+        }
+
+        .add-rule-btn:hover { border-color: var(--seller); color: var(--seller); background: var(--seller-bg); }
+
+        /* Info Box */
+        .info-box {
+            padding: 0.75rem;
+            border-radius: var(--radius);
+            font-size: 0.75rem;
+            line-height: 1.5;
+            display: flex;
+            gap: 0.65rem;
+        }
+
+        .info-box.tip { background: var(--info-bg); color: var(--info); }
+        .info-box.warning { background: var(--warning-bg); color: #92400E; }
+        .info-box-icon { font-size: 0.9rem; flex-shrink: 0; }
+
+        /* SLA Row */
+        .sla-row { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; font-size: 0.8rem; color: var(--text); }
+        .sla-row .form-input, .sla-row .form-select { width: auto; padding: 0.35rem 0.5rem; font-size: 0.75rem; }
+        .sla-row .form-input { width: 60px; }
+
+        /* Schedule Builder */
+        .schedule-row { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; background: var(--bg); border-radius: var(--radius); margin-bottom: 0.5rem; }
+        .schedule-row-number { width: 24px; height: 24px; background: var(--seller); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-weight: 700; }
+        .schedule-row-content { flex: 1; display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; }
+        .schedule-row-content input { width: 60px; padding: 0.3rem 0.4rem; border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.7rem; text-align: center; }
+        .schedule-row-content select { padding: 0.3rem 0.4rem; border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.7rem; }
+        .schedule-row-remove { color: var(--text-muted); cursor: pointer; }
+        .schedule-row-remove:hover { color: var(--danger); }
+
+        /* Checklist Builder */
+        .checklist-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem; background: var(--bg); border-radius: var(--radius); margin-bottom: 0.4rem; }
+        .checklist-item input[type="text"] { flex: 1; padding: 0.35rem 0.5rem; border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.75rem; }
+        .checklist-item-remove { color: var(--text-muted); cursor: pointer; font-size: 0.9rem; }
+        .checklist-item-remove:hover { color: var(--danger); }
+
+        /* Preview */
+        .preview-card { background: var(--bg); border-radius: var(--radius-lg); padding: 0.875rem; margin-top: 1rem; }
+        .preview-card-title { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.65rem; }
+        .preview-block { background: var(--surface); border-radius: var(--radius); padding: 0.875rem; border: 1px solid var(--border); }
+        .preview-block-header { display: flex; align-items: center; gap: 0.65rem; margin-bottom: 0.65rem; }
+        .preview-block-icon { width: 36px; height: 36px; background: var(--seller-bg); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; font-size: 1.125rem; }
+        .preview-block-name { font-weight: 700; font-size: 0.85rem; color: var(--brand); }
+        .preview-block-type { font-size: 0.6rem; color: var(--text-muted); }
+        .preview-block-meta { display: flex; flex-wrap: wrap; gap: 0.875rem; font-size: 0.7rem; color: var(--text-light); }
+        .preview-block-meta strong { color: var(--text); }
+
+        /* Wizard Footer */
+        .wizard-footer {
+            padding: 0.875rem 1.25rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--surface);
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--brand);
+            color: white;
+            padding: 0.65rem 1rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            box-shadow: var(--shadow-xl);
+            display: none;
+            z-index: 2000;
+        }
+
+        .toast.show { display: flex; align-items: center; gap: 0.4rem; animation: toastIn 0.3s ease; }
+
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon">⚡</div>
+                    <span>ContractNest</span>
+                </div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-label">Catalog</div>
+                    <div class="nav-item active"><span class="icon">🧱</span> Block Library</div>
+                    <div class="nav-item"><span class="icon">📦</span> Templates</div>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-label">Operations</div>
+                    <div class="nav-item"><span class="icon">📊</span> Ops Cockpit</div>
+                    <div class="nav-item"><span class="icon">📋</span> Contracts</div>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            <div class="top-bar">
+                <div class="page-title">
+                    <h1>Block Library</h1>
+                    <p>Build reusable blocks → Assemble into templates → Create contracts</p>
+                </div>
+                <div class="top-actions">
+                    <button class="btn btn-outline"><span>📥</span> Import</button>
+                    <button class="btn btn-primary" onclick="openWizard('create')"><span>➕</span> New Block</button>
+                </div>
+            </div>
+
+            <div class="studio-layout">
+                <!-- CATEGORY PANEL -->
+                <div class="category-panel">
+                    <div class="panel-header"><h3>📁 Block Types</h3></div>
+                    <div class="category-list">
+                        <div class="category-item service selected" onclick="selectCategory(this, 'service')">
+                            <div class="category-icon">🎯</div>
+                            <div class="category-info">
+                                <div class="category-name">Service</div>
+                                <div class="category-count">12 blocks</div>
+                            </div>
+                        </div>
+                        <div class="category-item spare" onclick="selectCategory(this, 'spare')">
+                            <div class="category-icon">📦</div>
+                            <div class="category-info">
+                                <div class="category-name">Spare Parts</div>
+                                <div class="category-count">8 blocks</div>
+                            </div>
+                        </div>
+                        <div class="category-item billing" onclick="selectCategory(this, 'billing')">
+                            <div class="category-icon">💰</div>
+                            <div class="category-info">
+                                <div class="category-name">Billing</div>
+                                <div class="category-count">4 blocks</div>
+                            </div>
+                        </div>
+                        <div class="category-item text" onclick="selectCategory(this, 'text')">
+                            <div class="category-icon">📄</div>
+                            <div class="category-info">
+                                <div class="category-name">Text</div>
+                                <div class="category-count">5 blocks</div>
+                            </div>
+                        </div>
+                        <div class="category-item video" onclick="selectCategory(this, 'video')">
+                            <div class="category-icon">🎬</div>
+                            <div class="category-info">
+                                <div class="category-name">Video</div>
+                                <div class="category-count">2 blocks</div>
+                            </div>
+                        </div>
+                        <div class="category-item image" onclick="selectCategory(this, 'image')">
+                            <div class="category-icon">🖼️</div>
+                            <div class="category-info">
+                                <div class="category-name">Image</div>
+                                <div class="category-count">3 blocks</div>
+                            </div>
+                        </div>
+                        <div class="category-item checklist" onclick="selectCategory(this, 'checklist')">
+                            <div class="category-icon">☑️</div>
+                            <div class="category-info">
+                                <div class="category-name">Checklist</div>
+                                <div class="category-count">4 blocks</div>
+                            </div>
+                        </div>
+                        <div class="category-item document" onclick="selectCategory(this, 'document')">
+                            <div class="category-icon">📎</div>
+                            <div class="category-info">
+                                <div class="category-name">Document</div>
+                                <div class="category-count">2 blocks</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BLOCK LIBRARY -->
+                <div class="block-library">
+                    <div class="library-header">
+                        <div class="library-title">
+                            <div class="library-title-icon" id="libraryIcon">🎯</div>
+                            <div>
+                                <h2 id="libraryTitle">Service Blocks</h2>
+                                <p id="librarySubtitle">Deliverable work items with SLA</p>
+                            </div>
+                        </div>
+                        <input type="text" class="search-input" placeholder="Search blocks...">
+                    </div>
+                    <div class="library-content">
+                        <!-- SERVICE BLOCKS -->
+                        <div class="blocks-grid" id="serviceBlocks">
+                            <div class="block-card service" onclick="openWizard('edit', 'service', {name: 'Yoga Session', icon: '🧘', desc: '60-min yoga session with PCOD-specific asanas', price: 2000, duration: 60, currency: 'INR'})">
+                                <div class="block-card-header">
+                                    <div class="block-icon">🧘</div>
+                                    <div class="block-info">
+                                        <div class="block-name">Yoga Session</div>
+                                        <div class="block-desc">60-min yoga with PCOD-specific asanas</div>
+                                    </div>
+                                </div>
+                                <div class="block-card-body">
+                                    <div class="block-meta">
+                                        <div class="block-meta-item">💰 <strong>₹2,000</strong></div>
+                                        <div class="block-meta-item">⏱️ <strong>60</strong> min</div>
+                                    </div>
+                                    <div class="block-tags">
+                                        <span class="block-tag evidence">📷 Photo</span>
+                                        <span class="block-tag">✍️ Sign</span>
+                                        <span class="block-tag">🏠 On-site</span>
+                                    </div>
+                                </div>
+                                <div class="block-usage">3 templates • 47 contracts</div>
+                            </div>
+                            <div class="block-card service" onclick="openWizard('edit', 'service', {name: 'Gynec Consultation', icon: '🩺', desc: '30-min specialist consultation', price: 1500, duration: 30, currency: 'INR'})">
+                                <div class="block-card-header">
+                                    <div class="block-icon">🩺</div>
+                                    <div class="block-info">
+                                        <div class="block-name">Gynec Consultation</div>
+                                        <div class="block-desc">30-min specialist consultation</div>
+                                    </div>
+                                </div>
+                                <div class="block-card-body">
+                                    <div class="block-meta">
+                                        <div class="block-meta-item">💰 <strong>₹1,500</strong></div>
+                                        <div class="block-meta-item">⏱️ <strong>30</strong> min</div>
+                                    </div>
+                                    <div class="block-tags">
+                                        <span class="block-tag evidence">📄 Report</span>
+                                        <span class="block-tag">💻 Virtual</span>
+                                    </div>
+                                </div>
+                                <div class="block-usage">2 templates • 31 contracts</div>
+                            </div>
+                            <div class="block-card service" onclick="openWizard('edit', 'service', {name: 'AC Deep Service', icon: '❄️', desc: 'Complete AC cleaning and gas check', price: 1200, duration: 90, currency: 'INR'})">
+                                <div class="block-card-header">
+                                    <div class="block-icon">❄️</div>
+                                    <div class="block-info">
+                                        <div class="block-name">AC Deep Service</div>
+                                        <div class="block-desc">Complete cleaning and gas check</div>
+                                    </div>
+                                </div>
+                                <div class="block-card-body">
+                                    <div class="block-meta">
+                                        <div class="block-meta-item">💰 <strong>₹1,200</strong></div>
+                                        <div class="block-meta-item">⏱️ <strong>90</strong> min</div>
+                                    </div>
+                                    <div class="block-tags">
+                                        <span class="block-tag evidence">📷 Before/After</span>
+                                        <span class="block-tag">📍 GPS</span>
+                                    </div>
+                                </div>
+                                <div class="block-usage">1 template • 89 contracts</div>
+                            </div>
+                            <div class="add-block-card" onclick="openWizard('create', 'service')">
+                                <div class="add-block-icon">➕</div>
+                                <div class="add-block-text">Add Service Block</div>
+                            </div>
+                        </div>
+
+                        <!-- SPARE BLOCKS -->
+                        <div class="blocks-grid" id="spareBlocks" style="display: none;">
+                            <div class="block-card spare" onclick="openWizard('edit', 'spare', {name: 'AC Filter 1.5T', icon: '🌀', sku: 'ACF-150', price: 450, stock: 24})">
+                                <div class="block-card-header">
+                                    <div class="block-icon">🌀</div>
+                                    <div class="block-info">
+                                        <div class="block-name">AC Filter 1.5T</div>
+                                        <div class="block-desc">Replacement filter for 1.5T units</div>
+                                    </div>
+                                </div>
+                                <div class="block-card-body">
+                                    <div class="block-meta">
+                                        <div class="block-meta-item">💰 <strong>₹450</strong>/unit</div>
+                                        <div class="block-meta-item">📦 <strong>24</strong> stock</div>
+                                    </div>
+                                    <div class="block-tags"><span class="block-tag">SKU: ACF-150</span></div>
+                                </div>
+                                <div class="block-usage">2 templates</div>
+                            </div>
+                            <div class="block-card spare" onclick="openWizard('edit', 'spare', {name: 'Refrigerant Gas R32', icon: '💨', sku: 'GAS-R32', price: 800, stock: 12})">
+                                <div class="block-card-header">
+                                    <div class="block-icon">💨</div>
+                                    <div class="block-info">
+                                        <div class="block-name">Refrigerant Gas R32</div>
+                                        <div class="block-desc">Eco-friendly refrigerant</div>
+                                    </div>
+                                </div>
+                                <div class="block-card-body">
+                                    <div class="block-meta">
+                                        <div class="block-meta-item">💰 <strong>₹800</strong>/unit</div>
+                                        <div class="block-meta-item">📦 <strong>12</strong> stock</div>
+                                    </div>
+                                    <div class="block-tags"><span class="block-tag">SKU: GAS-R32</span></div>
+                                </div>
+                                <div class="block-usage">1 template</div>
+                            </div>
+                            <div class="add-block-card" onclick="openWizard('create', 'spare')">
+                                <div class="add-block-icon">➕</div>
+                                <div class="add-block-text">Add Spare Part</div>
+                            </div>
+                        </div>
+
+                        <!-- BILLING BLOCKS -->
+                        <div class="blocks-grid" id="billingBlocks" style="display: none;">
+                            <div class="block-card billing" onclick="openWizard('edit', 'billing', {name: '3-Month EMI', type: 'emi', installments: 3})">
+                                <div class="block-card-header">
+                                    <div class="block-icon">💳</div>
+                                    <div class="block-info">
+                                        <div class="block-name">3-Month EMI</div>
+                                        <div class="block-desc">Split into 3 installments</div>
+                                    </div>
+                                </div>
+                                <div class="block-card-body">
+                                    <div class="block-meta">
+                                        <div class="block-meta-item">🔄 <strong>3</strong> payments</div>
+                                        <div class="block-meta-item">📅 Monthly</div>
+                                    </div>
+                                    <div class="block-tags"><span class="block-tag">Auto-Invoice</span></div>
+                                </div>
+                                <div class="block-usage">4 templates</div>
+                            </div>
+                            <div class="block-card billing" onclick="openWizard('edit', 'billing', {name: '100% Advance', type: 'advance'})">
+                                <div class="block-card-header">
+                                    <div class="block-icon">💵</div>
+                                    <div class="block-info">
+                                        <div class="block-name">100% Advance</div>
+                                        <div class="block-desc">Full payment upfront</div>
+                                    </div>
+                                </div>
+                                <div class="block-card-body">
+                                    <div class="block-meta"><div class="block-meta-item">💰 <strong>100%</strong> upfront</div></div>
+                                    <div class="block-tags"><span class="block-tag">Instant</span></div>
+                                </div>
+                                <div class="block-usage">6 templates</div>
+                            </div>
+                            <div class="block-card billing" onclick="openWizard('edit', 'billing', {name: '50-50 Milestone', type: 'milestone'})">
+                                <div class="block-card-header">
+                                    <div class="block-icon">🎯</div>
+                                    <div class="block-info">
+                                        <div class="block-name">50-50 Milestone</div>
+                                        <div class="block-desc">50% advance, 50% on completion</div>
+                                    </div>
+                                </div>
+                                <div class="block-card-body">
+                                    <div class="block-meta"><div class="block-meta-item">🔄 <strong>2</strong> milestones</div></div>
+                                    <div class="block-tags"><span class="block-tag">Milestone</span></div>
+                                </div>
+                                <div class="block-usage">3 templates</div>
+                            </div>
+                            <div class="add-block-card" onclick="openWizard('create', 'billing')">
+                                <div class="add-block-icon">➕</div>
+                                <div class="add-block-text">Add Billing Block</div>
+                            </div>
+                        </div>
+
+                        <!-- TEXT BLOCKS -->
+                        <div class="blocks-grid" id="textBlocks" style="display: none;">
+                            <div class="block-card text" onclick="openWizard('edit', 'text', {name: 'Standard T&C', requireSign: true})">
+                                <div class="block-card-header">
+                                    <div class="block-icon">📜</div>
+                                    <div class="block-info">
+                                        <div class="block-name">Standard T&C</div>
+                                        <div class="block-desc">General terms and conditions</div>
+                                    </div>
+                                </div>
+                                <div class="block-card-body">
+                                    <div class="block-tags">
+                                        <span class="block-tag">Legal</span>
+                                        <span class="block-tag">✍️ Sign Required</span>
+                                    </div>
+                                </div>
+                                <div class="block-usage">8 templates</div>
+                            </div>
+                            <div class="block-card text" onclick="openWizard('edit', 'text', {name: 'Cancellation Policy'})">
+                                <div class="block-card-header">
+                                    <div class="block-icon">🚫</div>
+                                    <div class="block-info">
+                                        <div class="block-name">Cancellation Policy</div>
+                                        <div class="block-desc">24-hour notice required</div>
+                                    </div>
+                                </div>
+                                <div class="block-card-body">
+                                    <div class="block-tags"><span class="block-tag">Policy</span></div>
+                                </div>
+                                <div class="block-usage">5 templates</div>
+                            </div>
+                            <div class="add-block-card" onclick="openWizard('create', 'text')">
+                                <div class="add-block-icon">➕</div>
+                                <div class="add-block-text">Add Text Block</div>
+                            </div>
+                        </div>
+
+                        <!-- VIDEO BLOCKS -->
+                        <div class="blocks-grid" id="videoBlocks" style="display: none;">
+                            <div class="block-card video" onclick="openWizard('edit', 'video', {name: 'Welcome Video', duration: '3:24'})">
+                                <div class="block-card-header">
+                                    <div class="block-icon">🎬</div>
+                                    <div class="block-info">
+                                        <div class="block-name">Welcome Video</div>
+                                        <div class="block-desc">Introduction to the program</div>
+                                    </div>
+                                </div>
+                                <div class="block-card-body">
+                                    <div class="block-meta">
+                                        <div class="block-meta-item">⏱️ <strong>3:24</strong></div>
+                                        <div class="block-meta-item">👁️ Required</div>
+                                    </div>
+                                </div>
+                                <div class="block-usage">2 templates</div>
+                            </div>
+                            <div class="add-block-card" onclick="openWizard('create', 'video')">
+                                <div class="add-block-icon">➕</div>
+                                <div class="add-block-text">Add Video Block</div>
+                            </div>
+                        </div>
+
+                        <!-- IMAGE BLOCKS -->
+                        <div class="blocks-grid" id="imageBlocks" style="display: none;">
+                            <div class="block-card image" onclick="openWizard('edit', 'image', {name: 'Service Brochure'})">
+                                <div class="block-card-header">
+                                    <div class="block-icon">🖼️</div>
+                                    <div class="block-info">
+                                        <div class="block-name">Service Brochure</div>
+                                        <div class="block-desc">Visual overview of services</div>
+                                    </div>
+                                </div>
+                                <div class="block-card-body">
+                                    <div class="block-meta"><div class="block-meta-item">📐 <strong>1200×800</strong></div></div>
+                                </div>
+                                <div class="block-usage">3 templates</div>
+                            </div>
+                            <div class="add-block-card" onclick="openWizard('create', 'image')">
+                                <div class="add-block-icon">➕</div>
+                                <div class="add-block-text">Add Image Block</div>
+                            </div>
+                        </div>
+
+                        <!-- CHECKLIST BLOCKS -->
+                        <div class="blocks-grid" id="checklistBlocks" style="display: none;">
+                            <div class="block-card checklist" onclick="openWizard('edit', 'checklist', {name: 'Pre-Service Checklist', items: 8})">
+                                <div class="block-card-header">
+                                    <div class="block-icon">☑️</div>
+                                    <div class="block-info">
+                                        <div class="block-name">Pre-Service Checklist</div>
+                                        <div class="block-desc">Items to verify before work</div>
+                                    </div>
+                                </div>
+                                <div class="block-card-body">
+                                    <div class="block-meta">
+                                        <div class="block-meta-item">📋 <strong>8</strong> items</div>
+                                        <div class="block-meta-item">📸 Photo/item</div>
+                                    </div>
+                                </div>
+                                <div class="block-usage">2 templates</div>
+                            </div>
+                            <div class="add-block-card" onclick="openWizard('create', 'checklist')">
+                                <div class="add-block-icon">➕</div>
+                                <div class="add-block-text">Add Checklist Block</div>
+                            </div>
+                        </div>
+
+                        <!-- DOCUMENT BLOCKS -->
+                        <div class="blocks-grid" id="documentBlocks" style="display: none;">
+                            <div class="block-card document" onclick="openWizard('edit', 'document', {name: 'Certificate Upload'})">
+                                <div class="block-card-header">
+                                    <div class="block-icon">📎</div>
+                                    <div class="block-info">
+                                        <div class="block-name">Certificate Upload</div>
+                                        <div class="block-desc">Completion certificate</div>
+                                    </div>
+                                </div>
+                                <div class="block-card-body">
+                                    <div class="block-meta"><div class="block-meta-item">📄 PDF, DOC</div></div>
+                                </div>
+                                <div class="block-usage">1 template</div>
+                            </div>
+                            <div class="add-block-card" onclick="openWizard('create', 'document')">
+                                <div class="add-block-icon">➕</div>
+                                <div class="add-block-text">Add Document Block</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- WIZARD MODAL -->
+    <div class="modal-overlay" id="wizardModal">
+        <div class="wizard-container">
+            <div class="wizard-header">
+                <h1 id="wizardTitle">➕ Create New Block</h1>
+                <button class="wizard-close" onclick="closeWizard()">×</button>
+            </div>
+
+            <div class="wizard-progress" id="wizardProgress">
+                <div class="progress-steps" id="progressSteps">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+            <div class="wizard-body" id="wizardBody">
+                <!-- Steps populated dynamically based on block type -->
+            </div>
+
+            <div class="wizard-footer">
+                <button class="btn btn-text" id="backBtn" onclick="prevStep()">← Back</button>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="btn btn-outline" onclick="saveDraft()">Save Draft</button>
+                    <button class="btn btn-primary" id="nextBtn" onclick="nextStep()">Continue →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast">✓ Block saved!</div>
+
+    <script>
+        // ===== STATE =====
+        let currentStep = 1;
+        let totalSteps = 6;
+        let selectedBlockType = 'service';
+        let wizardMode = 'create'; // 'create' or 'edit'
+        let editData = null;
+        let currentCategory = 'service';
+
+        const currencySymbols = { 'INR': '₹', 'USD': '$', 'EUR': '€', 'GBP': '£', 'AED': 'د.إ', 'SGD': 'S$' };
+
+        const categoryMeta = {
+            service: { icon: '🎯', title: 'Service Blocks', subtitle: 'Deliverable work items with SLA', steps: ['Type', 'Basic Info', 'Delivery', 'Pricing', 'Evidence', 'Rules'] },
+            spare: { icon: '📦', title: 'Spare Part Blocks', subtitle: 'Physical products with inventory', steps: ['Type', 'Basic Info', 'Inventory', 'Pricing', 'Fulfillment'] },
+            billing: { icon: '💰', title: 'Billing Blocks', subtitle: 'Payment structures', steps: ['Type', 'Basic Info', 'Structure', 'Schedule', 'Automation'] },
+            text: { icon: '📄', title: 'Text Blocks', subtitle: 'Terms, conditions, policies', steps: ['Type', 'Basic Info', 'Content', 'Settings'] },
+            video: { icon: '🎬', title: 'Video Blocks', subtitle: 'Embedded video content', steps: ['Type', 'Basic Info', 'Media', 'Settings'] },
+            image: { icon: '🖼️', title: 'Image Blocks', subtitle: 'Photos and diagrams', steps: ['Type', 'Basic Info', 'Upload', 'Display'] },
+            checklist: { icon: '☑️', title: 'Checklist Blocks', subtitle: 'Task verification lists', steps: ['Type', 'Basic Info', 'Items', 'Settings'] },
+            document: { icon: '📎', title: 'Document Blocks', subtitle: 'File attachments', steps: ['Type', 'Basic Info', 'File Settings', 'Settings'] }
+        };
+
+        // ===== CATEGORY SELECTION =====
+        function selectCategory(element, category) {
+            document.querySelectorAll('.category-item').forEach(c => c.classList.remove('selected'));
+            element.classList.add('selected');
+            currentCategory = category;
+            
+            const meta = categoryMeta[category];
+            document.getElementById('libraryIcon').textContent = meta.icon;
+            document.getElementById('libraryIcon').style.background = `var(--cat-${category}-bg)`;
+            document.getElementById('libraryTitle').textContent = meta.title;
+            document.getElementById('librarySubtitle').textContent = meta.subtitle;
+            
+            document.querySelectorAll('.blocks-grid').forEach(g => g.style.display = 'none');
+            document.getElementById(`${category}Blocks`).style.display = 'grid';
+        }
+
+        // ===== WIZARD MANAGEMENT =====
+        function openWizard(mode, type = null, data = null) {
+            wizardMode = mode;
+            editData = data;
+            currentStep = 1;
+            
+            if (mode === 'edit' && type) {
+                selectedBlockType = type;
+                document.getElementById('wizardTitle').innerHTML = `✏️ Edit Block <span class="wizard-header-badge" style="background: var(--cat-${type}-bg); color: var(--cat-${type});">${type.charAt(0).toUpperCase() + type.slice(1)}</span>`;
+            } else if (mode === 'create' && type) {
+                selectedBlockType = type;
+                document.getElementById('wizardTitle').innerHTML = `➕ Create ${type.charAt(0).toUpperCase() + type.slice(1)} Block`;
+            } else {
+                selectedBlockType = 'service';
+                document.getElementById('wizardTitle').innerHTML = '➕ Create New Block';
+            }
+            
+            totalSteps = categoryMeta[selectedBlockType].steps.length;
+            buildProgressBar();
+            buildWizardSteps();
+            showStep(1);
+            
+            document.getElementById('wizardModal').classList.add('show');
+        }
+
+        function closeWizard() {
+            document.getElementById('wizardModal').classList.remove('show');
+        }
+
+        function buildProgressBar() {
+            const steps = categoryMeta[selectedBlockType].steps;
+            let html = '';
+            steps.forEach((step, i) => {
+                if (i > 0) html += '<div class="step-connector"></div>';
+                html += `<div class="progress-step" data-step="${i + 1}">
+                    <div class="step-number">${i + 1}</div>
+                    <span class="step-label">${step}</span>
+                </div>`;
+            });
+            document.getElementById('progressSteps').innerHTML = html;
+        }
+
+        function buildWizardSteps() {
+            const type = selectedBlockType;
+            let html = '';
+            
+            // Step 1: Type Selection (for create mode only)
+            if (wizardMode === 'create') {
+                html += buildTypeSelectionStep();
+            }
+            
+            // Type-specific steps
+            switch(type) {
+                case 'service':
+                    html += buildServiceSteps();
+                    break;
+                case 'spare':
+                    html += buildSpareSteps();
+                    break;
+                case 'billing':
+                    html += buildBillingSteps();
+                    break;
+                case 'text':
+                    html += buildTextSteps();
+                    break;
+                case 'video':
+                    html += buildVideoSteps();
+                    break;
+                case 'image':
+                    html += buildImageSteps();
+                    break;
+                case 'checklist':
+                    html += buildChecklistSteps();
+                    break;
+                case 'document':
+                    html += buildDocumentSteps();
+                    break;
+            }
+            
+            document.getElementById('wizardBody').innerHTML = html;
+            
+            // Pre-populate if editing
+            if (wizardMode === 'edit' && editData) {
+                populateEditData();
+            }
+        }
+
+        function buildTypeSelectionStep() {
+            return `
+                <div class="wizard-step" data-step="1">
+                    <div class="step-title">What type of block do you want to create?</div>
+                    <div class="step-description">Each block type has different fields and behaviors.</div>
+                    <div class="type-grid">
+                        <div class="type-card ${selectedBlockType === 'service' ? 'selected' : ''}" onclick="changeBlockType('service')">
+                            <div class="type-card-icon">🎯</div>
+                            <div class="type-card-name">Service</div>
+                            <div class="type-card-desc">Work with SLA</div>
+                        </div>
+                        <div class="type-card ${selectedBlockType === 'spare' ? 'selected' : ''}" onclick="changeBlockType('spare')">
+                            <div class="type-card-icon">📦</div>
+                            <div class="type-card-name">Spare Part</div>
+                            <div class="type-card-desc">Physical product</div>
+                        </div>
+                        <div class="type-card ${selectedBlockType === 'billing' ? 'selected' : ''}" onclick="changeBlockType('billing')">
+                            <div class="type-card-icon">💰</div>
+                            <div class="type-card-name">Billing</div>
+                            <div class="type-card-desc">Payment structure</div>
+                        </div>
+                        <div class="type-card ${selectedBlockType === 'text' ? 'selected' : ''}" onclick="changeBlockType('text')">
+                            <div class="type-card-icon">📄</div>
+                            <div class="type-card-name">Text</div>
+                            <div class="type-card-desc">T&C, policies</div>
+                        </div>
+                        <div class="type-card ${selectedBlockType === 'video' ? 'selected' : ''}" onclick="changeBlockType('video')">
+                            <div class="type-card-icon">🎬</div>
+                            <div class="type-card-name">Video</div>
+                            <div class="type-card-desc">Embedded media</div>
+                        </div>
+                        <div class="type-card ${selectedBlockType === 'image' ? 'selected' : ''}" onclick="changeBlockType('image')">
+                            <div class="type-card-icon">🖼️</div>
+                            <div class="type-card-name">Image</div>
+                            <div class="type-card-desc">Photos, diagrams</div>
+                        </div>
+                        <div class="type-card ${selectedBlockType === 'checklist' ? 'selected' : ''}" onclick="changeBlockType('checklist')">
+                            <div class="type-card-icon">☑️</div>
+                            <div class="type-card-name">Checklist</div>
+                            <div class="type-card-desc">Task verification</div>
+                        </div>
+                        <div class="type-card ${selectedBlockType === 'document' ? 'selected' : ''}" onclick="changeBlockType('document')">
+                            <div class="type-card-icon">📎</div>
+                            <div class="type-card-name">Document</div>
+                            <div class="type-card-desc">File attachment</div>
+                        </div>
+                    </div>
+                    <div class="info-box tip" style="margin-top: 1rem;">
+                        <span class="info-box-icon">💡</span>
+                        <div><strong>Tip:</strong> Service blocks are for work that needs to be done. Spare Parts are physical products.</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ===== SERVICE BLOCK STEPS =====
+        function buildServiceSteps() {
+            return `
+                <!-- Step 2: Basic Info -->
+                <div class="wizard-step" data-step="2">
+                    <div class="step-title">Basic Information</div>
+                    <div class="step-description">Define the fundamental details of this service.</div>
+                    <div class="form-section">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Block Name <span class="required">*</span></label>
+                                <input type="text" class="form-input" id="blockName" placeholder="e.g., Yoga Session">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Icon</label>
+                                <select class="form-select" id="blockIcon">
+                                    <option value="🧘">🧘 Yoga/Wellness</option>
+                                    <option value="🩺">🩺 Medical</option>
+                                    <option value="❄️">❄️ AC/Cooling</option>
+                                    <option value="🔧">🔧 Repair</option>
+                                    <option value="💻">💻 IT/Tech</option>
+                                    <option value="🎓">🎓 Training</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Description <span class="required">*</span></label>
+                            <textarea class="form-textarea" id="blockDesc" placeholder="Describe what this service includes..."></textarea>
+                        </div>
+                        <div class="form-row-3">
+                            <div class="form-group">
+                                <label class="form-label">Duration <span class="required">*</span></label>
+                                <input type="number" class="form-input" id="duration" value="60">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Unit</label>
+                                <select class="form-select" id="durationUnit">
+                                    <option value="minutes" selected>Minutes</option>
+                                    <option value="hours">Hours</option>
+                                    <option value="days">Days</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Buffer</label>
+                                <select class="form-select" id="buffer">
+                                    <option value="0">No buffer</option>
+                                    <option value="15" selected>15 min</option>
+                                    <option value="30">30 min</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Delivery -->
+                <div class="wizard-step" data-step="3">
+                    <div class="step-title">Delivery Settings</div>
+                    <div class="step-description">How and where will this service be delivered?</div>
+                    <div class="form-section">
+                        <div class="form-section-title"><span>📍</span> Service Location</div>
+                        <div class="location-options">
+                            <div class="location-option selected" onclick="selectLocation(this, 'onsite')">
+                                <div class="location-option-header">
+                                    <span class="location-option-icon">🏠</span>
+                                    <span class="location-option-name">On-Premise</span>
+                                </div>
+                                <div class="location-option-desc">At client's location</div>
+                            </div>
+                            <div class="location-option" onclick="selectLocation(this, 'virtual')">
+                                <div class="location-option-header">
+                                    <span class="location-option-icon">💻</span>
+                                    <span class="location-option-name">Virtual</span>
+                                </div>
+                                <div class="location-option-desc">Online via video call</div>
+                            </div>
+                            <div class="location-option" onclick="selectLocation(this, 'hybrid')">
+                                <div class="location-option-header">
+                                    <span class="location-option-icon">🔄</span>
+                                    <span class="location-option-name">Hybrid</span>
+                                </div>
+                                <div class="location-option-desc">Either based on preference</div>
+                            </div>
+                        </div>
+                        <div class="conditional-fields visible" id="onsiteFields">
+                            <div class="conditional-fields-title">🏠 On-Premise Settings</div>
+                            <div class="form-group">
+                                <label class="form-label">Default Location</label>
+                                <select class="form-select">
+                                    <option value="client">Client's Address</option>
+                                    <option value="seller">Seller's Premises</option>
+                                    <option value="custom">Custom Location</option>
+                                </select>
+                            </div>
+                            <div class="toggle-row">
+                                <span class="toggle-label">📍 Require GPS check-in</span>
+                                <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                            </div>
+                        </div>
+                        <div class="conditional-fields" id="virtualFields">
+                            <div class="conditional-fields-title">💻 Virtual Settings</div>
+                            <div class="form-group">
+                                <label class="form-label">Meeting Platform</label>
+                                <select class="form-select">
+                                    <option value="auto">Auto-generate link</option>
+                                    <option value="zoom">Zoom</option>
+                                    <option value="meet">Google Meet</option>
+                                    <option value="teams">MS Teams</option>
+                                </select>
+                            </div>
+                            <div class="toggle-row">
+                                <span class="toggle-label">📧 Auto-send invite</span>
+                                <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-section">
+                        <div class="form-section-title"><span>👤</span> Vendor Assignment</div>
+                        <div class="form-group">
+                            <label class="form-label">Who performs this service?</label>
+                            <select class="form-select">
+                                <option value="seller">Seller performs directly</option>
+                                <option value="manual">Assign vendor manually</option>
+                                <option value="auto">Auto-assign from pool</option>
+                                <option value="client">Client chooses</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Pricing -->
+                <div class="wizard-step" data-step="4">
+                    <div class="step-title">Pricing</div>
+                    <div class="step-description">Set the base price and tax settings.</div>
+                    <div class="form-section">
+                        <div class="form-section-title"><span>💱</span> Currency</div>
+                        <div class="currency-selector">
+                            <div class="currency-option selected" onclick="selectCurrency(this, 'INR')"><span>🇮🇳</span> INR</div>
+                            <div class="currency-option" onclick="selectCurrency(this, 'USD')"><span>🇺🇸</span> USD</div>
+                            <div class="currency-option" onclick="selectCurrency(this, 'EUR')"><span>🇪🇺</span> EUR</div>
+                            <div class="currency-option" onclick="selectCurrency(this, 'GBP')"><span>🇬🇧</span> GBP</div>
+                            <div class="currency-option" onclick="selectCurrency(this, 'AED')"><span>🇦🇪</span> AED</div>
+                            <div class="currency-option" onclick="selectCurrency(this, 'SGD')"><span>🇸🇬</span> SGD</div>
+                        </div>
+                    </div>
+                    <div class="form-section">
+                        <div class="form-section-title"><span>💰</span> Base Price</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Price <span class="required">*</span></label>
+                                <div class="input-with-addon">
+                                    <span class="input-addon" id="currencySymbol">₹</span>
+                                    <input type="number" class="form-input" id="basePrice" value="2000">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Price Type</label>
+                                <select class="form-select" id="priceType">
+                                    <option value="session">Per Session</option>
+                                    <option value="hour">Per Hour</option>
+                                    <option value="day">Per Day</option>
+                                    <option value="fixed">Fixed</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Tax Rate</label>
+                                <select class="form-select">
+                                    <option value="0">No Tax (0%)</option>
+                                    <option value="5">GST 5%</option>
+                                    <option value="12">GST 12%</option>
+                                    <option value="18" selected>GST 18%</option>
+                                    <option value="28">GST 28%</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">HSN/SAC Code</label>
+                                <input type="text" class="form-input" placeholder="e.g., 999799">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 5: Evidence -->
+                <div class="wizard-step" data-step="5">
+                    <div class="step-title">Evidence Requirements</div>
+                    <div class="step-description">What proof should vendors provide?</div>
+                    <div class="evidence-list">
+                        <div class="evidence-item active" onclick="toggleEvidence(this)">
+                            <div class="evidence-checkbox">✓</div>
+                            <span class="evidence-icon">📷</span>
+                            <div class="evidence-info">
+                                <div class="evidence-name">Photo Upload</div>
+                                <div class="evidence-desc">Before/during/after photos</div>
+                            </div>
+                            <div class="evidence-config">
+                                <select><option>Min 1</option><option selected>Min 2</option><option>Min 3</option></select>
+                            </div>
+                        </div>
+                        <div class="evidence-item" onclick="toggleEvidence(this)">
+                            <div class="evidence-checkbox">✓</div>
+                            <span class="evidence-icon">📍</span>
+                            <div class="evidence-info">
+                                <div class="evidence-name">GPS Location</div>
+                                <div class="evidence-desc">Verify on-site</div>
+                            </div>
+                        </div>
+                        <div class="evidence-item active" onclick="toggleEvidence(this)">
+                            <div class="evidence-checkbox">✓</div>
+                            <span class="evidence-icon">✍️</span>
+                            <div class="evidence-info">
+                                <div class="evidence-name">Client Signature</div>
+                                <div class="evidence-desc">Digital sign-off</div>
+                            </div>
+                        </div>
+                        <div class="evidence-item active" onclick="toggleEvidence(this)">
+                            <div class="evidence-checkbox">✓</div>
+                            <span class="evidence-icon">📝</span>
+                            <div class="evidence-info">
+                                <div class="evidence-name">Session Notes</div>
+                                <div class="evidence-desc">Written summary</div>
+                            </div>
+                        </div>
+                        <div class="evidence-item" onclick="toggleEvidence(this)">
+                            <div class="evidence-checkbox">✓</div>
+                            <span class="evidence-icon">📄</span>
+                            <div class="evidence-info">
+                                <div class="evidence-name">Document Upload</div>
+                                <div class="evidence-desc">Reports, certificates</div>
+                            </div>
+                        </div>
+                        <div class="evidence-item" onclick="toggleEvidence(this)">
+                            <div class="evidence-checkbox">✓</div>
+                            <span class="evidence-icon">⭐</span>
+                            <div class="evidence-info">
+                                <div class="evidence-name">Client Rating</div>
+                                <div class="evidence-desc">Post-service feedback</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 6: Rules -->
+                <div class="wizard-step" data-step="6">
+                    <div class="step-title">SLA & Automation Rules</div>
+                    <div class="step-description">Define deadlines and automated actions.</div>
+                    <div class="form-section">
+                        <div class="form-section-title"><span>⏰</span> SLA</div>
+                        <div class="form-group">
+                            <div class="sla-row">
+                                <span>Complete within</span>
+                                <input type="number" class="form-input" value="48">
+                                <select class="form-select"><option selected>hours</option><option>days</option></select>
+                                <span>of scheduled time</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-section">
+                        <div class="form-section-title"><span>🤖</span> Automation</div>
+                        <div class="rule-card">
+                            <div class="rule-header">
+                                <span class="rule-type-badge">🔔 Reminder</span>
+                                <span class="rule-remove">×</span>
+                            </div>
+                            <div class="rule-content">
+                                <span class="rule-keyword">IF</span> task not started
+                                <select class="rule-select"><option>2h</option><option selected>24h</option><option>48h</option></select>
+                                before
+                            </div>
+                            <div class="rule-content" style="margin-top:0.4rem;">
+                                <span class="rule-keyword">THEN</span>
+                                <select class="rule-select"><option selected>WhatsApp vendor</option><option>Email vendor</option></select>
+                            </div>
+                        </div>
+                        <div class="rule-card">
+                            <div class="rule-header">
+                                <span class="rule-type-badge">⚠️ Escalation</span>
+                                <span class="rule-remove">×</span>
+                            </div>
+                            <div class="rule-content">
+                                <span class="rule-keyword">IF</span>
+                                <select class="rule-select"><option selected>SLA breached</option><option>Rejected</option></select>
+                            </div>
+                            <div class="rule-content" style="margin-top:0.4rem;">
+                                <span class="rule-keyword">THEN</span>
+                                <select class="rule-select"><option selected>Alert seller</option><option>Create ticket</option></select>
+                            </div>
+                        </div>
+                        <button class="add-rule-btn"><span>➕</span> Add Rule</button>
+                    </div>
+                    <div class="info-box warning" style="margin-top:1rem;">
+                        <span class="info-box-icon">⚡</span>
+                        <div><strong>Almost done!</strong> Click "${wizardMode === 'edit' ? 'Update' : 'Create'} Block" to save.</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ===== SPARE PARTS STEPS =====
+        function buildSpareSteps() {
+            return `
+                <div class="wizard-step" data-step="2">
+                    <div class="step-title">Part Information</div>
+                    <div class="step-description">Define the basic details of this spare part.</div>
+                    <div class="form-section">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Part Name <span class="required">*</span></label>
+                                <input type="text" class="form-input" id="blockName" placeholder="e.g., AC Filter 1.5T">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Icon</label>
+                                <select class="form-select" id="blockIcon">
+                                    <option value="🌀">🌀 Filter</option>
+                                    <option value="💨">💨 Gas</option>
+                                    <option value="🔩">🔩 Hardware</option>
+                                    <option value="🔌">🔌 Electrical</option>
+                                    <option value="⚙️">⚙️ Mechanical</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-textarea" id="blockDesc" placeholder="Part specifications..."></textarea>
+                        </div>
+                        <div class="form-row-3">
+                            <div class="form-group">
+                                <label class="form-label">SKU <span class="required">*</span></label>
+                                <input type="text" class="form-input" id="sku" placeholder="ACF-150">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">HSN Code</label>
+                                <input type="text" class="form-input" id="hsn" placeholder="84159000">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Brand</label>
+                                <input type="text" class="form-input" id="brand" placeholder="Optional">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="wizard-step" data-step="3">
+                    <div class="step-title">Inventory Settings</div>
+                    <div class="step-description">Track stock and reorder levels.</div>
+                    <div class="form-section">
+                        <div class="form-section-title"><span>📦</span> Stock Management</div>
+                        <div class="form-row-3">
+                            <div class="form-group">
+                                <label class="form-label">Current Stock</label>
+                                <input type="number" class="form-input" value="24">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Reorder Level</label>
+                                <input type="number" class="form-input" value="5">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Unit of Measure</label>
+                                <select class="form-select">
+                                    <option selected>Each</option>
+                                    <option>Box</option>
+                                    <option>Set</option>
+                                    <option>Liter</option>
+                                    <option>Kg</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="toggle-row">
+                            <span class="toggle-label">📧 Alert when stock is low</span>
+                            <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                        </div>
+                        <div class="toggle-row">
+                            <span class="toggle-label">🚫 Prevent overselling</span>
+                            <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                        </div>
+                    </div>
+                    <div class="form-section">
+                        <div class="form-section-title"><span>🏭</span> Supplier</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Supplier Name</label>
+                                <input type="text" class="form-input" placeholder="Primary supplier">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Lead Time</label>
+                                <div class="input-with-addon">
+                                    <input type="number" class="form-input" value="3">
+                                    <span class="input-addon input-addon-right">days</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="wizard-step" data-step="4">
+                    <div class="step-title">Pricing</div>
+                    <div class="step-description">Set selling price and cost.</div>
+                    <div class="form-section">
+                        <div class="form-section-title"><span>💱</span> Currency</div>
+                        <div class="currency-selector">
+                            <div class="currency-option selected" onclick="selectCurrency(this, 'INR')"><span>🇮🇳</span> INR</div>
+                            <div class="currency-option" onclick="selectCurrency(this, 'USD')"><span>🇺🇸</span> USD</div>
+                            <div class="currency-option" onclick="selectCurrency(this, 'EUR')"><span>🇪🇺</span> EUR</div>
+                            <div class="currency-option" onclick="selectCurrency(this, 'GBP')"><span>🇬🇧</span> GBP</div>
+                        </div>
+                    </div>
+                    <div class="form-section">
+                        <div class="form-section-title"><span>💰</span> Pricing</div>
+                        <div class="form-row-3">
+                            <div class="form-group">
+                                <label class="form-label">Cost Price</label>
+                                <div class="input-with-addon">
+                                    <span class="input-addon" id="currencySymbol">₹</span>
+                                    <input type="number" class="form-input" value="300">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Selling Price <span class="required">*</span></label>
+                                <div class="input-with-addon">
+                                    <span class="input-addon">₹</span>
+                                    <input type="number" class="form-input" id="basePrice" value="450">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Margin</label>
+                                <input type="text" class="form-input" value="50%" disabled style="background:var(--success-bg);color:var(--success);">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Tax Rate</label>
+                                <select class="form-select">
+                                    <option value="0">No Tax</option>
+                                    <option value="5">GST 5%</option>
+                                    <option value="12">GST 12%</option>
+                                    <option value="18" selected>GST 18%</option>
+                                    <option value="28">GST 28%</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Price includes tax?</label>
+                                <select class="form-select">
+                                    <option selected>No (add tax)</option>
+                                    <option>Yes (inclusive)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="wizard-step" data-step="5">
+                    <div class="step-title">Fulfillment</div>
+                    <div class="step-description">How will this part be delivered?</div>
+                    <div class="form-section">
+                        <div class="form-section-title"><span>🚚</span> Delivery Method</div>
+                        <div class="toggle-row">
+                            <span class="toggle-label">📦 Include in service delivery</span>
+                            <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                        </div>
+                        <div class="toggle-row">
+                            <span class="toggle-label">🏪 Available for pickup</span>
+                            <div class="toggle-switch" onclick="this.classList.toggle('active')"></div>
+                        </div>
+                        <div class="toggle-row">
+                            <span class="toggle-label">🚛 Ship separately</span>
+                            <div class="toggle-switch" onclick="this.classList.toggle('active')"></div>
+                        </div>
+                    </div>
+                    <div class="form-section">
+                        <div class="form-section-title"><span>📋</span> Warranty</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Warranty Period</label>
+                                <div class="input-with-addon">
+                                    <input type="number" class="form-input" value="6">
+                                    <span class="input-addon input-addon-right">months</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Warranty Type</label>
+                                <select class="form-select">
+                                    <option>Manufacturing defects</option>
+                                    <option>Full replacement</option>
+                                    <option>None</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="info-box warning" style="margin-top:1rem;">
+                        <span class="info-box-icon">⚡</span>
+                        <div><strong>Almost done!</strong> Click "Create Block" to save.</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ===== BILLING STEPS =====
+        function buildBillingSteps() {
+            return `
+                <div class="wizard-step" data-step="2">
+                    <div class="step-title">Billing Plan Info</div>
+                    <div class="step-description">Name and describe this payment structure.</div>
+                    <div class="form-section">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Plan Name <span class="required">*</span></label>
+                                <input type="text" class="form-input" id="blockName" placeholder="e.g., 3-Month EMI">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Icon</label>
+                                <select class="form-select" id="blockIcon">
+                                    <option value="💳">💳 EMI</option>
+                                    <option value="💵">💵 Advance</option>
+                                    <option value="🎯">🎯 Milestone</option>
+                                    <option value="📅">📅 Subscription</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-textarea" id="blockDesc" placeholder="Explain this payment plan..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="wizard-step" data-step="3">
+                    <div class="step-title">Payment Structure</div>
+                    <div class="step-description">Define how payments are split.</div>
+                    <div class="form-section">
+                        <div class="form-section-title"><span>💳</span> Payment Type</div>
+                        <div class="form-group">
+                            <label class="form-label">Type <span class="required">*</span></label>
+                            <select class="form-select" id="billingType" onchange="updateBillingFields(this.value)">
+                                <option value="advance">100% Advance</option>
+                                <option value="emi" selected>EMI (Equal Installments)</option>
+                                <option value="milestone">Milestone Based</option>
+                                <option value="postpaid">Post-Service</option>
+                                <option value="subscription">Subscription</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-section" id="emiFields">
+                        <div class="form-section-title"><span>🔄</span> EMI Settings</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Number of Installments</label>
+                                <select class="form-select">
+                                    <option>2</option>
+                                    <option selected>3</option>
+                                    <option>4</option>
+                                    <option>6</option>
+                                    <option>12</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Frequency</label>
+                                <select class="form-select">
+                                    <option>Weekly</option>
+                                    <option selected>Monthly</option>
+                                    <option>Quarterly</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="toggle-row">
+                            <span class="toggle-label">📅 First payment on signing</span>
+                            <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="wizard-step" data-step="4">
+                    <div class="step-title">Payment Schedule</div>
+                    <div class="step-description">Define when each payment is due.</div>
+                    <div class="form-section">
+                        <div class="form-section-title"><span>📅</span> Schedule</div>
+                        <div class="schedule-row">
+                            <div class="schedule-row-number">1</div>
+                            <div class="schedule-row-content">
+                                <input type="text" value="33.3">
+                                <span>%</span>
+                                <select><option selected>On signing</option><option>After</option></select>
+                            </div>
+                        </div>
+                        <div class="schedule-row">
+                            <div class="schedule-row-number">2</div>
+                            <div class="schedule-row-content">
+                                <input type="text" value="33.3">
+                                <span>%</span>
+                                <select><option>On signing</option><option selected>After</option></select>
+                                <input type="text" value="30">
+                                <span>days</span>
+                            </div>
+                        </div>
+                        <div class="schedule-row">
+                            <div class="schedule-row-number">3</div>
+                            <div class="schedule-row-content">
+                                <input type="text" value="33.4">
+                                <span>%</span>
+                                <select><option>On signing</option><option selected>After</option></select>
+                                <input type="text" value="60">
+                                <span>days</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="preview-card">
+                        <div class="preview-card-title">📋 Schedule Preview (₹12,000 contract)</div>
+                        <div style="display:flex;flex-direction:column;gap:0.4rem;">
+                            <div style="display:flex;justify-content:space-between;font-size:0.75rem;padding:0.4rem;background:var(--surface);border-radius:var(--radius);">
+                                <span>Payment 1</span><span style="font-weight:700;">₹4,000 on signing</span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;font-size:0.75rem;padding:0.4rem;background:var(--surface);border-radius:var(--radius);">
+                                <span>Payment 2</span><span style="font-weight:700;">₹4,000 after 30 days</span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;font-size:0.75rem;padding:0.4rem;background:var(--surface);border-radius:var(--radius);">
+                                <span>Payment 3</span><span style="font-weight:700;">₹4,000 after 60 days</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="wizard-step" data-step="5">
+                    <div class="step-title">Automation & Policies</div>
+                    <div class="step-description">Configure automatic invoicing and late fees.</div>
+                    <div class="form-section">
+                        <div class="form-section-title"><span>📧</span> Auto-Invoicing</div>
+                        <div class="toggle-row">
+                            <span class="toggle-label">📄 Generate invoice automatically</span>
+                            <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                        </div>
+                        <div class="toggle-row">
+                            <span class="toggle-label">📧 Email invoice to buyer</span>
+                            <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                        </div>
+                        <div class="toggle-row">
+                            <span class="toggle-label">💬 WhatsApp payment reminder</span>
+                            <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                        </div>
+                    </div>
+                    <div class="form-section">
+                        <div class="form-section-title"><span>⚠️</span> Late Payment Policy</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Grace Period</label>
+                                <div class="input-with-addon">
+                                    <input type="number" class="form-input" value="7">
+                                    <span class="input-addon input-addon-right">days</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Late Fee</label>
+                                <div class="input-with-addon">
+                                    <input type="number" class="form-input" value="2">
+                                    <span class="input-addon input-addon-right">%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="toggle-row">
+                            <span class="toggle-label">🚫 Pause services on overdue</span>
+                            <div class="toggle-switch" onclick="this.classList.toggle('active')"></div>
+                        </div>
+                    </div>
+                    <div class="info-box warning" style="margin-top:1rem;">
+                        <span class="info-box-icon">⚡</span>
+                        <div><strong>Almost done!</strong> Click "Create Block" to save.</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ===== TEXT BLOCK STEPS =====
+        function buildTextSteps() {
+            return `
+                <div class="wizard-step" data-step="2">
+                    <div class="step-title">Text Block Info</div>
+                    <div class="step-description">Name this text/content block.</div>
+                    <div class="form-section">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Title <span class="required">*</span></label>
+                                <input type="text" class="form-input" id="blockName" placeholder="e.g., Terms & Conditions">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Icon</label>
+                                <select class="form-select" id="blockIcon">
+                                    <option value="📜">📜 T&C</option>
+                                    <option value="🚫">🚫 Cancellation</option>
+                                    <option value="⚠️">⚠️ Disclaimer</option>
+                                    <option value="📋">📋 Instructions</option>
+                                    <option value="ℹ️">ℹ️ Information</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Category</label>
+                            <select class="form-select">
+                                <option>Legal</option>
+                                <option>Policy</option>
+                                <option>Instructions</option>
+                                <option>Information</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="wizard-step" data-step="3">
+                    <div class="step-title">Content</div>
+                    <div class="step-description">Write or paste the content.</div>
+                    <div class="form-section">
+                        <div class="form-group">
+                            <label class="form-label">Content <span class="required">*</span></label>
+                            <textarea class="form-textarea" id="blockDesc" style="min-height:200px;" placeholder="Enter your terms, conditions, or other text content here...
+
+You can use formatting like:
+1. Numbered lists
+2. Paragraphs
+3. etc."></textarea>
+                        </div>
+                        <div class="info-box tip">
+                            <span class="info-box-icon">💡</span>
+                            <div>Use <strong>{buyer_name}</strong>, <strong>{contract_date}</strong>, <strong>{contract_value}</strong> as variables.</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="wizard-step" data-step="4">
+                    <div class="step-title">Settings</div>
+                    <div class="step-description">Configure display and signature requirements.</div>
+                    <div class="form-section">
+                        <div class="form-section-title"><span>⚙️</span> Display</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Display Position</label>
+                                <select class="form-select">
+                                    <option>End of contract</option>
+                                    <option>Beginning of contract</option>
+                                    <option>Custom position</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Visibility</label>
+                                <select class="form-select">
+                                    <option>Always visible</option>
+                                    <option>Collapsible</option>
+                                    <option>Hidden (legal record)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-section">
+                        <div class="form-section-title"><span>✍️</span> Acknowledgement</div>
+                        <div class="toggle-row">
+                            <span class="toggle-label">✍️ Requires buyer signature</span>
+                            <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                        </div>
+                        <div class="toggle-row">
+                            <span class="toggle-label">☑️ Requires checkbox acceptance</span>
+                            <div class="toggle-switch" onclick="this.classList.toggle('active')"></div>
+                        </div>
+                        <div class="toggle-row">
+                            <span class="toggle-label">📧 Send copy to buyer email</span>
+                            <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                        </div>
+                    </div>
+                    <div class="info-box warning" style="margin-top:1rem;">
+                        <span class="info-box-icon">⚡</span>
+                        <div><strong>Almost done!</strong> Click "Create Block" to save.</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ===== VIDEO BLOCK STEPS =====
+        function buildVideoSteps() {
+            return `
+                <div class="wizard-step" data-step="2">
+                    <div class="step-title">Video Info</div>
+                    <div class="step-description">Name and describe this video block.</div>
+                    <div class="form-section">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Video Title <span class="required">*</span></label>
+                                <input type="text" class="form-input" id="blockName" placeholder="e.g., Welcome Video">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Category</label>
+                                <select class="form-select">
+                                    <option>Introduction</option>
+                                    <option>Training</option>
+                                    <option>Instructions</option>
+                                    <option>Promotional</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-textarea" id="blockDesc" placeholder="What is this video about?"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="wizard-step" data-step="3">
+                    <div class="step-title">Video Source</div>
+                    <div class="step-description">Upload or link to the video.</div>
+                    <div class="form-section">
+                        <div class="form-section-title"><span>🎬</span> Video Source</div>
+                        <div class="form-group">
+                            <label class="form-label">Source Type</label>
+                            <select class="form-select">
+                                <option>YouTube Link</option>
+                                <option>Vimeo Link</option>
+                                <option>Upload File</option>
+                                <option>External URL</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Video URL <span class="required">*</span></label>
+                            <input type="text" class="form-input" placeholder="https://youtube.com/watch?v=...">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Duration</label>
+                                <input type="text" class="form-input" placeholder="3:24">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Thumbnail</label>
+                                <select class="form-select">
+                                    <option>Auto-generate</option>
+                                    <option>Upload custom</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="wizard-step" data-step="4">
+                    <div class="step-title">Playback Settings</div>
+                    <div class="step-description">Configure how the video behaves.</div>
+                    <div class="form-section">
+                        <div class="form-section-title"><span>⚙️</span> Settings</div>
+                        <div class="toggle-row">
+                            <span class="toggle-label">👁️ Required to watch (blocks progress)</span>
+                            <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                        </div>
+                        <div class="toggle-row">
+                            <span class="toggle-label">📊 Track completion percentage</span>
+                            <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                        </div>
+                        <div class="toggle-row">
+                            <span class="toggle-label">🔄 Allow replay</span>
+                            <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                        </div>
+                        <div class="toggle-row">
+                            <span class="toggle-label">⏩ Allow skip/fast-forward</span>
+                            <div class="toggle-switch" onclick="this.classList.toggle('active')"></div>
+                        </div>
+                        <div class="toggle-row">
+                            <span class="toggle-label">📥 Allow download</span>
+                            <div class="toggle-switch" onclick="this.classList.toggle('active')"></div>
+                        </div>
+                    </div>
+                    <div class="info-box warning" style="margin-top:1rem;">
+                        <span class="info-box-icon">⚡</span>
+                        <div><strong>Almost done!</strong> Click "Create Block" to save.</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ===== IMAGE BLOCK STEPS =====
+        function buildImageSteps() {
+            return `
+                <div class="wizard-step" data-step="2">
+                    <div class="step-title">Image Info</div>
+                    <div class="step-description">Name and describe this image block.</div>
+                    <div class="form-section">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Image Title <span class="required">*</span></label>
+                                <input type="text" class="form-input" id="blockName" placeholder="e.g., Service Brochure">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Category</label>
+                                <select class="form-select">
+                                    <option>Brochure</option>
+                                    <option>Diagram</option>
+                                    <option>Photo</option>
+                                    <option>Infographic</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Alt Text (for accessibility)</label>
+                            <input type="text" class="form-input" id="blockDesc" placeholder="Describe the image...">
+                        </div>
+                    </div>
+                </div>
+                <div class="wizard-step" data-step="3">
+                    <div class="step-title">Upload Image</div>
+                    <div class="step-description">Upload or link to the image.</div>
+                    <div class="form-section">
+                        <div style="border:2px dashed var(--border);border-radius:var(--radius-lg);padding:2rem;text-align:center;background:var(--bg);">
+                            <div style="font-size:2rem;margin-bottom:0.5rem;">📁</div>
+                            <div style="font-weight:600;margin-bottom:0.25rem;">Drop image here or click to upload</div>
+                            <div style="font-size:0.7rem;color:var(--text-muted);">PNG, JPG, SVG up to 5MB</div>
+                        </div>
+                        <div class="form-group" style="margin-top:1rem;">
+                            <label class="form-label">Or paste image URL</label>
+                            <input type="text" class="form-input" placeholder="https://...">
+                        </div>
+                    </div>
+                </div>
+                <div class="wizard-step" data-step="4">
+                    <div class="step-title">Display Settings</div>
+                    <div class="step-description">Configure how the image appears.</div>
+                    <div class="form-section">
+                        <div class="form-section-title"><span>📐</span> Size & Layout</div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Display Size</label>
+                                <select class="form-select">
+                                    <option>Small (25%)</option>
+                                    <option>Medium (50%)</option>
+                                    <option selected>Large (100%)</option>
+                                    <option>Custom</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Alignment</label>
+                                <select class="form-select">
+                                    <option>Left</option>
+                                    <option selected>Center</option>
+                                    <option>Right</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="toggle-row">
+                            <span class="toggle-label">🔍 Allow zoom on click</span>
+                            <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                        </div>
+                        <div class="toggle-row">
+                            <span class="toggle-label">📥 Allow download</span>
+                            <div class="toggle-switch" onclick="this.classList.toggle('active')"></div>
+                        </div>
+                        <div class="toggle-row">
+                            <span class="toggle-label">🔗 Make clickable (link to URL)</span>
+                            <div class="toggle-switch" onclick="this.classList.toggle('active')"></div>
+                        </div>
+                    </div>
+                    <div class="info-box warning" style="margin-top:1rem;">
+                        <span class="info-box-icon">⚡</span>
+                        <div><strong>Almost done!</strong> Click "Create Block" to save.</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ===== CHECKLIST BLOCK STEPS =====
+        function buildChecklistSteps() {
+            return `
+                <div class="wizard-step" data-step="2">
+                    <div class="step-title">Checklist Info</div>
+                    <div class="step-description">Name and describe this checklist.</div>
+                    <div class="form-section">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Checklist Name <span class="required">*</span></label>
+                                <input type="text" class="form-input" id="blockName" placeholder="e.g., Pre-Service Checklist">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Type</label>
+                                <select class="form-select">
+                                    <option>Pre-Service</option>
+                                    <option>Post-Service</option>
+                                    <option>Quality Check</option>
+                                    <option>Inspection</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-textarea" id="blockDesc" placeholder="What is this checklist for?"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Who completes this?</label>
+                            <select class="form-select">
+                                <option selected>Vendor</option>
+                                <option>Buyer</option>
+                                <option>Seller</option>
+                                <option>Anyone</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="wizard-step" data-step="3">
+                    <div class="step-title">Checklist Items</div>
+                    <div class="step-description">Add the items to check.</div>
+                    <div class="form-section">
+                        <div class="form-section-title"><span>📋</span> Items</div>
+                        <div id="checklistItems">
+                            <div class="checklist-item">
+                                <span>☑️</span>
+                                <input type="text" placeholder="Check item 1..." value="Verify equipment condition">
+                                <select style="padding:0.3rem;font-size:0.7rem;border:1px solid var(--border);border-radius:var(--radius);">
+                                    <option selected>Required</option>
+                                    <option>Optional</option>
+                                </select>
+                                <span class="checklist-item-remove">×</span>
+                            </div>
+                            <div class="checklist-item">
+                                <span>☑️</span>
+                                <input type="text" placeholder="Check item 2..." value="Take before photo">
+                                <select style="padding:0.3rem;font-size:0.7rem;border:1px solid var(--border);border-radius:var(--radius);">
+                                    <option selected>Required</option>
+                                    <option>Optional</option>
+                                </select>
+                                <span class="checklist-item-remove">×</span>
+                            </div>
+                            <div class="checklist-item">
+                                <span>☑️</span>
+                                <input type="text" placeholder="Check item 3..." value="Confirm client present">
+                                <select style="padding:0.3rem;font-size:0.7rem;border:1px solid var(--border);border-radius:var(--radius);">
+                                    <option selected>Required</option>
+                                    <option>Optional</option>
+                                </select>
+                                <span class="checklist-item-remove">×</span>
+                            </div>
+                        </div>
+                        <button class="add-rule-btn" style="margin-top:0.75rem;"><span>➕</span> Add Item</button>
+                    </div>
+                </div>
+                <div class="wizard-step" data-step="4">
+                    <div class="step-title">Checklist Settings</div>
+                    <div class="step-description">Configure completion requirements.</div>
+                    <div class="form-section">
+                        <div class="form-section-title"><span>⚙️</span> Requirements</div>
+                        <div class="toggle-row">
+                            <span class="toggle-label">📷 Require photo per item</span>
+                            <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                        </div>
+                        <div class="toggle-row">
+                            <span class="toggle-label">📝 Allow notes per item</span>
+                            <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                        </div>
+                        <div class="toggle-row">
+                            <span class="toggle-label">🔒 Must complete all required items</span>
+                            <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                        </div>
+                        <div class="toggle-row">
+                            <span class="toggle-label">📊 Show completion % to buyer</span>
+                            <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                        </div>
+                    </div>
+                    <div class="info-box warning" style="margin-top:1rem;">
+                        <span class="info-box-icon">⚡</span>
+                        <div><strong>Almost done!</strong> Click "Create Block" to save.</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ===== DOCUMENT BLOCK STEPS =====
+        function buildDocumentSteps() {
+            return `
+                <div class="wizard-step" data-step="2">
+                    <div class="step-title">Document Info</div>
+                    <div class="step-description">Name and describe this document block.</div>
+                    <div class="form-section">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Document Name <span class="required">*</span></label>
+                                <input type="text" class="form-input" id="blockName" placeholder="e.g., Completion Certificate">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Document Type</label>
+                                <select class="form-select">
+                                    <option>Certificate</option>
+                                    <option>Report</option>
+                                    <option>Contract Attachment</option>
+                                    <option>Invoice</option>
+                                    <option>Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-textarea" id="blockDesc" placeholder="What is this document?"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="wizard-step" data-step="3">
+                    <div class="step-title">File Settings</div>
+                    <div class="step-description">Configure allowed file types and upload rules.</div>
+                    <div class="form-section">
+                        <div class="form-section-title"><span>📄</span> Allowed Files</div>
+                        <div class="form-group">
+                            <label class="form-label">Accepted File Types</label>
+                            <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:0.5rem;">
+                                <label style="display:flex;align-items:center;gap:0.3rem;font-size:0.75rem;padding:0.4rem 0.6rem;background:var(--bg);border-radius:var(--radius);cursor:pointer;">
+                                    <input type="checkbox" checked> PDF
+                                </label>
+                                <label style="display:flex;align-items:center;gap:0.3rem;font-size:0.75rem;padding:0.4rem 0.6rem;background:var(--bg);border-radius:var(--radius);cursor:pointer;">
+                                    <input type="checkbox" checked> DOC/DOCX
+                                </label>
+                                <label style="display:flex;align-items:center;gap:0.3rem;font-size:0.75rem;padding:0.4rem 0.6rem;background:var(--bg);border-radius:var(--radius);cursor:pointer;">
+                                    <input type="checkbox"> XLS/XLSX
+                                </label>
+                                <label style="display:flex;align-items:center;gap:0.3rem;font-size:0.75rem;padding:0.4rem 0.6rem;background:var(--bg);border-radius:var(--radius);cursor:pointer;">
+                                    <input type="checkbox"> Images
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Max File Size</label>
+                                <select class="form-select">
+                                    <option>5 MB</option>
+                                    <option selected>10 MB</option>
+                                    <option>25 MB</option>
+                                    <option>50 MB</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Who uploads?</label>
+                                <select class="form-select">
+                                    <option selected>Vendor</option>
+                                    <option>Buyer</option>
+                                    <option>Seller</option>
+                                    <option>Anyone</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="wizard-step" data-step="4">
+                    <div class="step-title">Document Settings</div>
+                    <div class="step-description">Configure visibility and requirements.</div>
+                    <div class="form-section">
+                        <div class="form-section-title"><span>⚙️</span> Settings</div>
+                        <div class="toggle-row">
+                            <span class="toggle-label">⭐ Required (blocks completion)</span>
+                            <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                        </div>
+                        <div class="toggle-row">
+                            <span class="toggle-label">✍️ Requires signature</span>
+                            <div class="toggle-switch" onclick="this.classList.toggle('active')"></div>
+                        </div>
+                        <div class="toggle-row">
+                            <span class="toggle-label">👁️ Visible to buyer</span>
+                            <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                        </div>
+                        <div class="toggle-row">
+                            <span class="toggle-label">📧 Email copy to buyer</span>
+                            <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                        </div>
+                    </div>
+                    <div class="info-box warning" style="margin-top:1rem;">
+                        <span class="info-box-icon">⚡</span>
+                        <div><strong>Almost done!</strong> Click "Create Block" to save.</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ===== HELPER FUNCTIONS =====
+        function changeBlockType(type) {
+            document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
+            event.currentTarget.classList.add('selected');
+            selectedBlockType = type;
+            totalSteps = categoryMeta[type].steps.length;
+            buildProgressBar();
+            buildWizardSteps();
+            showStep(1);
+        }
+
+        function selectLocation(element, location) {
+            document.querySelectorAll('.location-option').forEach(o => o.classList.remove('selected'));
+            element.classList.add('selected');
+            
+            document.getElementById('onsiteFields').classList.remove('visible');
+            document.getElementById('virtualFields').classList.remove('visible');
+            
+            if (location === 'onsite' || location === 'hybrid') {
+                document.getElementById('onsiteFields').classList.add('visible');
+            }
+            if (location === 'virtual' || location === 'hybrid') {
+                document.getElementById('virtualFields').classList.add('visible');
+            }
+        }
+
+        function selectCurrency(element, currency) {
+            document.querySelectorAll('.currency-option').forEach(c => c.classList.remove('selected'));
+            element.classList.add('selected');
+            const symbols = document.querySelectorAll('#currencySymbol');
+            symbols.forEach(s => s.textContent = currencySymbols[currency]);
+        }
+
+        function toggleEvidence(element) {
+            element.classList.toggle('active');
+        }
+
+        function populateEditData() {
+            if (editData.name) {
+                const nameInput = document.getElementById('blockName');
+                if (nameInput) nameInput.value = editData.name;
+            }
+            if (editData.desc) {
+                const descInput = document.getElementById('blockDesc');
+                if (descInput) descInput.value = editData.desc;
+            }
+            if (editData.price) {
+                const priceInput = document.getElementById('basePrice');
+                if (priceInput) priceInput.value = editData.price;
+            }
+            if (editData.duration) {
+                const durationInput = document.getElementById('duration');
+                if (durationInput) durationInput.value = editData.duration;
+            }
+        }
+
+        function showStep(step) {
+            document.querySelectorAll('.wizard-step').forEach(s => s.classList.remove('active'));
+            const targetStep = document.querySelector(`.wizard-step[data-step="${step}"]`);
+            if (targetStep) targetStep.classList.add('active');
+            
+            currentStep = step;
+            updateProgressBar();
+            
+            document.getElementById('backBtn').style.visibility = step > 1 ? 'visible' : 'hidden';
+            document.getElementById('nextBtn').textContent = step === totalSteps ? 
+                (wizardMode === 'edit' ? '✓ Update Block' : '✓ Create Block') : 'Continue →';
+        }
+
+        function updateProgressBar() {
+            document.querySelectorAll('.progress-step').forEach((step, index) => {
+                const stepNum = index + 1;
+                step.classList.remove('active', 'completed');
+                if (stepNum < currentStep) step.classList.add('completed');
+                else if (stepNum === currentStep) step.classList.add('active');
+            });
+            
+            document.querySelectorAll('.step-connector').forEach((conn, index) => {
+                if (index + 1 < currentStep) conn.classList.add('completed');
+                else conn.classList.remove('completed');
+            });
+        }
+
+        function nextStep() {
+            if (currentStep < totalSteps) {
+                showStep(currentStep + 1);
+            } else {
+                showToast(wizardMode === 'edit' ? '✓ Block updated!' : '✓ Block created!');
+                closeWizard();
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 1) showStep(currentStep - 1);
+        }
+
+        function saveDraft() {
+            showToast('✓ Draft saved!');
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.innerHTML = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Close on overlay click
+        document.getElementById('wizardModal').addEventListener('click', (e) => {
+            if (e.target.id === 'wizardModal') closeWizard();
+        });
+    </script>
+</body>
+</html>

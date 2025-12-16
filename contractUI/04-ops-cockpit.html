@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ContractNest - Ops Cockpit</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand: #0F172A;
+            --brand-light: #1E293B;
+            --accent: #6366F1;
+            --accent-light: #818CF8;
+            --accent-bg: #EEF2FF;
+            --success: #10B981;
+            --success-bg: #ECFDF5;
+            --success-border: #A7F3D0;
+            --warning: #F59E0B;
+            --warning-bg: #FFFBEB;
+            --warning-border: #FDE68A;
+            --danger: #EF4444;
+            --danger-bg: #FEF2F2;
+            --danger-border: #FECACA;
+            --bg: #F8FAFC;
+            --surface: #FFFFFF;
+            --border: #E2E8F0;
+            --border-light: #F1F5F9;
+            --text: #334155;
+            --text-light: #64748B;
+            --text-muted: #94A3B8;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1);
+            --radius: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ===== LAYOUT ===== */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: 260px;
+            background: var(--brand);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--brand-light);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.25rem;
+            font-weight: 800;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--accent);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+
+        .nav-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .nav-section-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            padding: 0 0.75rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0.75rem;
+            border-radius: var(--radius);
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            cursor: pointer;
+            margin-bottom: 2px;
+        }
+
+        .nav-item:hover {
+            background: var(--brand-light);
+            color: white;
+        }
+
+        .nav-item.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        .nav-item .icon {
+            font-size: 1.1rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .nav-item .badge {
+            margin-left: auto;
+            background: var(--danger);
+            color: white;
+            font-size: 0.65rem;
+            font-weight: 700;
+            padding: 0.15rem 0.4rem;
+            border-radius: 10px;
+        }
+
+        .sidebar-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--brand-light);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent) 0%, #818CF8 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.875rem;
+        }
+
+        .user-details {
+            flex: 1;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .user-role {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ===== TOP BAR ===== */
+        .top-bar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .page-title {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .page-title h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--brand);
+        }
+
+        .page-title .subtitle {
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 50px;
+            width: 280px;
+        }
+
+        .search-box input {
+            border: none;
+            background: transparent;
+            outline: none;
+            font-size: 0.875rem;
+            width: 100%;
+            color: var(--text);
+        }
+
+        .search-box input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .btn {
+            padding: 0.6rem 1.25rem;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--brand);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--brand-light);
+        }
+
+        .btn-outline {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .btn-outline:hover {
+            background: var(--bg);
+        }
+
+        .notification-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+        }
+
+        .notification-btn:hover {
+            background: var(--surface);
+            border-color: var(--text-muted);
+        }
+
+        .notification-btn .dot {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 8px;
+            height: 8px;
+            background: var(--danger);
+            border-radius: 50%;
+            border: 2px solid var(--surface);
+        }
+
+        /* ===== DASHBOARD CONTENT ===== */
+        .dashboard-content {
+            padding: 2rem;
+            flex: 1;
+        }
+
+        /* ===== KPI CARDS ===== */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .kpi-card {
+            background: var(--surface);
+            border-radius: var(--radius-xl);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-md);
+            border-left: 4px solid var(--accent);
+            transition: all 0.2s;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .kpi-card.success { border-left-color: var(--success); }
+        .kpi-card.warning { border-left-color: var(--warning); }
+        .kpi-card.danger { border-left-color: var(--danger); }
+
+        .kpi-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+
+        .kpi-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .kpi-card.success .kpi-icon { background: var(--success-bg); }
+        .kpi-card.warning .kpi-icon { background: var(--warning-bg); }
+        .kpi-card.danger .kpi-icon { background: var(--danger-bg); }
+        .kpi-card .kpi-icon { background: var(--accent-bg); }
+
+        .kpi-trend {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: 20px;
+        }
+
+        .kpi-trend.up {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
+        .kpi-trend.down {
+            background: var(--danger-bg);
+            color: var(--danger);
+        }
+
+        .kpi-value {
+            font-size: 2.25rem;
+            font-weight: 800;
+            color: var(--brand);
+            margin-bottom: 0.25rem;
+            line-height: 1;
+        }
+
+        .kpi-label {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        /* ===== SECTION HEADER ===== */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .section-header h2 {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--brand);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 0.25rem;
+            background: var(--bg);
+            padding: 4px;
+            border-radius: var(--radius);
+        }
+
+        .filter-tab {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: var(--text-light);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .filter-tab:hover {
+            color: var(--text);
+        }
+
+        .filter-tab.active {
+            background: var(--surface);
+            color: var(--text);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .filter-tab .count {
+            background: var(--border);
+            padding: 0.1rem 0.4rem;
+            border-radius: 10px;
+            font-size: 0.7rem;
+        }
+
+        .filter-tab.active .count {
+            background: var(--accent-bg);
+            color: var(--accent);
+        }
+
+        .filter-tab.danger .count {
+            background: var(--danger-bg);
+            color: var(--danger);
+        }
+
+        .filter-tab.warning .count {
+            background: var(--warning-bg);
+            color: var(--warning);
+        }
+
+        /* ===== ATTENTION TABLE ===== */
+        .attention-table-wrapper {
+            background: var(--surface);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+            margin-bottom: 2rem;
+        }
+
+        .attention-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .attention-table th {
+            background: var(--bg);
+            padding: 1rem 1.25rem;
+            text-align: left;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-light);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .attention-table td {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 0.875rem;
+        }
+
+        .attention-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .attention-table tr:hover {
+            background: var(--bg);
+        }
+
+        .traffic-light {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .traffic-light.green { background: var(--success); box-shadow: 0 0 8px rgba(16, 185, 129, 0.4); }
+        .traffic-light.amber { background: var(--warning); box-shadow: 0 0 8px rgba(245, 158, 11, 0.4); }
+        .traffic-light.red { background: var(--danger); box-shadow: 0 0 8px rgba(239, 68, 68, 0.4); animation: pulse-red 2s infinite; }
+
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        .contract-cell {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .contract-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--accent-bg) 0%, #C7D2FE 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+        }
+
+        .contract-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .contract-name {
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .contract-id {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .client-name {
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .issue-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 0.3rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .issue-badge.sla {
+            background: var(--danger-bg);
+            color: var(--danger);
+        }
+
+        .issue-badge.payment {
+            background: var(--warning-bg);
+            color: var(--warning);
+        }
+
+        .issue-badge.pending {
+            background: var(--accent-bg);
+            color: var(--accent);
+        }
+
+        .action-cell {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .table-action-btn {
+            padding: 0.4rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-light);
+            transition: all 0.2s;
+        }
+
+        .table-action-btn:hover {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .table-action-btn.primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        .table-action-btn.primary:hover {
+            background: var(--accent-light);
+        }
+
+        /* ===== CONTENT GRID ===== */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 1.5rem;
+        }
+
+        /* ===== AGENT FEED ===== */
+        .agent-feed {
+            background: var(--surface);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+        }
+
+        .agent-feed-header {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .agent-feed-header h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--brand);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .agent-feed-body {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .agent-item {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            gap: 1rem;
+            transition: background 0.2s;
+        }
+
+        .agent-item:hover {
+            background: var(--bg);
+        }
+
+        .agent-item:last-child {
+            border-bottom: none;
+        }
+
+        .agent-item-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--accent-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .agent-item-icon.warning { background: var(--warning-bg); }
+        .agent-item-icon.danger { background: var(--danger-bg); }
+        .agent-item-icon.success { background: var(--success-bg); }
+
+        .agent-item-content {
+            flex: 1;
+        }
+
+        .agent-item-text {
+            font-size: 0.85rem;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+            line-height: 1.5;
+        }
+
+        .agent-item-text strong {
+            color: var(--brand);
+        }
+
+        .agent-item-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .agent-item-time {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .agent-item-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .agent-action-btn {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .agent-action-btn.accept {
+            background: var(--accent);
+            color: white;
+        }
+
+        .agent-action-btn.dismiss {
+            background: var(--bg);
+            color: var(--text-light);
+        }
+
+        /* ===== QUICK STATS ===== */
+        .quick-stats {
+            background: var(--surface);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            padding: 1.5rem;
+        }
+
+        .quick-stats h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--brand);
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .stat-row-label {
+            font-size: 0.85rem;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .stat-row-value {
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .stat-row-value.success { color: var(--success); }
+        .stat-row-value.warning { color: var(--warning); }
+        .stat-row-value.danger { color: var(--danger); }
+
+        /* Progress bar */
+        .mini-progress {
+            width: 100%;
+            margin-top: 1rem;
+        }
+
+        .mini-progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .mini-progress-label span:first-child {
+            color: var(--text-light);
+        }
+
+        .mini-progress-label span:last-child {
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .mini-progress-bar {
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .mini-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--success) 0%, var(--accent) 100%);
+            border-radius: 4px;
+            transition: width 0.5s;
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon">⚡</div>
+                    <span>ContractNest</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-label">Main</div>
+                    <div class="nav-item active">
+                        <span class="icon">📊</span>
+                        Ops Cockpit
+                    </div>
+                    <div class="nav-item">
+                        <span class="icon">📋</span>
+                        All Contracts
+                        <span class="badge">523</span>
+                    </div>
+                    <div class="nav-item">
+                        <span class="icon">📦</span>
+                        Templates
+                    </div>
+                    <div class="nav-item">
+                        <span class="icon">🧱</span>
+                        Block Catalog
+                    </div>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-label">Stakeholders</div>
+                    <div class="nav-item">
+                        <span class="icon">👥</span>
+                        Clients
+                    </div>
+                    <div class="nav-item">
+                        <span class="icon">🔧</span>
+                        Vendors
+                    </div>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-label">Finance</div>
+                    <div class="nav-item">
+                        <span class="icon">💰</span>
+                        Invoices
+                        <span class="badge">12</span>
+                    </div>
+                    <div class="nav-item">
+                        <span class="icon">📈</span>
+                        Revenue
+                    </div>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-label">Settings</div>
+                    <div class="nav-item">
+                        <span class="icon">⚙️</span>
+                        Settings
+                    </div>
+                    <div class="nav-item">
+                        <span class="icon">🔗</span>
+                        Integrations
+                    </div>
+                </div>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">CS</div>
+                    <div class="user-details">
+                        <div class="user-name">Charan S.</div>
+                        <div class="user-role">Admin • Vikuna Wellness</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            <!-- TOP BAR -->
+            <div class="top-bar">
+                <div class="page-title">
+                    <h1>Ops Cockpit</h1>
+                    <span class="subtitle">Real-time operations overview</span>
+                </div>
+                
+                <div class="top-actions">
+                    <div class="search-box">
+                        <span>🔍</span>
+                        <input type="text" placeholder="Search contracts, clients...">
+                    </div>
+                    <button class="btn btn-outline">
+                        <span>📥</span> Export
+                    </button>
+                    <button class="btn btn-primary">
+                        <span>➕</span> New Contract
+                    </button>
+                    <div class="notification-btn">
+                        <span>🔔</span>
+                        <span class="dot"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DASHBOARD CONTENT -->
+            <div class="dashboard-content">
+                <!-- KPI CARDS -->
+                <div class="kpi-grid">
+                    <div class="kpi-card success">
+                        <div class="kpi-header">
+                            <div class="kpi-icon">📋</div>
+                            <div class="kpi-trend up">↑ +12</div>
+                        </div>
+                        <div class="kpi-value">523</div>
+                        <div class="kpi-label">Active Contracts</div>
+                    </div>
+                    
+                    <div class="kpi-card danger">
+                        <div class="kpi-header">
+                            <div class="kpi-icon">⚠️</div>
+                            <div class="kpi-trend down">↑ +3</div>
+                        </div>
+                        <div class="kpi-value">14</div>
+                        <div class="kpi-label">SLA Breaches</div>
+                    </div>
+                    
+                    <div class="kpi-card warning">
+                        <div class="kpi-header">
+                            <div class="kpi-icon">📌</div>
+                            <div class="kpi-trend up">↓ -8</div>
+                        </div>
+                        <div class="kpi-value">89</div>
+                        <div class="kpi-label">Pending Assignments</div>
+                    </div>
+                    
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <div class="kpi-icon">💰</div>
+                            <div class="kpi-trend up">↑ +18%</div>
+                        </div>
+                        <div class="kpi-value">₹12.4L</div>
+                        <div class="kpi-label">Projected Revenue (30d)</div>
+                    </div>
+                </div>
+
+                <!-- ATTENTION TABLE -->
+                <div class="section-header">
+                    <h2>🚨 Requires Immediate Attention</h2>
+                    <div class="filter-tabs">
+                        <button class="filter-tab active">
+                            All <span class="count">24</span>
+                        </button>
+                        <button class="filter-tab danger">
+                            SLA Breach <span class="count">14</span>
+                        </button>
+                        <button class="filter-tab warning">
+                            Payment Risk <span class="count">7</span>
+                        </button>
+                        <button class="filter-tab">
+                            Unassigned <span class="count">3</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="attention-table-wrapper">
+                    <table class="attention-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;">Status</th>
+                                <th>Contract</th>
+                                <th>Client</th>
+                                <th>Issue</th>
+                                <th>Due</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="traffic-light red"></span></td>
+                                <td>
+                                    <div class="contract-cell">
+                                        <div class="contract-avatar">🧘</div>
+                                        <div class="contract-info">
+                                            <span class="contract-name">PCOD Balance Program</span>
+                                            <span class="contract-id">#CN-9921</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="client-name">Anita Sharma</span></td>
+                                <td><span class="issue-badge sla">⏱️ SLA Breach - Gynec Consult</span></td>
+                                <td style="color: var(--danger); font-weight: 600;">2 days overdue</td>
+                                <td>
+                                    <div class="action-cell">
+                                        <button class="table-action-btn primary">Assign Now</button>
+                                        <button class="table-action-btn">View</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><span class="traffic-light red"></span></td>
+                                <td>
+                                    <div class="contract-cell">
+                                        <div class="contract-avatar">❄️</div>
+                                        <div class="contract-info">
+                                            <span class="contract-name">AC Annual Maintenance</span>
+                                            <span class="contract-id">#CN-8834</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="client-name">Raj Enterprises</span></td>
+                                <td><span class="issue-badge sla">⏱️ SLA Breach - Service Visit</span></td>
+                                <td style="color: var(--danger); font-weight: 600;">1 day overdue</td>
+                                <td>
+                                    <div class="action-cell">
+                                        <button class="table-action-btn primary">Escalate</button>
+                                        <button class="table-action-btn">View</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><span class="traffic-light amber"></span></td>
+                                <td>
+                                    <div class="contract-cell">
+                                        <div class="contract-avatar">⚙️</div>
+                                        <div class="contract-info">
+                                            <span class="contract-name">MRI Calibration AMC</span>
+                                            <span class="contract-id">#CN-7721</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="client-name">City Hospital</span></td>
+                                <td><span class="issue-badge payment">💳 Invoice Overdue - ₹45,000</span></td>
+                                <td style="color: var(--warning); font-weight: 600;">15 days overdue</td>
+                                <td>
+                                    <div class="action-cell">
+                                        <button class="table-action-btn primary">Send Reminder</button>
+                                        <button class="table-action-btn">View</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><span class="traffic-light amber"></span></td>
+                                <td>
+                                    <div class="contract-cell">
+                                        <div class="contract-avatar">🖥️</div>
+                                        <div class="contract-info">
+                                            <span class="contract-name">Server Support Contract</span>
+                                            <span class="contract-id">#CN-6655</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="client-name">TechFlow Inc</span></td>
+                                <td><span class="issue-badge payment">💳 Payment Pending - ₹1,20,000</span></td>
+                                <td style="color: var(--warning); font-weight: 600;">7 days overdue</td>
+                                <td>
+                                    <div class="action-cell">
+                                        <button class="table-action-btn primary">Send Reminder</button>
+                                        <button class="table-action-btn">View</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><span class="traffic-light green"></span></td>
+                                <td>
+                                    <div class="contract-cell">
+                                        <div class="contract-avatar">🏋️</div>
+                                        <div class="contract-info">
+                                            <span class="contract-name">Corporate Fitness Program</span>
+                                            <span class="contract-id">#CN-9102</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="client-name">InfoSys Ltd</span></td>
+                                <td><span class="issue-badge pending">📌 3 Tasks Unassigned</span></td>
+                                <td style="font-weight: 500;">Due in 5 days</td>
+                                <td>
+                                    <div class="action-cell">
+                                        <button class="table-action-btn primary">Assign</button>
+                                        <button class="table-action-btn">View</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- CONTENT GRID -->
+                <div class="content-grid">
+                    <!-- AGENT FEED -->
+                    <div class="agent-feed">
+                        <div class="agent-feed-header">
+                            <h3>⚡ Agent Activity Feed</h3>
+                            <button class="btn btn-outline" style="padding: 0.4rem 0.75rem; font-size: 0.75rem;">
+                                View All
+                            </button>
+                        </div>
+                        <div class="agent-feed-body">
+                            <div class="agent-item">
+                                <div class="agent-item-icon danger">🚨</div>
+                                <div class="agent-item-content">
+                                    <div class="agent-item-text">
+                                        <strong>SLA Alert:</strong> Yoga Session #3 for Anita Sharma is at risk. Only 4 hours remaining. Vendor Priya hasn't started.
+                                    </div>
+                                    <div class="agent-item-meta">
+                                        <span class="agent-item-time">2 minutes ago</span>
+                                        <div class="agent-item-actions">
+                                            <button class="agent-action-btn accept">Nudge Vendor</button>
+                                            <button class="agent-action-btn dismiss">Dismiss</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="agent-item">
+                                <div class="agent-item-icon warning">💳</div>
+                                <div class="agent-item-content">
+                                    <div class="agent-item-text">
+                                        <strong>Payment Risk:</strong> Invoice #INV-2234 for MRI Calibration AMC is 15 days overdue. Auto-reminder sent.
+                                    </div>
+                                    <div class="agent-item-meta">
+                                        <span class="agent-item-time">15 minutes ago</span>
+                                        <div class="agent-item-actions">
+                                            <button class="agent-action-btn accept">Escalate</button>
+                                            <button class="agent-action-btn dismiss">OK</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="agent-item">
+                                <div class="agent-item-icon success">✅</div>
+                                <div class="agent-item-content">
+                                    <div class="agent-item-text">
+                                        <strong>Task Completed:</strong> AC Service for Raj Enterprises completed. Evidence verified and invoice auto-generated.
+                                    </div>
+                                    <div class="agent-item-meta">
+                                        <span class="agent-item-time">32 minutes ago</span>
+                                        <div class="agent-item-actions">
+                                            <button class="agent-action-btn dismiss">View Invoice</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="agent-item">
+                                <div class="agent-item-icon">📋</div>
+                                <div class="agent-item-content">
+                                    <div class="agent-item-text">
+                                        <strong>New Contract:</strong> Server Support Contract accepted by TechFlow Inc. First milestone scheduled for Jan 15.
+                                    </div>
+                                    <div class="agent-item-meta">
+                                        <span class="agent-item-time">1 hour ago</span>
+                                        <div class="agent-item-actions">
+                                            <button class="agent-action-btn dismiss">View</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="agent-item">
+                                <div class="agent-item-icon warning">🔄</div>
+                                <div class="agent-item-content">
+                                    <div class="agent-item-text">
+                                        <strong>Renewal Alert:</strong> Corporate Fitness Program for InfoSys expires in 30 days. Draft renewal contract?
+                                    </div>
+                                    <div class="agent-item-meta">
+                                        <span class="agent-item-time">2 hours ago</span>
+                                        <div class="agent-item-actions">
+                                            <button class="agent-action-btn accept">Create Draft</button>
+                                            <button class="agent-action-btn dismiss">Later</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- QUICK STATS -->
+                    <div class="quick-stats">
+                        <h3>📊 Quick Stats</h3>
+                        
+                        <div class="stat-row">
+                            <span class="stat-row-label">🟢 On Track</span>
+                            <span class="stat-row-value success">487</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-row-label">🟡 At Risk</span>
+                            <span class="stat-row-value warning">22</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-row-label">🔴 Critical</span>
+                            <span class="stat-row-value danger">14</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-row-label">📤 Pending Acceptance</span>
+                            <span class="stat-row-value">31</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-row-label">🔄 Expiring (30d)</span>
+                            <span class="stat-row-value warning">18</span>
+                        </div>
+                        
+                        <div class="mini-progress">
+                            <div class="mini-progress-label">
+                                <span>SLA Compliance</span>
+                                <span>93.2%</span>
+                            </div>
+                            <div class="mini-progress-bar">
+                                <div class="mini-progress-fill" style="width: 93.2%;"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="mini-progress">
+                            <div class="mini-progress-label">
+                                <span>Collection Rate</span>
+                                <span>87.5%</span>
+                            </div>
+                            <div class="mini-progress-bar">
+                                <div class="mini-progress-fill" style="width: 87.5%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // ===== FILTER TABS =====
+        const filterTabs = document.querySelectorAll('.filter-tab');
+        filterTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                filterTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+            });
+        });
+
+        // ===== NAV ITEMS =====
+        const navItems = document.querySelectorAll('.nav-item');
+        navItems.forEach(item => {
+            item.addEventListener('click', () => {
+                navItems.forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+            });
+        });
+
+        // ===== SIMULATE REAL-TIME UPDATES =====
+        function simulateUpdate() {
+            const agentFeed = document.querySelector('.agent-feed-body');
+            const newItem = document.createElement('div');
+            newItem.className = 'agent-item';
+            newItem.style.background = 'var(--accent-bg)';
+            newItem.innerHTML = `
+                <div class="agent-item-icon success">📸</div>
+                <div class="agent-item-content">
+                    <div class="agent-item-text">
+                        <strong>Evidence Uploaded:</strong> Vendor Priya uploaded session photos for Yoga Session #2. AI validation in progress.
+                    </div>
+                    <div class="agent-item-meta">
+                        <span class="agent-item-time">Just now</span>
+                        <div class="agent-item-actions">
+                            <button class="agent-action-btn dismiss">Review</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            agentFeed.insertBefore(newItem, agentFeed.firstChild);
+            
+            setTimeout(() => {
+                newItem.style.background = '';
+            }, 3000);
+        }
+
+        // Uncomment to simulate real-time updates
+        // setInterval(simulateUpdate, 10000);
+    </script>
+</body>
+</html>

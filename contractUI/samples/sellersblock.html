@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ContractNest - Atomic Block Studio</title>
+    <style>
+        :root {
+            --brand: #0F172A;
+            --accent: #6366F1; /* Agentic Indigo */
+            --bg: #F1F5F9;
+            --surface: #FFFFFF;
+            --border: #E2E8F0;
+            --text: #334155;
+            --sidebar-width: 280px;
+        }
+        * { box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+        body { margin: 0; background: var(--bg); display: flex; height: 100vh; overflow: hidden; color: var(--text); }
+
+        /* COLUMN 1: TYPE SELECTOR */
+        .col-types { width: 80px; background: var(--brand); display: flex; flex-direction: column; align-items: center; padding-top: 20px; z-index: 10; }
+        .type-icon { 
+            width: 48px; height: 48px; border-radius: 12px; margin-bottom: 15px; 
+            display: flex; align-items: center; justify-content: center; 
+            color: #94A3B8; cursor: pointer; transition: all 0.2s; font-size: 1.2rem;
+        }
+        .type-icon:hover { background: rgba(255,255,255,0.1); color: white; }
+        .type-icon.active { background: var(--accent); color: white; box-shadow: 0 0 15px rgba(99, 102, 241, 0.4); }
+        .type-label { font-size: 0.6rem; color: #94A3B8; margin-top: -10px; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* COLUMN 2: CONFIGURATION CANVAS */
+        .col-config { width: 500px; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; }
+        .config-header { padding: 1.5rem; border-bottom: 1px solid var(--border); }
+        .config-body { padding: 2rem; overflow-y: auto; flex: 1; }
+        
+        .form-group { margin-bottom: 1.5rem; }
+        .form-label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text); }
+        .form-input { width: 100%; padding: 0.8rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; transition: border 0.2s; }
+        .form-input:focus { outline: none; border-color: var(--accent); }
+        
+        .toggle-row { display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: #F8FAFC; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 1rem; }
+        .toggle-switch { width: 40px; height: 22px; background: #CBD5E1; border-radius: 20px; position: relative; cursor: pointer; transition: background 0.2s; }
+        .toggle-switch.on { background: var(--success); } /* Green for active */
+        .toggle-switch::after { content: ''; position: absolute; left: 2px; top: 2px; width: 18px; height: 18px; background: white; border-radius: 50%; transition: transform 0.2s; }
+        .toggle-switch.on::after { transform: translateX(18px); }
+
+        /* COLUMN 3: LIVE PREVIEW */
+        .col-preview { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; background-image: radial-gradient(#E2E8F0 1px, transparent 1px); background-size: 20px 20px; }
+        .preview-label { margin-bottom: 1rem; font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 1px; font-size: 0.8rem; }
+        
+        /* THE BLOCK CARD DESIGN */
+        .block-card { 
+            width: 400px; background: white; border-radius: 12px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); 
+            border: 1px solid var(--border); overflow: hidden; position: relative;
+        }
+        .block-header { padding: 1.5rem; background: white; border-bottom: 1px solid var(--bg); display: flex; justify-content: space-between; align-items: start; }
+        .block-icon { width: 40px; height: 40px; background: #EEF2FF; color: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; margin-right: 1rem; }
+        .block-body { padding: 1.5rem; }
+        .block-footer { background: #F8FAFC; padding: 1rem 1.5rem; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: #64748B; }
+
+        .meta-tag { display: inline-flex; align-items: center; gap: 5px; padding: 4px 8px; background: #F1F5F9; border-radius: 4px; font-size: 0.75rem; color: #475569; margin-top: 5px; }
+
+        /* AGENTIC LOGIC SECTION */
+        .agent-settings { margin-top: 2rem; padding: 1.5rem; background: #EEF2FF; border: 1px solid #C7D2FE; border-radius: 8px; }
+        .agent-title { color: var(--accent); font-weight: 700; display: flex; align-items: center; gap: 8px; margin-bottom: 1rem; font-size: 0.9rem; }
+
+        /* TABS for Configuration */
+        .config-tabs { display: flex; border-bottom: 1px solid var(--border); padding: 0 1rem; background: white; }
+        .config-tab { padding: 1rem; cursor: pointer; font-size: 0.9rem; color: #64748B; border-bottom: 2px solid transparent; }
+        .config-tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+
+        /* Button */
+        .btn-save { margin: 1.5rem; padding: 1rem; background: var(--brand); color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; }
+        .btn-save:hover { background: #1E293B; }
+
+    </style>
+</head>
+<body>
+
+    <div class="col-types">
+        <div class="type-icon active" onclick="setMode('service')">⚡</div>
+        <div class="type-label">Service</div>
+
+        <div class="type-icon" onclick="setMode('pricing')">💰</div>
+        <div class="type-label">Pricing</div>
+
+        <div class="type-icon" onclick="setMode('timeline')">📅</div>
+        <div class="type-label">Timeline</div>
+
+        <div class="type-icon" onclick="setMode('assignee')">👤</div>
+        <div class="type-label">Assignee</div>
+
+        <div class="type-icon" onclick="setMode('media')">📷</div>
+        <div class="type-label">Media</div>
+    </div>
+
+    <div class="col-config">
+        <div class="config-header">
+            <h2 style="margin:0; font-size: 1.2rem;">Configure Service Block</h2>
+            <p style="margin:5px 0 0 0; font-size: 0.85rem; color: #64748B;">Define the core deliverable and its evidence.</p>
+        </div>
+
+        <div class="config-tabs">
+            <div class="config-tab active">Content</div>
+            <div class="config-tab">Evidence Rules</div>
+            <div class="config-tab">Agent Logic</div>
+        </div>
+
+        <div class="config-body">
+            <div class="form-group">
+                <label class="form-label">Block Title</label>
+                <input type="text" class="form-input" value="Nutrition Consultation" onkeyup="updatePreview(this.value, 'title')">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Description / Scope</label>
+                <textarea class="form-input" rows="3" onkeyup="updatePreview(this.value, 'desc')">One-on-one session with Senior Nutritionist. Includes diet chart preparation.</textarea>
+            </div>
+
+            <div style="margin-top: 2rem;">
+                <label class="form-label" style="color: var(--accent);">Evidence Requirements (How is this proven?)</label>
+                <div class="toggle-row">
+                    <span>Require Photo Upload</span>
+                    <div class="toggle-switch"></div>
+                </div>
+                <div class="toggle-row">
+                    <span>Require Digital Signature (Vendor)</span>
+                    <div class="toggle-switch on"></div>
+                </div>
+                <div class="toggle-row">
+                    <span>Require GPS Geotag</span>
+                    <div class="toggle-switch"></div>
+                </div>
+            </div>
+
+            <div class="agent-settings">
+                <div class="agent-title">⚡ Agentic Rules</div>
+                <p style="font-size: 0.8rem; margin-bottom: 1rem;">What should the AI do if this block is at risk?</p>
+                
+                <div class="form-group">
+                    <label class="form-label">If Status is 'Pending' after Due Date:</label>
+                    <select class="form-input">
+                        <option>Nudge Assignee (Email/SMS)</option>
+                        <option>Escalate to Manager</option>
+                        <option>Apply Penalty to Vendor</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn-save">Save to Block Library</button>
+    </div>
+
+    <div class="col-preview">
+        <div class="preview-label">Buyer / Vendor View</div>
+        
+        <div class="block-card">
+            <div class="block-header">
+                <div style="display: flex;">
+                    <div class="block-icon">⚡</div>
+                    <div>
+                        <h3 id="prev-title" style="margin:0; font-size: 1rem;">Nutrition Consultation</h3>
+                        <div class="meta-tag">Service Event</div>
+                    </div>
+                </div>
+                <div style="width: 10px; height: 10px; background: #E2E8F0; border-radius: 50%;"></div>
+            </div>
+
+            <div class="block-body">
+                <p id="prev-desc" style="margin:0; font-size: 0.9rem; color: #475569; line-height: 1.5;">
+                    One-on-one session with Senior Nutritionist. Includes diet chart preparation.
+                </p>
+                
+                <div style="margin-top: 1.5rem; border: 1px dashed #CBD5E1; padding: 0.8rem; border-radius: 6px; background: #F8FAFC; text-align: center; color: #64748B; font-size: 0.8rem;">
+                    🔒 Vendor Signature Required
+                </div>
+            </div>
+
+            <div class="block-footer">
+                <div style="display: flex; align-items: center; gap: 5px; color: var(--accent); font-weight: 600; font-size: 0.75rem;">
+                    <span>⚡</span> Auto-Nudge Enabled
+                </div>
+                <div>ID: BLK-102</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updatePreview(val, type) {
+            if(type === 'title') document.getElementById('prev-title').innerText = val;
+            if(type === 'desc') document.getElementById('prev-desc').innerText = val;
+        }
+
+        function setMode(mode) {
+            // In a full app, this would swap the form fields and the preview card style
+            // based on whether it is Pricing, Media, or Service.
+            document.querySelectorAll('.type-icon').forEach(el => el.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            
+            // Just for demo visualization change
+            const icon = document.querySelector('.block-icon');
+            if(mode === 'pricing') icon.innerText = '💰';
+            else if(mode === 'timeline') icon.innerText = '📅';
+            else if(mode === 'assignee') icon.innerText = '👤';
+            else icon.innerText = '⚡';
+        }
+    </script>
+</body>
+</html>

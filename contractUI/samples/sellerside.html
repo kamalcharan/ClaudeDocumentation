@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ContractNest - Ops Control Center</title>
+    <style>
+        :root {
+            --primary: #0F172A; /* Deep Navy (Professional) */
+            --accent: #3B82F6; /* Action Blue */
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --bg: #F1F5F9;
+            --surface: #FFFFFF;
+            --border: #E2E8F0;
+            --text-main: #1E293B;
+            --text-light: #64748B;
+        }
+        * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { margin: 0; background: var(--bg); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+
+        /* SIDEBAR NAV */
+        aside { width: 240px; background: var(--primary); color: white; display: flex; flex-direction: column; padding: 1.5rem; }
+        .logo { font-size: 1.4rem; font-weight: 800; margin-bottom: 2.5rem; display: flex; align-items: center; gap: 10px; }
+        .nav-item { padding: 0.8rem 1rem; color: #94A3B8; cursor: pointer; border-radius: 8px; margin-bottom: 0.5rem; font-weight: 500; transition: all 0.2s; display: flex; align-items: center; gap: 10px; }
+        .nav-item:hover, .nav-item.active { background: #1E293B; color: white; }
+        .nav-item.active { border-left: 3px solid var(--accent); }
+
+        /* MAIN CONTENT */
+        main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        
+        /* HEADER */
+        header { background: var(--surface); height: 70px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; padding: 0 2rem; }
+        .breadcrumbs { font-size: 0.9rem; color: var(--text-light); }
+        .header-actions { display: flex; gap: 1rem; }
+
+        /* VIEW CONTAINER */
+        .content-area { flex: 1; padding: 2rem; overflow-y: auto; }
+        .view { display: none; animation: fadeUp 0.3s ease; }
+        .view.active { display: block; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* UTILITY CLASSES */
+        .btn { padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: 600; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-outline { background: white; border: 1px solid var(--border); color: var(--text-main); }
+        .card { background: var(--surface); border-radius: 10px; border: 1px solid var(--border); padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.05); margin-bottom: 1.5rem; }
+        
+        /* DASHBOARD METRICS */
+        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2rem; }
+        .kpi-card { background: white; padding: 1.5rem; border-radius: 10px; border-left: 4px solid var(--accent); box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .kpi-num { font-size: 2rem; font-weight: 700; margin: 0.5rem 0; }
+        
+        /* TEMPLATE GRID */
+        .template-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+        .template-card { border: 1px solid var(--border); background: white; border-radius: 8px; overflow: hidden; transition: transform 0.2s; cursor: pointer; }
+        .template-card:hover { transform: translateY(-3px); border-color: var(--accent); }
+        .template-header { background: #F8FAFC; padding: 1rem; border-bottom: 1px solid var(--border); font-weight: 600; display: flex; justify-content: space-between; }
+        .template-body { padding: 1rem; color: var(--text-light); font-size: 0.9rem; }
+        .tag { font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; background: #E2E8F0; color: #475569; }
+
+        /* EXECUTION PLAN (The Promise) */
+        .plan-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .plan-timeline { display: flex; flex-direction: column; gap: 1rem; }
+        
+        .task-row { display: grid; grid-template-columns: 50px 3fr 2fr 1fr 1fr; align-items: center; background: white; padding: 1rem; border-radius: 8px; border: 1px solid var(--border); transition: background 0.2s; }
+        .task-row:hover { background: #F8FAFC; }
+        .task-icon { width: 32px; height: 32px; border-radius: 50%; background: #EFF6FF; color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
+        .task-meta { display: flex; flex-direction: column; }
+        .assignee-badge { display: inline-flex; align-items: center; gap: 5px; background: #F1F5F9; padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; border: 1px dashed #94A3B8; }
+        .assignee-badge.assigned { background: #DCFCE7; border: 1px solid #86EFAC; color: #166534; }
+        
+        /* WIZARD OVERLAY */
+        .wizard-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 100; display: none; align-items: center; justify-content: center; }
+        .wizard-box { background: white; width: 600px; border-radius: 12px; padding: 2rem; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+        .wizard-step { display: none; }
+        .wizard-step.active { display: block; }
+
+    </style>
+</head>
+<body>
+
+    <aside>
+        <div class="logo">
+            <span>⚡</span> Vikuna
+        </div>
+        <div class="nav-item active" onclick="nav('dashboard', this)">📊 Ops Dashboard</div>
+        <div class="nav-item" onclick="nav('contracts', this)">🗂 All Contracts</div>
+        <div class="nav-item" onclick="nav('templates', this)">🧩 Template Library</div>
+        <div class="nav-item" onclick="nav('billing', this)">💳 Billing & AR</div>
+    </aside>
+
+    <main>
+        <header>
+            <div class="breadcrumbs">Operations / Dashboard</div>
+            <div class="header-actions">
+                <button class="btn btn-outline">🔔 Alerts (3)</button>
+                <button class="btn btn-primary" onclick="openWizard()">+ New Commitment</button>
+            </div>
+        </header>
+
+        <div class="content-area">
+            
+            <div id="view-dashboard" class="view active">
+                <h2>Operational Health</h2>
+                <p style="margin-bottom: 2rem; color: var(--text-light);">Managing 523 Active Service Contracts</p>
+
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <small>Active Commitments</small>
+                        <div class="kpi-num">523</div>
+                        <span style="color: var(--success); font-size: 0.8rem;">+12 this month</span>
+                    </div>
+                    <div class="kpi-card" style="border-left-color: var(--danger);">
+                        <small>SLA Breaches (Risk)</small>
+                        <div class="kpi-num" style="color: var(--danger);">14</div>
+                        <span style="font-size: 0.8rem;">Requires immediate Assigning</span>
+                    </div>
+                    <div class="kpi-card" style="border-left-color: var(--warning);">
+                        <small>Pending Executions</small>
+                        <div class="kpi-num">89</div>
+                        <span style="font-size: 0.8rem;">Tasks unassigned to Vendors</span>
+                    </div>
+                    <div class="kpi-card" style="border-left-color: var(--success);">
+                        <small>Projected Revenue</small>
+                        <div class="kpi-num">$1.2M</div>
+                        <span style="font-size: 0.8rem;">Next 30 Days</span>
+                    </div>
+                </div>
+
+                <h3>🔥 Immediate Attention Needed (Operational Help)</h3>
+                <div class="card" style="padding: 0;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr style="background: #F8FAFC; text-align: left;">
+                            <th style="padding: 1rem;">Client</th>
+                            <th style="padding: 1rem;">Contract</th>
+                            <th style="padding: 1rem;">Issue</th>
+                            <th style="padding: 1rem;">Action</th>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border);">
+                            <td style="padding: 1rem;">Apollo Hospitals</td>
+                            <td>AMC - HVAC Unit 4</td>
+                            <td><span style="color: var(--danger);">SLA Breach in 2 hrs</span></td>
+                            <td><button class="btn btn-primary" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Assign Tech</button></td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid var(--border);">
+                            <td style="padding: 1rem;">Rob's Gym</td>
+                            <td>Wellness PCOD</td>
+                            <td><span style="color: var(--warning);">Payment Failed</span></td>
+                            <td><button class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Resend Invoice</button></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div id="view-templates" class="view">
+                <h2>Template Library</h2>
+                <p style="margin-bottom: 2rem; color: var(--text-light);">The "Master Architecture" for your services. Define once, instantiate many.</p>
+
+                <div class="template-grid">
+                    <div class="template-card" onclick="openWizardWithTemplate('AMC Gold')">
+                        <div class="template-header">
+                            OEM Annual Maintenance
+                            <span class="tag">Technical</span>
+                        </div>
+                        <div class="template-body">
+                            <p><strong>Structure:</strong> 4 Quarterly Visits + Spares.</p>
+                            <p><strong>Billing:</strong> Subscription (Monthly).</p>
+                            <p><strong>Tasks:</strong> Auto-assigns to "Field Engineer" role.</p>
+                        </div>
+                        <div style="padding: 1rem; border-top: 1px solid var(--border); background: #F8FAFC; color: var(--accent); font-weight: 600; font-size: 0.9rem;">
+                            Use Template →
+                        </div>
+                    </div>
+
+                    <div class="template-card" onclick="openWizardWithTemplate('PCOD Wellness')">
+                        <div class="template-header">
+                            Wellness Package (3 Month)
+                            <span class="tag">Healthcare</span>
+                        </div>
+                        <div class="template-body">
+                            <p><strong>Structure:</strong> 10 Sessions (Mixed).</p>
+                            <p><strong>Billing:</strong> 100% Advance.</p>
+                            <p><strong>Tasks:</strong> Requires Vendor (Nutritionist).</p>
+                        </div>
+                        <div style="padding: 1rem; border-top: 1px solid var(--border); background: #F8FAFC; color: var(--accent); font-weight: 600; font-size: 0.9rem;">
+                            Use Template →
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="view-contracts" class="view">
+                <div class="plan-header">
+                    <div>
+                        <h2>Contract #CN-2025-882: PCOD Balance Program</h2>
+                        <div style="display: flex; gap: 1rem; font-size: 0.9rem;">
+                            <span><strong>Client:</strong> Rob Johnson</span>
+                            <span><strong>Status:</strong> <span style="color: var(--success);">Active / Signed</span></span>
+                        </div>
+                    </div>
+                    <div>
+                        <button class="btn btn-outline">View Legal PDF</button>
+                    </div>
+                </div>
+
+                <div class="card" style="background: #F0F9FF; border-color: #BAE6FD;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <strong>Billing Status:</strong> 100% Advance Payment
+                        </div>
+                        <div style="font-weight: 700; font-size: 1.2rem; color: #0369A1;">
+                            $12,000 <span style="font-size: 0.8rem; background: #0284C7; color: white; padding: 2px 6px; border-radius: 4px;">PAID</span>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>Execution Plan & Resource Assignment</h3>
+                <p style="font-size: 0.9rem; color: var(--text-light); margin-bottom: 1rem;">This plan was auto-generated from the contract. Assign resources to ensure delivery.</p>
+
+                <div class="plan-timeline">
+                    <div class="task-row">
+                        <div class="task-icon">1</div>
+                        <div class="task-meta">
+                            <strong>Nutrition Consultation</strong>
+                            <small style="color: var(--text-light);">Due: Sept 25 (Milestone 1)</small>
+                        </div>
+                        <div>
+                            <div class="assignee-badge assigned">
+                                <span>👤 Mark (Vendor)</span>
+                                <span style="font-size: 0.7rem;">✕</span>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="tag" style="background: #FEF3C7; color: #D97706;">Pending Report</span>
+                        </div>
+                        <div style="text-align: right;">
+                            <button class="btn btn-outline" style="padding: 0.2rem 0.5rem; font-size: 0.8rem;">Nudge</button>
+                        </div>
+                    </div>
+
+                    <div class="task-row">
+                        <div class="task-icon">2</div>
+                        <div class="task-meta">
+                            <strong>Yoga Session #1</strong>
+                            <small style="color: var(--text-light);">Due: Sept 29</small>
+                        </div>
+                        <div>
+                            <div class="assignee-badge">
+                                <span>+ Assign Resource</span>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="tag">Not Started</span>
+                        </div>
+                        <div style="text-align: right;">
+                            <button class="btn btn-outline" style="padding: 0.2rem 0.5rem; font-size: 0.8rem;">Edit</button>
+                        </div>
+                    </div>
+
+                    <div class="task-row" style="opacity: 0.6;">
+                        <div class="task-icon">3</div>
+                        <div class="task-meta">
+                            <strong>Gynecologist Consult</strong>
+                            <small style="color: var(--text-light);">Due: Oct 15</small>
+                        </div>
+                        <div>
+                            <div class="assignee-badge">
+                                <span>+ Assign Resource</span>
+                            </div>
+                        </div>
+                        <div>
+                            <span class="tag">Locked</span>
+                        </div>
+                        <div style="text-align: right;"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <div id="wizard" class="wizard-overlay">
+        <div class="wizard-box">
+            <div id="wiz-step-1" class="wizard-step active">
+                <h3>Step 1: Select the Buyer</h3>
+                <p>Who is this proposal for?</p>
+                <input type="text" placeholder="Search Clients (e.g. Rob...)" style="width: 100%; padding: 0.8rem; margin: 1rem 0; border: 1px solid var(--border); border-radius: 6px;">
+                
+                <div style="display: flex; gap: 10px; margin-bottom: 2rem;">
+                    <div style="padding: 10px; border: 1px solid var(--accent); background: #EFF6FF; border-radius: 6px; cursor: pointer;">
+                        <strong>Rob Johnson</strong><br><small>rob@gmail.com</small>
+                    </div>
+                    <div style="padding: 10px; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; opacity: 0.6;">
+                        <strong>Apollo Jubilee</strong><br><small>admin@apollo.com</small>
+                    </div>
+                </div>
+
+                <div style="text-align: right;">
+                    <button class="btn btn-primary" onclick="nextStep(2)">Next: Choose Template →</button>
+                </div>
+            </div>
+
+            <div id="wiz-step-2" class="wizard-step">
+                <h3>Step 2: Apply Service Logic</h3>
+                <p>Select a "Master Template" to instantiate.</p>
+                <select style="width: 100%; padding: 0.8rem; margin: 1rem 0; border: 1px solid var(--border); border-radius: 6px;">
+                    <option>PCOD Balance Program (Standard)</option>
+                    <option>PCOD Balance Program (Premium)</option>
+                    <option>Custom Contract</option>
+                </select>
+
+                <div class="card" style="background: #F8FAFC; margin-bottom: 2rem;">
+                    <strong>Preview:</strong>
+                    <ul style="margin: 0; padding-left: 1.2rem; color: var(--text-light); font-size: 0.9rem; margin-top: 0.5rem;">
+                        <li>Client: <strong>Rob Johnson</strong></li>
+                        <li>Tasks: 4 Yoga, 1 Nutrition, 2 Consults</li>
+                        <li>Price: $12,000 (100% Advance)</li>
+                    </ul>
+                </div>
+
+                <div style="text-align: right; display: flex; justify-content: space-between;">
+                    <button class="btn btn-outline" onclick="nextStep(1)">← Back</button>
+                    <button class="btn btn-primary" onclick="finishWizard()">Generate Proposal 🚀</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Navigation Logic
+        function nav(viewId, element) {
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+            
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById('view-' + viewId).classList.add('active');
+        }
+
+        // Wizard Logic
+        function openWizard() {
+            document.getElementById('wizard').style.display = 'flex';
+            document.getElementById('wiz-step-1').classList.add('active');
+            document.getElementById('wiz-step-2').classList.remove('active');
+        }
+
+        function nextStep(step) {
+            document.querySelectorAll('.wizard-step').forEach(s => s.classList.remove('active'));
+            document.getElementById('wiz-step-' + step).classList.add('active');
+        }
+
+        function finishWizard() {
+            document.getElementById('wizard').style.display = 'none';
+            // Simulate creation and go to contracts view
+            nav('contracts', document.querySelectorAll('.nav-item')[1]);
+            alert("Contract Draft Created! Now assigning tasks...");
+        }
+        
+        // Close modal on outside click
+        document.getElementById('wizard').addEventListener('click', function(e) {
+            if (e.target === this) this.style.display = 'none';
+        });
+    </script>
+</body>
+</html>

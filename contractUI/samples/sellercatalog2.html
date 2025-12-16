@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ContractNest - Universal Catalog Creator</title>
+    <style>
+        :root {
+            --brand: #0F172A;
+            --accent: #6366F1;
+            --bg: #F8FAFC;
+            --surface: #FFFFFF;
+            --border: #E2E8F0;
+            --text: #334155;
+            --text-light: #64748B;
+        }
+        * { box-sizing: border-box; font-family: 'Inter', system-ui, sans-serif; }
+        body { margin: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; height: 100vh; }
+
+        /* THE MODAL CONTAINER */
+        .modal {
+            width: 900px;
+            height: 85vh;
+            background: var(--surface);
+            border-radius: 12px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* LEFT: CATEGORY SELECTOR */
+        .sidebar { width: 220px; background: #F1F5F9; padding: 1.5rem; border-right: 1px solid var(--border); }
+        .sidebar-title { font-size: 0.75rem; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem; }
+        
+        .cat-option {
+            display: flex; align-items: center; gap: 10px; padding: 0.8rem; 
+            border-radius: 8px; cursor: pointer; transition: all 0.2s; 
+            margin-bottom: 0.5rem; font-weight: 500; color: var(--text-light);
+        }
+        .cat-option:hover { background: #E2E8F0; color: var(--text); }
+        .cat-option.active { background: white; color: var(--accent); box-shadow: 0 2px 4px rgba(0,0,0,0.05); font-weight: 600; }
+        
+        /* RIGHT: FORM CONTENT */
+        .content { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+        .modal-header { padding: 1.5rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .form-scroll { flex: 1; padding: 2rem; overflow-y: auto; }
+        .modal-footer { padding: 1rem 2rem; border-top: 1px solid var(--border); background: #F8FAFC; text-align: right; }
+
+        /* FORM ELEMENTS */
+        .section-title { font-size: 0.9rem; font-weight: 700; color: var(--brand); margin-top: 1.5rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
+        .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); margin-left: 10px; }
+        
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1rem; }
+        
+        .form-group { margin-bottom: 1.5rem; }
+        .label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text); margin-bottom: 0.4rem; }
+        .input, .select, textarea { 
+            width: 100%; padding: 0.7rem; border: 1px solid var(--border); 
+            border-radius: 6px; font-size: 0.9rem; transition: border 0.2s; 
+        }
+        .input:focus, .select:focus { border-color: var(--accent); outline: none; }
+        
+        /* RULE BUILDER UI */
+        .rule-box { background: #F0F9FF; border: 1px dashed #BAE6FD; padding: 1rem; border-radius: 8px; }
+        .rule-row { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+        .rule-tag { background: white; padding: 4px 8px; border-radius: 4px; font-weight: 600; font-size: 0.8rem; border: 1px solid #BAE6FD; color: #0284C7; }
+
+        /* BUTTONS */
+        .btn { padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: 600; border: none; cursor: pointer; }
+        .btn-primary { background: var(--brand); color: white; }
+        .btn-ghost { background: transparent; color: var(--text-light); }
+
+        /* DYNAMIC SECTIONS */
+        .dynamic-form { display: none; }
+        .dynamic-form.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+    </style>
+</head>
+<body>
+
+<div class="modal">
+    <div class="sidebar">
+        <div class="sidebar-title">Item Type</div>
+        
+        <div class="cat-option active" onclick="switchForm('service', this)">
+            <span>⚡</span> Services
+        </div>
+        <div class="cat-option" onclick="switchForm('hardware', this)">
+            <span>🛠</span> Hardware / Spares
+        </div>
+        <div class="cat-option" onclick="switchForm('pricing', this)">
+            <span>💰</span> Pricing Models
+        </div>
+        <div class="cat-option" onclick="switchForm('legal', this)">
+            <span>⚖️</span> Legal Terms
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="modal-header">
+            <h2 style="margin:0; font-size: 1.2rem;">Create Catalog Item</h2>
+            <button class="btn-ghost" style="font-size: 1.2rem;">×</button>
+        </div>
+
+        <div class="form-scroll">
+            
+            <div class="section-title"><span>📦 Base Catalog Data</span></div>
+            <div class="grid-2">
+                <div class="form-group">
+                    <label class="label">Item Name</label>
+                    <input type="text" class="input" placeholder="e.g. Annual Maintenance Gold">
+                </div>
+                <div class="form-group">
+                    <label class="label">Internal SKU / Code</label>
+                    <input type="text" class="input" placeholder="e.g. SERV-001">
+                </div>
+            </div>
+
+            <div id="form-service" class="dynamic-form active">
+                <div class="section-title"><span>⚡ Service Logic</span></div>
+                
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="label">Service Category</label>
+                        <select class="select">
+                            <option>On-Site Visit</option>
+                            <option>Remote Consultation</option>
+                            <option>Lab Calibration</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="label">Standard Duration</label>
+                        <input type="text" class="input" placeholder="e.g. 2 Hours">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="label" style="color: var(--accent);">Evidence Rules (Proof of Work)</label>
+                    <div class="rule-box">
+                        <div class="rule-row">
+                            <span>To mark complete, Vendor MUST:</span>
+                        </div>
+                        <div class="rule-row">
+                            <input type="checkbox" checked> <span>Upload Photo</span>
+                        </div>
+                        <div class="rule-row">
+                            <input type="checkbox"> <span>Capture Customer Signature</span>
+                        </div>
+                        <div class="rule-row">
+                            <input type="checkbox"> <span>Enter 'Final Reading' Value</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="label" style="color: var(--accent);">Agent Escalation Rules</label>
+                    <div class="rule-box">
+                        <div class="rule-row">
+                            <span class="rule-tag">IF</span>
+                            <span>Status is 'Pending'</span>
+                        </div>
+                        <div class="rule-row">
+                            <span class="rule-tag">AND</span>
+                            <span>Time is > Due Date + 24 Hours</span>
+                        </div>
+                        <div class="rule-row" style="border-top: 1px solid #BAE6FD; padding-top: 10px; margin-top: 5px;">
+                            <span class="rule-tag" style="background: var(--accent); color: white; border:none;">THEN</span>
+                            <select class="select" style="width: auto; display: inline-block;">
+                                <option>Auto-Email Supervisor</option>
+                                <option>Trigger Penalty Clause</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="form-hardware" class="dynamic-form">
+                <div class="section-title"><span>🛠 Inventory & Logistics Logic</span></div>
+                
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="label">Unit Cost</label>
+                        <input type="number" class="input" placeholder="₹ 450.00">
+                    </div>
+                    <div class="form-group">
+                        <label class="label">Restock Threshold</label>
+                        <input type="number" class="input" placeholder="Alert when < 10 units">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="label">Installation Logic</label>
+                    <div class="rule-box">
+                        <div class="rule-row">
+                            <input type="checkbox" checked> <span>Requires "Installation Service" block to be added?</span>
+                        </div>
+                        <p style="font-size: 0.8rem; color: var(--text-light); margin: 5px 0 0 24px;">
+                            (If checked, adding this spare part to a contract will auto-suggest adding a Technician Visit block).
+                        </p>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="label" style="color: var(--accent);">Consumption Rules</label>
+                    <div class="rule-box">
+                        <div class="rule-row">
+                            <span class="rule-tag">IF</span>
+                            <span>Part marked "Consumed" by Vendor</span>
+                        </div>
+                        <div class="rule-row">
+                            <span class="rule-tag" style="background: var(--accent); color: white; border:none;">THEN</span>
+                            <span>Deduct from Inventory & Add Cost to Invoice (if billable)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="form-pricing" class="dynamic-form">
+                <div class="section-title"><span>💰 Financial Logic</span></div>
+                
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="label">Pricing Type</label>
+                        <select class="select">
+                            <option>Recurring Subscription (AMC)</option>
+                            <option>One-Time Milestone</option>
+                            <option>Retainer</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="label">Billing Frequency</label>
+                        <select class="select">
+                            <option>Monthly</option>
+                            <option>Quarterly</option>
+                            <option>Yearly</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="label" style="color: var(--accent);">Payment Trigger Rules</label>
+                    <div class="rule-box">
+                        <div class="rule-row">
+                            <span>Unlock Payment Request WHEN:</span>
+                        </div>
+                        <div class="rule-row">
+                            <input type="radio" name="trig" checked> <span>Date is reached (e.g. 1st of Month)</span>
+                        </div>
+                        <div class="rule-row">
+                            <input type="radio" name="trig"> <span>Specific Service Block is marked "Verified"</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="form-legal" class="dynamic-form">
+                <div class="section-title"><span>⚖️ Clause Content</span></div>
+                
+                <div class="form-group">
+                    <label class="label">Clause Text (Rich Text)</label>
+                    <textarea class="input" style="height: 150px; font-family: monospace;">"The Service Provider shall not be liable for any indirect, incidental, or consequential damages..."</textarea>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="label">Jurisdiction</label>
+                        <input type="text" class="input" placeholder="Telangana, India">
+                    </div>
+                    <div class="form-group">
+                        <label class="label">Mandatory?</label>
+                        <select class="select">
+                            <option>Yes, Required for All Contracts</option>
+                            <option>Optional (User can remove)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="label" style="color: var(--accent);">Interaction Rules</label>
+                    <div class="rule-box">
+                        <div class="rule-row">
+                            <input type="checkbox"> <span>Require specific checkbox acceptance?</span>
+                        </div>
+                        <div class="rule-row">
+                            <input type="checkbox"> <span>Lock editing for Sales Team?</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn btn-ghost">Cancel</button>
+            <button class="btn btn-primary">Save to Catalog</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    function switchForm(type, element) {
+        // Reset Tabs
+        document.querySelectorAll('.cat-option').forEach(el => el.classList.remove('active'));
+        element.classList.add('active');
+
+        // Reset Forms
+        document.querySelectorAll('.dynamic-form').forEach(el => el.classList.remove('active'));
+        document.getElementById('form-' + type).classList.add('active');
+    }
+</script>
+
+</body>
+</html>

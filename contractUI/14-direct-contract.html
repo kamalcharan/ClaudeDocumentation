@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ContractNest - Create Contract</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand: #0F172A;
+            --brand-light: #1E293B;
+            --seller: #7C3AED;
+            --seller-light: #8B5CF6;
+            --seller-bg: #F5F3FF;
+            --seller-border: #DDD6FE;
+            --success: #10B981;
+            --success-bg: #ECFDF5;
+            --warning: #F59E0B;
+            --warning-bg: #FFFBEB;
+            --danger: #EF4444;
+            --danger-bg: #FEF2F2;
+            --info: #0284C7;
+            --info-bg: #F0F9FF;
+            --whatsapp: #25D366;
+            --whatsapp-bg: #E8FDF0;
+            --bg: #F8FAFC;
+            --surface: #FFFFFF;
+            --border: #E2E8F0;
+            --border-light: #F1F5F9;
+            --text: #334155;
+            --text-light: #64748B;
+            --text-muted: #94A3B8;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1);
+            --radius: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+        .app-container { display: flex; min-height: 100vh; }
+
+        /* Sidebar */
+        .sidebar { width: 200px; background: var(--brand); position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
+        .sidebar-header { padding: 1rem; border-bottom: 1px solid var(--brand-light); }
+        .logo { display: flex; align-items: center; gap: 8px; font-size: 0.95rem; font-weight: 800; color: white; }
+        .logo-icon { width: 26px; height: 26px; background: var(--seller); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
+        .sidebar-nav { padding: 0.75rem 0.5rem; }
+        .nav-item { display: flex; align-items: center; gap: 8px; padding: 0.5rem 0.75rem; border-radius: var(--radius); color: var(--text-muted); font-size: 0.7rem; font-weight: 500; cursor: pointer; margin-bottom: 2px; }
+        .nav-item:hover { background: var(--brand-light); color: white; }
+        .nav-item.active { background: var(--seller); color: white; }
+
+        /* Main */
+        .main-content { flex: 1; margin-left: 200px; display: flex; flex-direction: column; }
+
+        /* Top Bar */
+        .top-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0.75rem 1rem; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; }
+        .top-bar-left { display: flex; align-items: center; gap: 1rem; }
+        .back-btn { background: none; border: none; color: var(--text-light); cursor: pointer; font-size: 1.25rem; }
+        .back-btn:hover { color: var(--seller); }
+        .page-title h1 { font-size: 1rem; font-weight: 700; color: var(--brand); }
+        .page-title p { font-size: 0.65rem; color: var(--text-light); }
+        .top-bar-right { display: flex; gap: 0.5rem; }
+
+        .btn { padding: 0.4rem 0.875rem; border-radius: var(--radius); font-weight: 600; font-size: 0.7rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.3rem; border: none; transition: all 0.2s; }
+        .btn-primary { background: var(--seller); color: white; }
+        .btn-primary:hover { background: var(--seller-light); }
+        .btn-outline { background: var(--surface); border: 1px solid var(--border); color: var(--text); }
+        .btn-outline:hover { border-color: var(--seller); color: var(--seller); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-whatsapp { background: var(--whatsapp); color: white; }
+        .btn-whatsapp:hover { background: #20BD5A; }
+        .btn-lg { padding: 0.6rem 1.5rem; font-size: 0.85rem; }
+
+        /* Progress */
+        .progress-bar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0.75rem 1.5rem; display: flex; justify-content: center; }
+        .progress-steps { display: flex; align-items: center; gap: 0.4rem; }
+        .progress-step { display: flex; align-items: center; gap: 0.35rem; cursor: pointer; }
+        .step-number { width: 24px; height: 24px; border-radius: 50%; background: var(--border); color: var(--text-muted); display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: 700; }
+        .progress-step.active .step-number { background: var(--seller); color: white; }
+        .progress-step.completed .step-number { background: var(--success); color: white; }
+        .step-label { font-size: 0.6rem; font-weight: 600; color: var(--text-muted); }
+        .progress-step.active .step-label { color: var(--seller); }
+        .progress-step.completed .step-label { color: var(--success); }
+        .step-connector { width: 30px; height: 2px; background: var(--border); }
+        .step-connector.completed { background: var(--success); }
+
+        /* Step Content */
+        .step-content { display: none; flex: 1; overflow-y: auto; padding: 1.5rem; }
+        .step-content.active { display: block; }
+
+        .content-container { max-width: 700px; margin: 0 auto; }
+
+        /* Cards */
+        .card { background: var(--surface); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); margin-bottom: 1rem; overflow: hidden; }
+        .card-header { padding: 0.875rem 1rem; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .card-title { font-size: 0.85rem; font-weight: 700; color: var(--brand); display: flex; align-items: center; gap: 0.4rem; }
+        .card-edit { font-size: 0.65rem; color: var(--seller); cursor: pointer; font-weight: 600; }
+        .card-body { padding: 1rem; }
+
+        /* Step 1: Source Selection */
+        .source-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+        .source-card { border: 2px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; cursor: pointer; transition: all 0.2s; text-align: center; }
+        .source-card:hover { border-color: var(--seller-border); background: var(--seller-bg); }
+        .source-card.selected { border-color: var(--seller); background: var(--seller-bg); }
+        .source-card-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+        .source-card-title { font-size: 0.85rem; font-weight: 700; color: var(--brand); margin-bottom: 0.25rem; }
+        .source-card-desc { font-size: 0.7rem; color: var(--text-light); line-height: 1.4; }
+
+        .template-picker { margin-top: 1.5rem; display: none; }
+        .template-picker.visible { display: block; }
+        .template-picker-title { font-size: 0.75rem; font-weight: 700; color: var(--text); margin-bottom: 0.75rem; }
+        .template-list { display: flex; flex-direction: column; gap: 0.5rem; }
+        .template-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--bg); border: 2px solid var(--border); border-radius: var(--radius); cursor: pointer; transition: all 0.2s; }
+        .template-item:hover { border-color: var(--seller-border); }
+        .template-item.selected { border-color: var(--seller); background: var(--seller-bg); }
+        .template-item-icon { width: 40px; height: 40px; background: var(--seller-bg); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; font-size: 1.25rem; }
+        .template-item-info { flex: 1; }
+        .template-item-name { font-size: 0.8rem; font-weight: 600; color: var(--text); }
+        .template-item-meta { font-size: 0.65rem; color: var(--text-muted); }
+        .template-item-price { font-size: 0.85rem; font-weight: 700; color: var(--brand); }
+
+        /* Step 2: Buyer */
+        .buyer-search { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+        .buyer-search input { flex: 1; padding: 0.6rem 0.75rem; border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.8rem; }
+        .buyer-search input:focus { outline: none; border-color: var(--seller); }
+
+        .buyer-list { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
+        .buyer-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--bg); border: 2px solid var(--border); border-radius: var(--radius); cursor: pointer; transition: all 0.2s; }
+        .buyer-item:hover { border-color: var(--seller-border); }
+        .buyer-item.selected { border-color: var(--seller); background: var(--seller-bg); }
+        .buyer-avatar { width: 40px; height: 40px; background: var(--seller-bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 700; color: var(--seller); }
+        .buyer-info { flex: 1; }
+        .buyer-name { font-size: 0.8rem; font-weight: 600; color: var(--text); }
+        .buyer-contact { font-size: 0.65rem; color: var(--text-muted); }
+        .buyer-badge { font-size: 0.55rem; padding: 0.15rem 0.4rem; background: var(--success-bg); color: var(--success); border-radius: 10px; font-weight: 600; }
+
+        .divider { display: flex; align-items: center; gap: 1rem; margin: 1rem 0; color: var(--text-muted); font-size: 0.7rem; }
+        .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+        .new-buyer-form { background: var(--bg); border-radius: var(--radius); padding: 1rem; }
+        .new-buyer-form-title { font-size: 0.75rem; font-weight: 700; color: var(--text); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.4rem; }
+        .form-group { margin-bottom: 0.75rem; }
+        .form-label { display: block; font-size: 0.7rem; font-weight: 600; color: var(--text); margin-bottom: 0.25rem; }
+        .form-label .required { color: var(--danger); }
+        .form-input, .form-select, .form-textarea { width: 100%; padding: 0.5rem 0.65rem; border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.8rem; color: var(--text); }
+        .form-input:focus, .form-select:focus { outline: none; border-color: var(--seller); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+        .form-hint { font-size: 0.6rem; color: var(--text-muted); margin-top: 0.2rem; }
+
+        /* Step 3: Customize */
+        .block-list { display: flex; flex-direction: column; gap: 0.5rem; }
+        .block-item { display: flex; align-items: center; gap: 0.65rem; padding: 0.65rem; background: var(--bg); border-radius: var(--radius); }
+        .block-item-icon { width: 34px; height: 34px; background: var(--seller-bg); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 1rem; }
+        .block-item-info { flex: 1; }
+        .block-item-name { font-size: 0.75rem; font-weight: 600; color: var(--text); }
+        .block-item-meta { font-size: 0.6rem; color: var(--text-muted); }
+        .block-item-qty { display: flex; align-items: center; gap: 0.25rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 0.15rem; }
+        .qty-btn { width: 22px; height: 22px; border: none; background: var(--bg); border-radius: 4px; cursor: pointer; font-weight: 700; color: var(--text-light); }
+        .qty-btn:hover { background: var(--seller-bg); color: var(--seller); }
+        .qty-value { width: 28px; text-align: center; font-size: 0.75rem; font-weight: 700; }
+        .block-item-price { font-size: 0.8rem; font-weight: 700; color: var(--brand); min-width: 70px; text-align: right; }
+        .block-item-remove { color: var(--text-muted); cursor: pointer; font-size: 0.9rem; }
+        .block-item-remove:hover { color: var(--danger); }
+
+        .pricing-summary { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+        .pricing-row { display: flex; justify-content: space-between; font-size: 0.8rem; padding: 0.3rem 0; }
+        .pricing-row.discount { color: var(--success); }
+        .pricing-row.total { border-top: 2px solid var(--border); padding-top: 0.6rem; margin-top: 0.3rem; font-weight: 700; font-size: 1rem; color: var(--brand); }
+
+        .discount-section { margin-top: 1rem; padding: 0.75rem; background: var(--success-bg); border-radius: var(--radius); }
+        .discount-row { display: flex; align-items: center; gap: 0.5rem; }
+        .discount-row input { width: 80px; padding: 0.35rem 0.5rem; border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.75rem; text-align: center; }
+        .discount-row select { padding: 0.35rem 0.5rem; border: 1px solid var(--border); border-radius: var(--radius); font-size: 0.75rem; }
+        .discount-row span { font-size: 0.75rem; color: var(--text); }
+
+        /* Step 4: Schedule */
+        .schedule-section { margin-bottom: 1.5rem; }
+        .schedule-section-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.6rem; }
+
+        .date-picker-row { display: flex; gap: 0.75rem; }
+        .date-picker-row .form-group { flex: 1; }
+
+        .payment-options { display: flex; flex-direction: column; gap: 0.5rem; }
+        .payment-option { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; background: var(--bg); border: 2px solid var(--border); border-radius: var(--radius); cursor: pointer; transition: all 0.2s; }
+        .payment-option:hover { border-color: var(--seller-border); }
+        .payment-option.selected { border-color: var(--seller); background: var(--seller-bg); }
+        .payment-option-radio { width: 18px; height: 18px; border: 2px solid var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .payment-option.selected .payment-option-radio { border-color: var(--seller); }
+        .payment-option.selected .payment-option-radio::after { content: ''; width: 10px; height: 10px; background: var(--seller); border-radius: 50%; }
+        .payment-option-info { flex: 1; }
+        .payment-option-name { font-size: 0.8rem; font-weight: 600; color: var(--text); }
+        .payment-option-desc { font-size: 0.65rem; color: var(--text-muted); }
+
+        .payment-schedule { margin-top: 1rem; padding: 0.75rem; background: var(--bg); border-radius: var(--radius); }
+        .payment-schedule-title { font-size: 0.7rem; font-weight: 700; color: var(--text); margin-bottom: 0.5rem; }
+        .payment-schedule-item { display: flex; justify-content: space-between; font-size: 0.75rem; padding: 0.35rem 0; border-bottom: 1px solid var(--border-light); }
+        .payment-schedule-item:last-child { border-bottom: none; }
+
+        /* Step 5: Review */
+        .review-section { margin-bottom: 1rem; }
+        .review-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+        .review-item { }
+        .review-item-label { font-size: 0.6rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
+        .review-item-value { font-size: 0.8rem; color: var(--text); font-weight: 500; }
+
+        .review-block-item { display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem; background: var(--bg); border-radius: var(--radius); margin-bottom: 0.4rem; }
+        .review-block-icon { width: 30px; height: 30px; background: var(--seller-bg); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; }
+        .review-block-info { flex: 1; }
+        .review-block-name { font-size: 0.75rem; font-weight: 600; color: var(--text); }
+        .review-block-meta { font-size: 0.6rem; color: var(--text-muted); }
+        .review-block-qty { font-size: 0.65rem; color: var(--text-light); }
+        .review-block-price { font-size: 0.75rem; font-weight: 700; color: var(--brand); }
+
+        /* Step 6: Send */
+        .send-options { display: flex; flex-direction: column; gap: 0.75rem; margin-bottom: 1.5rem; }
+        .send-option { display: flex; align-items: center; gap: 1rem; padding: 1rem; background: var(--bg); border: 2px solid var(--border); border-radius: var(--radius-lg); cursor: pointer; transition: all 0.2s; }
+        .send-option:hover { border-color: var(--seller-border); }
+        .send-option.selected { border-color: var(--seller); background: var(--seller-bg); }
+        .send-option-icon { width: 48px; height: 48px; border-radius: var(--radius); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+        .send-option.whatsapp .send-option-icon { background: var(--whatsapp-bg); }
+        .send-option.email .send-option-icon { background: var(--info-bg); }
+        .send-option.link .send-option-icon { background: var(--seller-bg); }
+        .send-option-info { flex: 1; }
+        .send-option-name { font-size: 0.9rem; font-weight: 700; color: var(--brand); }
+        .send-option-desc { font-size: 0.7rem; color: var(--text-light); }
+        .send-option-radio { width: 20px; height: 20px; border: 2px solid var(--border); border-radius: 50%; }
+        .send-option.selected .send-option-radio { border-color: var(--seller); background: var(--seller); }
+
+        .message-preview { background: var(--bg); border-radius: var(--radius); padding: 1rem; margin-bottom: 1rem; }
+        .message-preview-title { font-size: 0.7rem; font-weight: 700; color: var(--text); margin-bottom: 0.5rem; }
+        .message-preview-content { font-size: 0.75rem; color: var(--text-light); line-height: 1.5; white-space: pre-line; }
+
+        .send-actions { text-align: center; }
+
+        /* Success */
+        .success-container { max-width: 500px; margin: 0 auto; padding: 2rem; text-align: center; }
+        .success-icon { width: 80px; height: 80px; background: var(--success-bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; margin: 0 auto 1.5rem; }
+        .success-title { font-size: 1.5rem; font-weight: 800; color: var(--brand); margin-bottom: 0.5rem; }
+        .success-message { font-size: 0.9rem; color: var(--text-light); margin-bottom: 1.5rem; }
+
+        .tracking-card { background: var(--bg); border-radius: var(--radius-lg); padding: 1rem; margin-bottom: 1.5rem; text-align: left; }
+        .tracking-title { font-size: 0.75rem; font-weight: 700; color: var(--text); margin-bottom: 0.75rem; }
+        .tracking-timeline { display: flex; flex-direction: column; gap: 0.5rem; }
+        .tracking-item { display: flex; align-items: center; gap: 0.75rem; font-size: 0.75rem; }
+        .tracking-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--border); }
+        .tracking-item.active .tracking-dot { background: var(--success); }
+        .tracking-item.active { color: var(--text); font-weight: 600; }
+        .tracking-item.pending { color: var(--text-muted); }
+
+        .success-actions { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
+
+        /* Toast */
+        .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%); background: var(--brand); color: white; padding: 0.6rem 1rem; border-radius: 50px; font-size: 0.75rem; font-weight: 600; box-shadow: var(--shadow-xl); display: none; z-index: 2000; }
+        .toast.show { display: flex; align-items: center; gap: 0.4rem; }
+
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo"><div class="logo-icon">⚡</div><span>ContractNest</span></div>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-item"><span>🧱</span> Block Library</div>
+                <div class="nav-item"><span>📦</span> Templates</div>
+                <div class="nav-item active"><span>📋</span> Contracts</div>
+                <div class="nav-item"><span>📊</span> Dashboard</div>
+            </nav>
+        </aside>
+
+        <!-- Main -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <div class="top-bar-left">
+                    <button class="back-btn" onclick="goBack()">←</button>
+                    <div class="page-title">
+                        <h1>Create Contract</h1>
+                        <p>FLOW 2: Configure and send directly to buyer</p>
+                    </div>
+                </div>
+                <div class="top-bar-right">
+                    <button class="btn btn-outline" onclick="saveDraft()">💾 Save Draft</button>
+                    <button class="btn btn-primary" id="nextBtn" onclick="nextStep()">Continue →</button>
+                </div>
+            </div>
+
+            <!-- Progress -->
+            <div class="progress-bar">
+                <div class="progress-steps">
+                    <div class="progress-step active" data-step="1">
+                        <div class="step-number">1</div>
+                        <span class="step-label">Source</span>
+                    </div>
+                    <div class="step-connector"></div>
+                    <div class="progress-step" data-step="2">
+                        <div class="step-number">2</div>
+                        <span class="step-label">Buyer</span>
+                    </div>
+                    <div class="step-connector"></div>
+                    <div class="progress-step" data-step="3">
+                        <div class="step-number">3</div>
+                        <span class="step-label">Customize</span>
+                    </div>
+                    <div class="step-connector"></div>
+                    <div class="progress-step" data-step="4">
+                        <div class="step-number">4</div>
+                        <span class="step-label">Schedule</span>
+                    </div>
+                    <div class="step-connector"></div>
+                    <div class="progress-step" data-step="5">
+                        <div class="step-number">5</div>
+                        <span class="step-label">Review</span>
+                    </div>
+                    <div class="step-connector"></div>
+                    <div class="progress-step" data-step="6">
+                        <div class="step-number">6</div>
+                        <span class="step-label">Send</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 1: Choose Source -->
+            <div class="step-content active" id="step1">
+                <div class="content-container">
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">📋 How do you want to start?</div></div>
+                        <div class="card-body">
+                            <div class="source-grid">
+                                <div class="source-card selected" onclick="selectSource(this, 'template')">
+                                    <div class="source-card-icon">📦</div>
+                                    <div class="source-card-title">From Template</div>
+                                    <div class="source-card-desc">Start with a pre-built package and customize</div>
+                                </div>
+                                <div class="source-card" onclick="selectSource(this, 'scratch')">
+                                    <div class="source-card-icon">✨</div>
+                                    <div class="source-card-title">From Scratch</div>
+                                    <div class="source-card-desc">Build a custom contract from blocks</div>
+                                </div>
+                                <div class="source-card" onclick="selectSource(this, 'clone')">
+                                    <div class="source-card-icon">📋</div>
+                                    <div class="source-card-title">Clone Contract</div>
+                                    <div class="source-card-desc">Copy from a past contract</div>
+                                </div>
+                            </div>
+
+                            <div class="template-picker visible" id="templatePicker">
+                                <div class="template-picker-title">Select a template:</div>
+                                <div class="template-list">
+                                    <div class="template-item selected" onclick="selectTemplate(this, 'pcod')">
+                                        <div class="template-item-icon">🧘</div>
+                                        <div class="template-item-info">
+                                            <div class="template-item-name">PCOD Balance Program</div>
+                                            <div class="template-item-meta">4 Yoga • 2 Gynec • 1 Nutrition • T&C</div>
+                                        </div>
+                                        <div class="template-item-price">₹14,160</div>
+                                    </div>
+                                    <div class="template-item" onclick="selectTemplate(this, 'ac')">
+                                        <div class="template-item-icon">❄️</div>
+                                        <div class="template-item-info">
+                                            <div class="template-item-name">Annual AC Maintenance</div>
+                                            <div class="template-item-meta">4 Services • Spare Parts • EMI</div>
+                                        </div>
+                                        <div class="template-item-price">₹5,664</div>
+                                    </div>
+                                    <div class="template-item" onclick="selectTemplate(this, 'fitness')">
+                                        <div class="template-item-icon">💪</div>
+                                        <div class="template-item-info">
+                                            <div class="template-item-name">Corporate Fitness</div>
+                                            <div class="template-item-meta">12 Sessions • 4 Consultations</div>
+                                        </div>
+                                        <div class="template-item-price">₹28,320</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 2: Select Buyer -->
+            <div class="step-content" id="step2">
+                <div class="content-container">
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">👤 Who is this contract for?</div></div>
+                        <div class="card-body">
+                            <div class="buyer-search">
+                                <input type="text" placeholder="Search by name, phone, or email..." id="buyerSearch">
+                                <button class="btn btn-outline">🔍</button>
+                            </div>
+
+                            <div class="buyer-list">
+                                <div class="buyer-item selected" onclick="selectBuyer(this, 'anita')">
+                                    <div class="buyer-avatar">AS</div>
+                                    <div class="buyer-info">
+                                        <div class="buyer-name">Anita Sharma</div>
+                                        <div class="buyer-contact">+91 98765 43210 • anita@email.com</div>
+                                    </div>
+                                    <span class="buyer-badge">2 contracts</span>
+                                </div>
+                                <div class="buyer-item" onclick="selectBuyer(this, 'rajesh')">
+                                    <div class="buyer-avatar">RK</div>
+                                    <div class="buyer-info">
+                                        <div class="buyer-name">Rajesh Kumar</div>
+                                        <div class="buyer-contact">+91 87654 32109 • rajesh@company.com</div>
+                                    </div>
+                                    <span class="buyer-badge">5 contracts</span>
+                                </div>
+                                <div class="buyer-item" onclick="selectBuyer(this, 'priya')">
+                                    <div class="buyer-avatar">PM</div>
+                                    <div class="buyer-info">
+                                        <div class="buyer-name">Priya Mehta</div>
+                                        <div class="buyer-contact">+91 76543 21098</div>
+                                    </div>
+                                    <span class="buyer-badge">1 contract</span>
+                                </div>
+                            </div>
+
+                            <div class="divider">or add new buyer</div>
+
+                            <div class="new-buyer-form">
+                                <div class="new-buyer-form-title">➕ New Buyer</div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Full Name <span class="required">*</span></label>
+                                        <input type="text" class="form-input" placeholder="Enter name">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Phone (WhatsApp) <span class="required">*</span></label>
+                                        <input type="text" class="form-input" placeholder="+91 00000 00000">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Email</label>
+                                        <input type="email" class="form-input" placeholder="email@example.com">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Company</label>
+                                        <input type="text" class="form-input" placeholder="Optional">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Address</label>
+                                    <input type="text" class="form-input" placeholder="For on-site services">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 3: Customize -->
+            <div class="step-content" id="step3">
+                <div class="content-container">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">🎯 Contract Items</div>
+                            <span class="card-edit">➕ Add Block</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="block-list">
+                                <div class="block-item">
+                                    <div class="block-item-icon">🧘</div>
+                                    <div class="block-item-info">
+                                        <div class="block-item-name">Yoga Session</div>
+                                        <div class="block-item-meta">60 min • ₹2,000/session</div>
+                                    </div>
+                                    <div class="block-item-qty">
+                                        <button class="qty-btn" onclick="changeQty('yoga', -1)">−</button>
+                                        <span class="qty-value" id="qtyYoga">4</span>
+                                        <button class="qty-btn" onclick="changeQty('yoga', 1)">+</button>
+                                    </div>
+                                    <div class="block-item-price" id="priceYoga">₹8,000</div>
+                                    <span class="block-item-remove">×</span>
+                                </div>
+                                <div class="block-item">
+                                    <div class="block-item-icon">🩺</div>
+                                    <div class="block-item-info">
+                                        <div class="block-item-name">Gynec Consultation</div>
+                                        <div class="block-item-meta">30 min • ₹1,500/session</div>
+                                    </div>
+                                    <div class="block-item-qty">
+                                        <button class="qty-btn" onclick="changeQty('gynec', -1)">−</button>
+                                        <span class="qty-value" id="qtyGynec">2</span>
+                                        <button class="qty-btn" onclick="changeQty('gynec', 1)">+</button>
+                                    </div>
+                                    <div class="block-item-price" id="priceGynec">₹3,000</div>
+                                    <span class="block-item-remove">×</span>
+                                </div>
+                                <div class="block-item">
+                                    <div class="block-item-icon">🥗</div>
+                                    <div class="block-item-info">
+                                        <div class="block-item-name">Nutrition Planning</div>
+                                        <div class="block-item-meta">45 min • ₹1,000/session</div>
+                                    </div>
+                                    <div class="block-item-qty">
+                                        <button class="qty-btn" onclick="changeQty('nutrition', -1)">−</button>
+                                        <span class="qty-value" id="qtyNutrition">1</span>
+                                        <button class="qty-btn" onclick="changeQty('nutrition', 1)">+</button>
+                                    </div>
+                                    <div class="block-item-price" id="priceNutrition">₹1,000</div>
+                                    <span class="block-item-remove">×</span>
+                                </div>
+                                <div class="block-item" style="background: var(--seller-bg);">
+                                    <div class="block-item-icon" style="background: var(--surface);">💳</div>
+                                    <div class="block-item-info">
+                                        <div class="block-item-name">3-Month EMI</div>
+                                        <div class="block-item-meta">Split into 3 payments</div>
+                                    </div>
+                                    <span class="block-item-remove">×</span>
+                                </div>
+                                <div class="block-item" style="background: var(--bg);">
+                                    <div class="block-item-icon" style="background: var(--surface);">📜</div>
+                                    <div class="block-item-info">
+                                        <div class="block-item-name">Standard T&C</div>
+                                        <div class="block-item-meta">Requires signature</div>
+                                    </div>
+                                    <span class="block-item-remove">×</span>
+                                </div>
+                            </div>
+
+                            <div class="discount-section">
+                                <div class="discount-row">
+                                    <span>🏷️ Apply discount:</span>
+                                    <input type="text" value="10" id="discountValue">
+                                    <select id="discountType">
+                                        <option value="percent" selected>%</option>
+                                        <option value="flat">₹ Flat</option>
+                                    </select>
+                                    <span style="margin-left: 0.5rem; font-weight: 700; color: var(--success);" id="discountAmount">−₹1,200</span>
+                                </div>
+                            </div>
+
+                            <div class="pricing-summary">
+                                <div class="pricing-row"><span>Subtotal</span><span id="subtotal">₹12,000</span></div>
+                                <div class="pricing-row discount"><span>Discount (10%)</span><span id="discountDisplay">−₹1,200</span></div>
+                                <div class="pricing-row"><span>Tax (18%)</span><span id="tax">₹1,944</span></div>
+                                <div class="pricing-row total"><span>Total</span><span id="total">₹12,744</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">📝 Notes for Buyer</div></div>
+                        <div class="card-body">
+                            <textarea class="form-input" style="min-height: 80px;" placeholder="Add any special notes, instructions, or personalized message...">Hi Anita, I've prepared this wellness program based on our discussion. Please review and let me know if you'd like any changes!</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 4: Schedule & Payment -->
+            <div class="step-content" id="step4">
+                <div class="content-container">
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">📅 Contract Dates</div></div>
+                        <div class="card-body">
+                            <div class="schedule-section">
+                                <div class="date-picker-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Start Date <span class="required">*</span></label>
+                                        <input type="date" class="form-input" value="2024-12-20">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">End Date</label>
+                                        <input type="date" class="form-input" value="2025-03-20">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="schedule-section">
+                                <div class="schedule-section-title">Contract Validity</div>
+                                <div class="form-group">
+                                    <label class="form-label">This offer expires on</label>
+                                    <input type="date" class="form-input" value="2024-12-25" style="max-width: 200px;">
+                                    <div class="form-hint">Buyer must accept before this date</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">💰 Payment Schedule</div></div>
+                        <div class="card-body">
+                            <div class="payment-options">
+                                <div class="payment-option" onclick="selectPayment(this, 'advance')">
+                                    <div class="payment-option-radio"></div>
+                                    <div class="payment-option-info">
+                                        <div class="payment-option-name">100% Advance</div>
+                                        <div class="payment-option-desc">Full payment before services begin</div>
+                                    </div>
+                                </div>
+                                <div class="payment-option selected" onclick="selectPayment(this, 'emi')">
+                                    <div class="payment-option-radio"></div>
+                                    <div class="payment-option-info">
+                                        <div class="payment-option-name">3-Month EMI</div>
+                                        <div class="payment-option-desc">Split into 3 equal monthly payments</div>
+                                    </div>
+                                </div>
+                                <div class="payment-option" onclick="selectPayment(this, 'milestone')">
+                                    <div class="payment-option-radio"></div>
+                                    <div class="payment-option-info">
+                                        <div class="payment-option-name">Milestone Based</div>
+                                        <div class="payment-option-desc">Pay as services are completed</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="payment-schedule" id="paymentSchedule">
+                                <div class="payment-schedule-title">📋 Payment Schedule Preview</div>
+                                <div class="payment-schedule-item"><span>Payment 1 (on signing)</span><span>₹4,248</span></div>
+                                <div class="payment-schedule-item"><span>Payment 2 (Jan 20, 2025)</span><span>₹4,248</span></div>
+                                <div class="payment-schedule-item"><span>Payment 3 (Feb 20, 2025)</span><span>₹4,248</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 5: Review -->
+            <div class="step-content" id="step5">
+                <div class="content-container">
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">👤 Buyer Details</div>
+                            <span class="card-edit" onclick="goToStep(2)">✏️ Edit</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="review-grid">
+                                <div class="review-item"><div class="review-item-label">Name</div><div class="review-item-value">Anita Sharma</div></div>
+                                <div class="review-item"><div class="review-item-label">Phone</div><div class="review-item-value">+91 98765 43210</div></div>
+                                <div class="review-item"><div class="review-item-label">Email</div><div class="review-item-value">anita@email.com</div></div>
+                                <div class="review-item"><div class="review-item-label">Address</div><div class="review-item-value">Jubilee Hills, Hyderabad</div></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">🎯 Contract Items</div>
+                            <span class="card-edit" onclick="goToStep(3)">✏️ Edit</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="review-block-item"><div class="review-block-icon">🧘</div><div class="review-block-info"><div class="review-block-name">Yoga Session</div><div class="review-block-meta">60 min each</div></div><span class="review-block-qty">×4</span><span class="review-block-price">₹8,000</span></div>
+                            <div class="review-block-item"><div class="review-block-icon">🩺</div><div class="review-block-info"><div class="review-block-name">Gynec Consultation</div><div class="review-block-meta">30 min each</div></div><span class="review-block-qty">×2</span><span class="review-block-price">₹3,000</span></div>
+                            <div class="review-block-item"><div class="review-block-icon">🥗</div><div class="review-block-info"><div class="review-block-name">Nutrition Planning</div><div class="review-block-meta">45 min</div></div><span class="review-block-qty">×1</span><span class="review-block-price">₹1,000</span></div>
+                            <div class="review-block-item"><div class="review-block-icon">💳</div><div class="review-block-info"><div class="review-block-name">3-Month EMI</div><div class="review-block-meta">Payment plan</div></div></div>
+                            <div class="review-block-item"><div class="review-block-icon">📜</div><div class="review-block-info"><div class="review-block-name">Standard T&C</div><div class="review-block-meta">Requires signature</div></div></div>
+
+                            <div class="pricing-summary">
+                                <div class="pricing-row"><span>Subtotal</span><span>₹12,000</span></div>
+                                <div class="pricing-row discount"><span>Discount (10%)</span><span>−₹1,200</span></div>
+                                <div class="pricing-row"><span>Tax (18%)</span><span>₹1,944</span></div>
+                                <div class="pricing-row total"><span>Total</span><span>₹12,744</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">📅 Schedule & Payment</div>
+                            <span class="card-edit" onclick="goToStep(4)">✏️ Edit</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="review-grid">
+                                <div class="review-item"><div class="review-item-label">Start Date</div><div class="review-item-value">Dec 20, 2024</div></div>
+                                <div class="review-item"><div class="review-item-label">End Date</div><div class="review-item-value">Mar 20, 2025</div></div>
+                                <div class="review-item"><div class="review-item-label">Payment Plan</div><div class="review-item-value">3-Month EMI</div></div>
+                                <div class="review-item"><div class="review-item-label">Offer Valid Until</div><div class="review-item-value">Dec 25, 2024</div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 6: Send -->
+            <div class="step-content" id="step6">
+                <div class="content-container">
+                    <div class="card">
+                        <div class="card-header"><div class="card-title">📤 How do you want to send this contract?</div></div>
+                        <div class="card-body">
+                            <div class="send-options">
+                                <div class="send-option whatsapp selected" onclick="selectSendMethod(this, 'whatsapp')">
+                                    <div class="send-option-icon">📱</div>
+                                    <div class="send-option-info">
+                                        <div class="send-option-name">Send via WhatsApp</div>
+                                        <div class="send-option-desc">Instant delivery to +91 98765 43210</div>
+                                    </div>
+                                    <div class="send-option-radio"></div>
+                                </div>
+                                <div class="send-option email" onclick="selectSendMethod(this, 'email')">
+                                    <div class="send-option-icon">📧</div>
+                                    <div class="send-option-info">
+                                        <div class="send-option-name">Send via Email</div>
+                                        <div class="send-option-desc">Send to anita@email.com</div>
+                                    </div>
+                                    <div class="send-option-radio"></div>
+                                </div>
+                                <div class="send-option link" onclick="selectSendMethod(this, 'link')">
+                                    <div class="send-option-icon">🔗</div>
+                                    <div class="send-option-info">
+                                        <div class="send-option-name">Copy Link</div>
+                                        <div class="send-option-desc">Share the contract link manually</div>
+                                    </div>
+                                    <div class="send-option-radio"></div>
+                                </div>
+                            </div>
+
+                            <div class="message-preview">
+                                <div class="message-preview-title">📝 Message Preview</div>
+                                <div class="message-preview-content">Hi Anita! 👋
+
+Your PCOD Balance Program contract is ready!
+
+💰 Total: ₹12,744
+📅 Start: Dec 20, 2024
+💳 Payment: 3-Month EMI (₹4,248/month)
+
+Click below to review and accept:
+🔗 https://contractnest.app/c/CN-9921
+
+Valid until Dec 25, 2024
+
+— Vikuna Wellness</div>
+                            </div>
+
+                            <div class="send-actions">
+                                <button class="btn btn-whatsapp btn-lg" onclick="sendContract()">📱 Send via WhatsApp</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 7: Success -->
+            <div class="step-content" id="step7">
+                <div class="success-container">
+                    <div class="success-icon">✓</div>
+                    <div class="success-title">Contract Sent!</div>
+                    <div class="success-message">Your contract has been sent to Anita Sharma via WhatsApp. You'll be notified when they view or accept it.</div>
+
+                    <div class="tracking-card">
+                        <div class="tracking-title">📊 Contract Status</div>
+                        <div class="tracking-timeline">
+                            <div class="tracking-item active"><div class="tracking-dot"></div><span>✓ Contract Created</span></div>
+                            <div class="tracking-item active"><div class="tracking-dot"></div><span>✓ Sent via WhatsApp</span></div>
+                            <div class="tracking-item pending"><div class="tracking-dot"></div><span>○ Viewed by Buyer</span></div>
+                            <div class="tracking-item pending"><div class="tracking-dot"></div><span>○ Accepted</span></div>
+                            <div class="tracking-item pending"><div class="tracking-dot"></div><span>○ T&C Signed</span></div>
+                            <div class="tracking-item pending"><div class="tracking-dot"></div><span>○ First Payment</span></div>
+                        </div>
+                    </div>
+
+                    <div class="success-actions">
+                        <button class="btn btn-primary btn-lg" onclick="viewContract()">📋 View Contract</button>
+                        <button class="btn btn-outline btn-lg" onclick="createAnother()">➕ Create Another</button>
+                        <button class="btn btn-outline btn-lg" onclick="goToDashboard()">📊 Go to Dashboard</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div class="toast" id="toast">✓ Saved!</div>
+
+    <script>
+        let currentStep = 1;
+        const totalSteps = 7;
+        let selectedSource = 'template';
+        let selectedBuyer = 'anita';
+        let selectedPayment = 'emi';
+        let selectedSendMethod = 'whatsapp';
+
+        // Quantities
+        let quantities = { yoga: 4, gynec: 2, nutrition: 1 };
+        const prices = { yoga: 2000, gynec: 1500, nutrition: 1000 };
+
+        function goToStep(step) {
+            if (step > currentStep) return;
+            currentStep = step;
+            updateUI();
+        }
+
+        function nextStep() {
+            if (currentStep < totalSteps) {
+                if (currentStep === 6) {
+                    sendContract();
+                    return;
+                }
+                currentStep++;
+                updateUI();
+            }
+        }
+
+        function goBack() {
+            if (currentStep > 1) {
+                currentStep--;
+                updateUI();
+            }
+        }
+
+        function updateUI() {
+            document.querySelectorAll('.step-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(`step${currentStep}`).classList.add('active');
+
+            document.querySelectorAll('.progress-step').forEach((step, i) => {
+                step.classList.remove('active', 'completed');
+                if (i + 1 < currentStep) step.classList.add('completed');
+                else if (i + 1 === currentStep) step.classList.add('active');
+            });
+
+            document.querySelectorAll('.step-connector').forEach((conn, i) => {
+                conn.classList.toggle('completed', i + 1 < currentStep);
+            });
+
+            const nextBtn = document.getElementById('nextBtn');
+            if (currentStep === 6) {
+                nextBtn.innerHTML = '📱 Send Contract';
+                nextBtn.className = 'btn btn-whatsapp';
+            } else if (currentStep === 7) {
+                nextBtn.style.display = 'none';
+            } else {
+                nextBtn.innerHTML = 'Continue →';
+                nextBtn.className = 'btn btn-primary';
+                nextBtn.style.display = '';
+            }
+        }
+
+        function selectSource(el, source) {
+            document.querySelectorAll('.source-card').forEach(c => c.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedSource = source;
+
+            document.getElementById('templatePicker').classList.toggle('visible', source === 'template');
+        }
+
+        function selectTemplate(el, template) {
+            document.querySelectorAll('.template-item').forEach(t => t.classList.remove('selected'));
+            el.classList.add('selected');
+        }
+
+        function selectBuyer(el, buyer) {
+            document.querySelectorAll('.buyer-item').forEach(b => b.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedBuyer = buyer;
+        }
+
+        function selectPayment(el, payment) {
+            document.querySelectorAll('.payment-option').forEach(p => p.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedPayment = payment;
+        }
+
+        function selectSendMethod(el, method) {
+            document.querySelectorAll('.send-option').forEach(s => s.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedSendMethod = method;
+        }
+
+        function changeQty(item, delta) {
+            quantities[item] = Math.max(1, quantities[item] + delta);
+            document.getElementById(`qty${item.charAt(0).toUpperCase() + item.slice(1)}`).textContent = quantities[item];
+            document.getElementById(`price${item.charAt(0).toUpperCase() + item.slice(1)}`).textContent = `₹${(quantities[item] * prices[item]).toLocaleString()}`;
+            updatePricing();
+        }
+
+        function updatePricing() {
+            const subtotal = Object.keys(quantities).reduce((sum, key) => sum + quantities[key] * prices[key], 0);
+            const discountPercent = parseInt(document.getElementById('discountValue').value) || 0;
+            const discount = Math.round(subtotal * discountPercent / 100);
+            const afterDiscount = subtotal - discount;
+            const tax = Math.round(afterDiscount * 0.18);
+            const total = afterDiscount + tax;
+
+            document.getElementById('subtotal').textContent = `₹${subtotal.toLocaleString()}`;
+            document.getElementById('discountAmount').textContent = `−₹${discount.toLocaleString()}`;
+            document.getElementById('discountDisplay').textContent = `−₹${discount.toLocaleString()}`;
+            document.getElementById('tax').textContent = `₹${tax.toLocaleString()}`;
+            document.getElementById('total').textContent = `₹${total.toLocaleString()}`;
+        }
+
+        function sendContract() {
+            currentStep = 7;
+            updateUI();
+            showToast('📱 Contract sent via WhatsApp!');
+        }
+
+        function saveDraft() {
+            showToast('✓ Draft saved!');
+        }
+
+        function viewContract() {
+            showToast('Opening contract...');
+        }
+
+        function createAnother() {
+            currentStep = 1;
+            updateUI();
+        }
+
+        function goToDashboard() {
+            showToast('Going to dashboard...');
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        // Init
+        updatePricing();
+    </script>
+</body>
+</html>

@@ -1,0 +1,1453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ContractNest - Polymorphic Contract View</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand: #0F172A;
+            --brand-light: #1E293B;
+            --accent: #6366F1;
+            --accent-light: #818CF8;
+            --accent-bg: #EEF2FF;
+            --seller-brand: #7C3AED;
+            --seller-bg: #F5F3FF;
+            --seller-border: #DDD6FE;
+            --buyer-brand: #0284C7;
+            --buyer-bg: #F0F9FF;
+            --buyer-border: #BAE6FD;
+            --vendor-brand: #059669;
+            --vendor-bg: #ECFDF5;
+            --vendor-border: #A7F3D0;
+            --success: #10B981;
+            --success-bg: #ECFDF5;
+            --warning: #F59E0B;
+            --warning-bg: #FFFBEB;
+            --danger: #EF4444;
+            --danger-bg: #FEF2F2;
+            --bg: #F8FAFC;
+            --surface: #FFFFFF;
+            --border: #E2E8F0;
+            --border-light: #F1F5F9;
+            --text: #334155;
+            --text-light: #64748B;
+            --text-muted: #94A3B8;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1);
+            --radius: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1.125rem;
+            font-weight: 800;
+            color: var(--brand);
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--accent);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .contract-id {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg);
+            border-radius: 50px;
+            font-size: 0.8rem;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        .contract-id strong {
+            color: var(--text);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0.4rem 0.75rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-badge.active {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
+        .status-badge .dot {
+            width: 6px;
+            height: 6px;
+            background: currentColor;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* ===== PERSONA SWITCHER ===== */
+        .persona-switcher {
+            display: flex;
+            background: var(--bg);
+            border-radius: 50px;
+            padding: 4px;
+            gap: 4px;
+        }
+
+        .persona-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0.6rem 1.25rem;
+            border-radius: 50px;
+            border: none;
+            background: transparent;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: var(--text-light);
+        }
+
+        .persona-btn:hover {
+            background: var(--surface);
+        }
+
+        .persona-btn.active {
+            color: white;
+            box-shadow: var(--shadow-md);
+        }
+
+        .persona-btn.seller.active {
+            background: var(--seller-brand);
+        }
+
+        .persona-btn.buyer.active {
+            background: var(--buyer-brand);
+        }
+
+        .persona-btn.vendor.active {
+            background: var(--vendor-brand);
+        }
+
+        .persona-icon {
+            font-size: 1rem;
+        }
+
+        /* ===== MAIN CONTAINER ===== */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* ===== VIEW TRANSITION ===== */
+        .view-container {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .view-container.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===== CONTRACT HEADER CARD ===== */
+        .contract-header-card {
+            background: var(--surface);
+            border-radius: var(--radius-xl);
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-md);
+            border-left: 5px solid var(--accent);
+        }
+
+        .contract-header-card.seller-view {
+            border-left-color: var(--seller-brand);
+        }
+
+        .contract-header-card.buyer-view {
+            border-left-color: var(--buyer-brand);
+        }
+
+        .contract-header-card.vendor-view {
+            border-left-color: var(--vendor-brand);
+        }
+
+        .contract-header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+        }
+
+        .contract-title-section h1 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: var(--brand);
+            margin-bottom: 0.5rem;
+        }
+
+        .contract-title-section p {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .progress-ring {
+            width: 80px;
+            height: 80px;
+            position: relative;
+        }
+
+        .progress-ring svg {
+            transform: rotate(-90deg);
+        }
+
+        .progress-ring circle {
+            fill: none;
+            stroke-width: 8;
+        }
+
+        .progress-ring .bg {
+            stroke: var(--border);
+        }
+
+        .progress-ring .progress {
+            stroke: var(--success);
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.5s;
+        }
+
+        .progress-ring .value {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--brand);
+        }
+
+        .contract-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 1rem;
+            background: var(--bg);
+            border-radius: var(--radius);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--brand);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* ===== GRID LAYOUT ===== */
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 1.5rem;
+        }
+
+        .content-grid.single-column {
+            grid-template-columns: 1fr;
+        }
+
+        /* ===== CARD STYLES ===== */
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--brand);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        /* ===== TIMELINE ===== */
+        .timeline {
+            position: relative;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border);
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-left: 50px;
+            padding-bottom: 1.5rem;
+        }
+
+        .timeline-item:last-child {
+            padding-bottom: 0;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: 12px;
+            top: 0;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 3px solid var(--border);
+            background: var(--surface);
+            z-index: 1;
+        }
+
+        .timeline-item.completed .timeline-dot {
+            background: var(--success);
+            border-color: var(--success);
+        }
+
+        .timeline-item.completed .timeline-dot::after {
+            content: '✓';
+            color: white;
+            font-size: 0.6rem;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .timeline-item.active .timeline-dot {
+            background: var(--warning);
+            border-color: var(--warning);
+            animation: pulseDot 2s infinite;
+        }
+
+        @keyframes pulseDot {
+            0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+            70% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+        }
+
+        .timeline-item.upcoming .timeline-dot {
+            background: var(--bg);
+            border-color: var(--border);
+        }
+
+        .timeline-content {
+            background: var(--bg);
+            border-radius: var(--radius);
+            padding: 1rem;
+            border: 1px solid var(--border-light);
+        }
+
+        .timeline-item.active .timeline-content {
+            background: var(--warning-bg);
+            border-color: #FDE68A;
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-title {
+            font-weight: 600;
+            color: var(--text);
+            font-size: 0.9rem;
+        }
+
+        .timeline-date {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .timeline-meta {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .timeline-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .timeline-tag.assignee {
+            background: var(--accent-bg);
+            color: var(--accent);
+        }
+
+        .timeline-tag.sla {
+            background: var(--warning-bg);
+            color: var(--warning);
+        }
+
+        .timeline-tag.evidence {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
+        /* ===== SELLER SPECIFIC ===== */
+        .seller-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            padding: 0.4rem 0.75rem;
+            border-radius: var(--radius);
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-light);
+        }
+
+        .action-btn:hover {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .action-btn.primary {
+            background: var(--seller-brand);
+            color: white;
+            border-color: var(--seller-brand);
+        }
+
+        .action-btn.primary:hover {
+            opacity: 0.9;
+        }
+
+        /* Financial Panel */
+        .financial-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .financial-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .financial-row:last-child {
+            border-bottom: none;
+        }
+
+        .financial-label {
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        .financial-value {
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .financial-value.success {
+            color: var(--success);
+        }
+
+        .financial-value.warning {
+            color: var(--warning);
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--success);
+            border-radius: 4px;
+            transition: width 0.5s;
+        }
+
+        /* Agent Suggestion */
+        .agent-suggestion {
+            background: var(--accent-bg);
+            border: 1px solid #C7D2FE;
+            border-radius: var(--radius);
+            padding: 1rem;
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+
+        .agent-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .agent-content {
+            flex: 1;
+        }
+
+        .agent-content p {
+            font-size: 0.85rem;
+            color: var(--text);
+            margin-bottom: 0.75rem;
+            line-height: 1.5;
+        }
+
+        .agent-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .agent-btn {
+            padding: 0.4rem 0.75rem;
+            border-radius: var(--radius);
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .agent-btn.accept {
+            background: var(--accent);
+            color: white;
+        }
+
+        .agent-btn.dismiss {
+            background: var(--surface);
+            color: var(--text-light);
+            border: 1px solid var(--border);
+        }
+
+        /* ===== BUYER SPECIFIC ===== */
+        .value-card {
+            text-align: center;
+            padding: 2rem;
+            background: linear-gradient(135deg, var(--buyer-bg) 0%, #E0F2FE 100%);
+            border-radius: var(--radius-lg);
+            margin-bottom: 1.5rem;
+        }
+
+        .value-card h4 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+        }
+
+        .value-card .amount {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--buyer-brand);
+        }
+
+        .value-card .subtext {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-top: 0.5rem;
+        }
+
+        .service-log {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .service-log-item {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-light);
+        }
+
+        .service-log-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--surface);
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .service-log-content {
+            flex: 1;
+        }
+
+        .service-log-title {
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.25rem;
+        }
+
+        .service-log-date {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .evidence-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.75rem;
+            color: var(--buyer-brand);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .evidence-link:hover {
+            text-decoration: underline;
+        }
+
+        .service-log-status {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .status-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+        }
+
+        .status-icon.completed {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
+        /* ===== VENDOR SPECIFIC ===== */
+        .vendor-task-card {
+            background: linear-gradient(135deg, var(--vendor-bg) 0%, #D1FAE5 100%);
+            border: 2px solid var(--vendor-border);
+            border-radius: var(--radius-xl);
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .vendor-task-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--surface);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            margin: 0 auto 1.5rem;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .vendor-task-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--brand);
+            margin-bottom: 0.5rem;
+        }
+
+        .vendor-task-client {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin-bottom: 1.5rem;
+        }
+
+        .sla-countdown {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--surface);
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            margin-bottom: 1.5rem;
+        }
+
+        .sla-countdown .icon {
+            color: var(--warning);
+            font-size: 1.25rem;
+        }
+
+        .sla-countdown .time {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--brand);
+        }
+
+        .sla-countdown .label {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .vendor-details {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .vendor-detail {
+            background: var(--surface);
+            padding: 1rem;
+            border-radius: var(--radius);
+        }
+
+        .vendor-detail-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+        }
+
+        .vendor-detail-value {
+            font-weight: 600;
+            color: var(--text);
+            font-size: 0.9rem;
+        }
+
+        .evidence-checklist {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .evidence-checklist h4 {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-light);
+            margin-bottom: 1rem;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.6rem 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .checklist-item:last-child {
+            border-bottom: none;
+        }
+
+        .checklist-checkbox {
+            width: 22px;
+            height: 22px;
+            border: 2px solid var(--border);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .checklist-checkbox.checked {
+            background: var(--vendor-brand);
+            border-color: var(--vendor-brand);
+            color: white;
+        }
+
+        .checklist-text {
+            flex: 1;
+            font-size: 0.875rem;
+            color: var(--text);
+        }
+
+        .vendor-cta {
+            width: 100%;
+            padding: 1.25rem 2rem;
+            background: var(--vendor-brand);
+            color: white;
+            border: none;
+            border-radius: var(--radius-lg);
+            font-size: 1.125rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            box-shadow: 0 4px 15px rgba(5, 150, 105, 0.4);
+            transition: all 0.2s;
+        }
+
+        .vendor-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(5, 150, 105, 0.5);
+        }
+
+        /* ===== FOOTER INFO ===== */
+        .view-info {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: var(--bg);
+            border-radius: var(--radius);
+            border: 1px dashed var(--border);
+            text-align: center;
+        }
+
+        .view-info p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .view-info strong {
+            color: var(--text);
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">
+                <div class="logo-icon">⚡</div>
+                ContractNest
+            </div>
+            
+            <div class="contract-id">
+                📋 Contract <strong>#CN-9921</strong>
+            </div>
+            
+            <div class="status-badge active">
+                <span class="dot"></span>
+                Active
+            </div>
+        </div>
+        
+        <!-- PERSONA SWITCHER -->
+        <div class="persona-switcher">
+            <button class="persona-btn seller active" onclick="switchView('seller')">
+                <span class="persona-icon">👔</span>
+                Seller View
+            </button>
+            <button class="persona-btn buyer" onclick="switchView('buyer')">
+                <span class="persona-icon">🛒</span>
+                Buyer View
+            </button>
+            <button class="persona-btn vendor" onclick="switchView('vendor')">
+                <span class="persona-icon">🔧</span>
+                Vendor View
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <div class="main-container">
+        
+        <!-- ==================== SELLER VIEW ==================== -->
+        <div class="view-container active" id="sellerView">
+            <!-- Contract Header -->
+            <div class="contract-header-card seller-view">
+                <div class="contract-header-top">
+                    <div class="contract-title-section">
+                        <h1>PCOD Balance Program</h1>
+                        <p>Client: Anita Sharma • Started Dec 20, 2024</p>
+                    </div>
+                    <div class="progress-ring">
+                        <svg width="80" height="80">
+                            <circle class="bg" cx="40" cy="40" r="32"/>
+                            <circle class="progress" cx="40" cy="40" r="32" 
+                                stroke-dasharray="201" stroke-dashoffset="110"/>
+                        </svg>
+                        <span class="value">45%</span>
+                    </div>
+                </div>
+                
+                <div class="contract-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">₹12,000</div>
+                        <div class="stat-label">Contract Value</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">₹12,000</div>
+                        <div class="stat-label">Collected</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">3/7</div>
+                        <div class="stat-label">Services Done</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">0</div>
+                        <div class="stat-label">SLA Breaches</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-grid">
+                <!-- Timeline Section -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>📅 Execution Timeline</h3>
+                        <div class="seller-actions">
+                            <button class="action-btn">+ Add Task</button>
+                            <button class="action-btn primary">📤 Send Update</button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="timeline">
+                            <div class="timeline-item completed">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-content">
+                                    <div class="timeline-header">
+                                        <span class="timeline-title">🧘 Yoga Session #1</span>
+                                        <span class="timeline-date">Dec 22, 2024</span>
+                                    </div>
+                                    <div class="timeline-meta">
+                                        <span class="timeline-tag assignee">👤 Priya (Trainer)</span>
+                                        <span class="timeline-tag evidence">✓ Evidence Verified</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="timeline-item completed">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-content">
+                                    <div class="timeline-header">
+                                        <span class="timeline-title">🥗 Nutrition Consultation</span>
+                                        <span class="timeline-date">Dec 26, 2024</span>
+                                    </div>
+                                    <div class="timeline-meta">
+                                        <span class="timeline-tag assignee">👤 Dr. Meera</span>
+                                        <span class="timeline-tag evidence">✓ Diet Chart Uploaded</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="timeline-item completed">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-content">
+                                    <div class="timeline-header">
+                                        <span class="timeline-title">🧘 Yoga Session #2</span>
+                                        <span class="timeline-date">Dec 29, 2024</span>
+                                    </div>
+                                    <div class="timeline-meta">
+                                        <span class="timeline-tag assignee">👤 Priya (Trainer)</span>
+                                        <span class="timeline-tag evidence">✓ Evidence Verified</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="timeline-item active">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-content">
+                                    <div class="timeline-header">
+                                        <span class="timeline-title">🩺 Gynec Consultation #1</span>
+                                        <span class="timeline-date">Jan 05, 2025</span>
+                                    </div>
+                                    <div class="timeline-meta">
+                                        <span class="timeline-tag assignee">👤 Unassigned</span>
+                                        <span class="timeline-tag sla">⏱️ 2 days remaining</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="timeline-item upcoming">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-content">
+                                    <div class="timeline-header">
+                                        <span class="timeline-title">🧘 Yoga Session #3</span>
+                                        <span class="timeline-date">Jan 12, 2025</span>
+                                    </div>
+                                    <div class="timeline-meta">
+                                        <span class="timeline-tag assignee">👤 Priya (Trainer)</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="timeline-item upcoming">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-content">
+                                    <div class="timeline-header">
+                                        <span class="timeline-title">🧘 Yoga Session #4</span>
+                                        <span class="timeline-date">Jan 19, 2025</span>
+                                    </div>
+                                    <div class="timeline-meta">
+                                        <span class="timeline-tag assignee">👤 Priya (Trainer)</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="timeline-item upcoming">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-content">
+                                    <div class="timeline-header">
+                                        <span class="timeline-title">🩺 Gynec Consultation #2</span>
+                                        <span class="timeline-date">Feb 15, 2025</span>
+                                    </div>
+                                    <div class="timeline-meta">
+                                        <span class="timeline-tag assignee">👤 To be assigned</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    <!-- Financial Health -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>💰 Financial Health</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="financial-panel">
+                                <div class="financial-row">
+                                    <span class="financial-label">Contract Value</span>
+                                    <span class="financial-value">₹12,000</span>
+                                </div>
+                                <div class="financial-row">
+                                    <span class="financial-label">Collected</span>
+                                    <span class="financial-value success">₹12,000</span>
+                                </div>
+                                <div class="financial-row">
+                                    <span class="financial-label">Pending</span>
+                                    <span class="financial-value">₹0</span>
+                                </div>
+                                <div>
+                                    <div class="financial-row" style="border: none; padding-bottom: 0;">
+                                        <span class="financial-label">Collection Progress</span>
+                                        <span class="financial-value success">100%</span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-bar-fill" style="width: 100%;"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Agent Suggestion -->
+                    <div class="agent-suggestion">
+                        <div class="agent-icon">⚡</div>
+                        <div class="agent-content">
+                            <p><strong>Agent Alert:</strong> Gynec Consultation #1 is unassigned and due in 2 days. Would you like me to notify Dr. Sunita?</p>
+                            <div class="agent-actions">
+                                <button class="agent-btn accept">Yes, Notify</button>
+                                <button class="agent-btn dismiss">Dismiss</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="view-info">
+                <p>🔍 <strong>Seller View</strong> — You're seeing the operations & monitoring perspective with task management and financial tracking.</p>
+            </div>
+        </div>
+
+        <!-- ==================== BUYER VIEW ==================== -->
+        <div class="view-container" id="buyerView">
+            <!-- Contract Header -->
+            <div class="contract-header-card buyer-view">
+                <div class="contract-header-top">
+                    <div class="contract-title-section">
+                        <h1>PCOD Balance Program</h1>
+                        <p>Your wellness journey with Vikuna Wellness</p>
+                    </div>
+                    <div class="progress-ring">
+                        <svg width="80" height="80">
+                            <circle class="bg" cx="40" cy="40" r="32"/>
+                            <circle class="progress" cx="40" cy="40" r="32" 
+                                stroke-dasharray="201" stroke-dashoffset="110" style="stroke: #0284C7;"/>
+                        </svg>
+                        <span class="value">45%</span>
+                    </div>
+                </div>
+                
+                <div class="contract-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">3</div>
+                        <div class="stat-label">Services Received</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">4</div>
+                        <div class="stat-label">Remaining</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">Jan 5</div>
+                        <div class="stat-label">Next Session</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">Mar 20</div>
+                        <div class="stat-label">Program Ends</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-grid">
+                <!-- Service Log -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>📋 Your Service Log</h3>
+                        <button class="action-btn" style="background: var(--buyer-brand); color: white; border-color: var(--buyer-brand);">
+                            Download All
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="service-log">
+                            <div class="service-log-item">
+                                <div class="service-log-icon">🧘</div>
+                                <div class="service-log-content">
+                                    <div class="service-log-title">Yoga Session #1</div>
+                                    <div class="service-log-date">Dec 22, 2024 • 10:00 AM • With Priya</div>
+                                    <div class="evidence-link">📷 View Session Photos →</div>
+                                </div>
+                                <div class="service-log-status">
+                                    <div class="status-icon completed">✓</div>
+                                </div>
+                            </div>
+                            
+                            <div class="service-log-item">
+                                <div class="service-log-icon">🥗</div>
+                                <div class="service-log-content">
+                                    <div class="service-log-title">Nutrition Consultation</div>
+                                    <div class="service-log-date">Dec 26, 2024 • 2:00 PM • With Dr. Meera</div>
+                                    <div class="evidence-link">📄 Download Diet Chart.pdf →</div>
+                                </div>
+                                <div class="service-log-status">
+                                    <div class="status-icon completed">✓</div>
+                                </div>
+                            </div>
+                            
+                            <div class="service-log-item">
+                                <div class="service-log-icon">🧘</div>
+                                <div class="service-log-content">
+                                    <div class="service-log-title">Yoga Session #2</div>
+                                    <div class="service-log-date">Dec 29, 2024 • 10:00 AM • With Priya</div>
+                                    <div class="evidence-link">📷 View Session Photos →</div>
+                                </div>
+                                <div class="service-log-status">
+                                    <div class="status-icon completed">✓</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                    <!-- Value Summary -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>💎 Your Investment</h3>
+                        </div>
+                        <div class="card-body" style="padding: 0;">
+                            <div class="value-card">
+                                <h4>Value Received</h4>
+                                <div class="amount">₹5,400</div>
+                                <div class="subtext">of ₹12,000 total program value</div>
+                            </div>
+                            <div style="padding: 0 1.5rem 1.5rem;">
+                                <div class="financial-row">
+                                    <span class="financial-label">Program Cost</span>
+                                    <span class="financial-value">₹12,000</span>
+                                </div>
+                                <div class="financial-row">
+                                    <span class="financial-label">Amount Paid</span>
+                                    <span class="financial-value success">₹12,000</span>
+                                </div>
+                                <div class="financial-row">
+                                    <span class="financial-label">Status</span>
+                                    <span class="financial-value success">✓ Fully Paid</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Upcoming -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>📅 Coming Up</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="service-log-item" style="margin-bottom: 0;">
+                                <div class="service-log-icon">🩺</div>
+                                <div class="service-log-content">
+                                    <div class="service-log-title">Gynec Consultation #1</div>
+                                    <div class="service-log-date">Jan 05, 2025 • Time TBD</div>
+                                    <span style="font-size: 0.75rem; color: var(--warning);">⏳ Scheduling in progress</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="view-info">
+                <p>🔍 <strong>Buyer View</strong> — You're seeing the value tracking perspective with service history and evidence downloads.</p>
+            </div>
+        </div>
+
+        <!-- ==================== VENDOR VIEW ==================== -->
+        <div class="view-container" id="vendorView">
+            <div class="content-grid single-column">
+                <div class="vendor-task-card">
+                    <div class="vendor-task-icon">🧘</div>
+                    <h2 class="vendor-task-title">Yoga Session #3</h2>
+                    <p class="vendor-task-client">Client: Anita Sharma • PCOD Balance Program</p>
+                    
+                    <div class="sla-countdown">
+                        <span class="icon">⏱️</span>
+                        <div>
+                            <div class="time">47:59:23</div>
+                            <div class="label">Time Remaining</div>
+                        </div>
+                    </div>
+                    
+                    <div class="vendor-details">
+                        <div class="vendor-detail">
+                            <div class="vendor-detail-label">📍 Location</div>
+                            <div class="vendor-detail-value">Wellness Studio A<br>Jubilee Hills, Hyderabad</div>
+                        </div>
+                        <div class="vendor-detail">
+                            <div class="vendor-detail-label">📅 Date & Time</div>
+                            <div class="vendor-detail-value">Jan 12, 2025<br>10:00 AM - 11:00 AM</div>
+                        </div>
+                        <div class="vendor-detail">
+                            <div class="vendor-detail-label">📞 Client Contact</div>
+                            <div class="vendor-detail-value">+91 98765 43210<br>anita.sharma@email.com</div>
+                        </div>
+                    </div>
+                    
+                    <div class="evidence-checklist">
+                        <h4>📸 Required Evidence</h4>
+                        <div class="checklist-item">
+                            <div class="checklist-checkbox" onclick="toggleCheck(this)"></div>
+                            <span class="checklist-text">Take photo of session setup (before)</span>
+                        </div>
+                        <div class="checklist-item">
+                            <div class="checklist-checkbox" onclick="toggleCheck(this)"></div>
+                            <span class="checklist-text">Take photo during session</span>
+                        </div>
+                        <div class="checklist-item">
+                            <div class="checklist-checkbox" onclick="toggleCheck(this)"></div>
+                            <span class="checklist-text">Get client digital signature</span>
+                        </div>
+                        <div class="checklist-item">
+                            <div class="checklist-checkbox" onclick="toggleCheck(this)"></div>
+                            <span class="checklist-text">Upload session completion notes</span>
+                        </div>
+                    </div>
+                    
+                    <button class="vendor-cta" onclick="completeTask()">
+                        <span>📷</span>
+                        Upload Evidence & Complete
+                    </button>
+                </div>
+            </div>
+            
+            <div class="view-info">
+                <p>🔍 <strong>Vendor View</strong> — You're seeing the action/execution perspective with task details, SLA countdown, and evidence requirements.</p>
+            </div>
+        </div>
+        
+    </div>
+
+    <script>
+        // ===== VIEW SWITCHING =====
+        function switchView(view) {
+            // Update buttons
+            document.querySelectorAll('.persona-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`.persona-btn.${view}`).classList.add('active');
+            
+            // Update views
+            document.querySelectorAll('.view-container').forEach(v => {
+                v.classList.remove('active');
+            });
+            document.getElementById(`${view}View`).classList.add('active');
+        }
+
+        // ===== VENDOR CHECKLIST =====
+        function toggleCheck(element) {
+            element.classList.toggle('checked');
+            if (element.classList.contains('checked')) {
+                element.innerHTML = '✓';
+            } else {
+                element.innerHTML = '';
+            }
+        }
+
+        // ===== COMPLETE TASK =====
+        function completeTask() {
+            const checkedItems = document.querySelectorAll('.checklist-checkbox.checked').length;
+            const totalItems = document.querySelectorAll('.checklist-checkbox').length;
+            
+            if (checkedItems < totalItems) {
+                alert(`Please complete all evidence requirements (${checkedItems}/${totalItems} done)`);
+                return;
+            }
+            
+            alert('🎉 Task completed successfully! Evidence uploaded and verified.');
+        }
+
+        // ===== SLA COUNTDOWN =====
+        function updateCountdown() {
+            const timeElement = document.querySelector('.sla-countdown .time');
+            if (!timeElement) return;
+            
+            let [hours, minutes, seconds] = timeElement.textContent.split(':').map(Number);
+            
+            seconds--;
+            if (seconds < 0) {
+                seconds = 59;
+                minutes--;
+            }
+            if (minutes < 0) {
+                minutes = 59;
+                hours--;
+            }
+            if (hours < 0) {
+                hours = 0;
+                minutes = 0;
+                seconds = 0;
+            }
+            
+            timeElement.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+
+        setInterval(updateCountdown, 1000);
+    </script>
+</body>
+</html>

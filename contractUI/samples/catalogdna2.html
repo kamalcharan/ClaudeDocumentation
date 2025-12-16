@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Billing Rule Setup</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #F8FAFC; padding: 2rem; display: flex; justify-content: center; }
+        .config-card { width: 500px; background: white; border: 1px solid #E2E8F0; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); overflow: hidden; }
+        .header { padding: 1.5rem; border-bottom: 1px solid #F1F5F9; background: #10B981; color: white; } /* Green for money */
+        .body { padding: 2rem; }
+        
+        .section-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: #64748B; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
+
+        /* The Visual Connection UI */
+        .connection-box { border: 2px dashed #CBD5E1; padding: 1.5rem; border-radius: 8px; text-align: center; position: relative; margin-bottom: 2rem; background: #F8FAFC; }
+        .connector-line { width: 2px; height: 20px; background: #CBD5E1; margin: 0 auto; }
+        .node { background: white; padding: 0.8rem; border-radius: 6px; border: 1px solid #E2E8F0; display: inline-block; font-weight: 600; color: #334155; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .node.action { border-color: #10B981; color: #047857; background: #ECFDF5; }
+        
+        /* Penalty Slider */
+        .slider-container { margin-bottom: 2rem; }
+        .range-slider { width: 100%; cursor: pointer; }
+        .penalty-val { font-size: 1.5rem; font-weight: 700; color: #EF4444; }
+
+    </style>
+</head>
+<body>
+
+<div class="config-card">
+    <div class="header">
+        <div style="font-size: 1.1rem; font-weight: 600;">💰 Billing Rules Setup</div>
+        <div style="opacity: 0.8; font-size: 0.85rem;">For Catalog Item: "Installation Milestone Payment"</div>
+    </div>
+    
+    <div class="body">
+        
+        <div class="section-title">🔗 Payment Trigger (Dependency)</div>
+        <p style="font-size: 0.9rem; color: #64748B; margin-bottom: 1rem;">When should this invoice be generated?</p>
+
+        <div class="connection-box">
+            <div class="node">🏁 WHEN "Installation Service" is Verified</div>
+            <div class="connector-line"></div>
+            <div class="connector-line"></div>
+            <div style="font-size: 1.5rem; color: #94A3B8;">⬇</div>
+            <div class="node action">⚡ Auto-Generate Invoice ($2,000)</div>
+            
+            <div style="margin-top: 1rem; font-size: 0.8rem; color: #64748B;">
+                <input type="checkbox" checked> Hold for Buyer Approval?
+            </div>
+        </div>
+
+        <div class="section-title">📉 SLA Penalty Logic</div>
+        <p style="font-size: 0.9rem; color: #64748B;">Auto-discount if service is delayed?</p>
+        
+        <div class="slider-container">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span>Discount per 24h delay:</span>
+                <span class="penalty-val" id="p-val">5%</span>
+            </div>
+            <input type="range" class="range-slider" min="0" max="20" value="5" oninput="document.getElementById('p-val').innerText = this.value + '%'">
+            <div style="font-size: 0.8rem; color: #64748B; margin-top: 5px; text-align: right;">Max Cap: 20%</div>
+        </div>
+
+    </div>
+    <button class="btn-save" style="background: #10B981;">Save Billing Logic</button>
+</div>
+
+</body>
+</html>

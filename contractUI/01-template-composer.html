@@ -1,0 +1,1826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ContractNest - Template Composer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand: #0F172A;
+            --brand-light: #1E293B;
+            --accent: #6366F1;
+            --accent-light: #818CF8;
+            --accent-bg: #EEF2FF;
+            --success: #10B981;
+            --success-bg: #ECFDF5;
+            --warning: #F59E0B;
+            --warning-bg: #FFFBEB;
+            --danger: #EF4444;
+            --danger-bg: #FEF2F2;
+            --bg: #F8FAFC;
+            --surface: #FFFFFF;
+            --border: #E2E8F0;
+            --border-light: #F1F5F9;
+            --text: #334155;
+            --text-light: #64748B;
+            --text-muted: #94A3B8;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+            --radius: 8px;
+            --radius-lg: 12px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+            background: var(--bg); 
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ===== LAYOUT ===== */
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* ===== SIDEBAR - BLOCK LIBRARY ===== */
+        .sidebar {
+            width: 280px;
+            background: var(--brand);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--brand-light);
+        }
+
+        .sidebar-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--brand-light);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.25rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--accent);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+
+        .block-category {
+            margin-bottom: 1.5rem;
+        }
+
+        .category-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+            padding-left: 0.5rem;
+            font-weight: 600;
+        }
+
+        .block-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0.75rem;
+            border-radius: var(--radius);
+            cursor: grab;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+            border: 1px solid transparent;
+        }
+
+        .block-item:hover {
+            background: var(--brand-light);
+            border-color: var(--text-muted);
+        }
+
+        .block-item:active {
+            cursor: grabbing;
+            transform: scale(0.98);
+        }
+
+        .block-item.dragging {
+            opacity: 0.5;
+        }
+
+        .block-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .block-icon.service { background: var(--accent-bg); color: var(--accent); }
+        .block-icon.commercial { background: var(--success-bg); color: var(--success); }
+        .block-icon.content { background: var(--warning-bg); color: var(--warning); }
+        .block-icon.core { background: #F1F5F9; color: var(--text); }
+
+        .block-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .block-name {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: white;
+            margin-bottom: 2px;
+        }
+
+        .block-desc {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .block-add {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--brand-light);
+            border: 1px solid var(--text-muted);
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            opacity: 0;
+        }
+
+        .block-item:hover .block-add {
+            opacity: 1;
+        }
+
+        .block-add:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ===== TOP BAR ===== */
+        .top-bar {
+            height: 64px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1.5rem;
+        }
+
+        .template-title-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .back-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .template-title-input {
+            font-size: 1.25rem;
+            font-weight: 700;
+            border: none;
+            background: transparent;
+            color: var(--brand);
+            width: 300px;
+            padding: 0.5rem;
+            border-radius: var(--radius);
+        }
+
+        .template-title-input:hover {
+            background: var(--bg);
+        }
+
+        .template-title-input:focus {
+            outline: none;
+            background: var(--bg);
+            box-shadow: 0 0 0 2px var(--accent-bg);
+        }
+
+        .template-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .meta-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .meta-badge.draft {
+            background: var(--warning-bg);
+            color: var(--warning);
+        }
+
+        .meta-badge.industry {
+            background: var(--border-light);
+            color: var(--text-light);
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .btn {
+            padding: 0.6rem 1.25rem;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: none;
+        }
+
+        .btn-outline {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .btn-outline:hover {
+            background: var(--bg);
+            border-color: var(--text-light);
+        }
+
+        .btn-primary {
+            background: var(--brand);
+            color: white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-primary:hover {
+            background: var(--brand-light);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-accent {
+            background: var(--accent);
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-accent:hover {
+            background: var(--accent-light);
+            transform: translateY(-1px);
+        }
+
+        /* ===== COMPOSER AREA ===== */
+        .composer-area {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* ===== CANVAS ===== */
+        .canvas-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: var(--bg);
+        }
+
+        .canvas-header {
+            padding: 1rem 1.5rem;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .canvas-header h3 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .block-count {
+            background: var(--accent-bg);
+            color: var(--accent);
+            padding: 0.15rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+
+        .canvas-tabs {
+            display: flex;
+            gap: 0.25rem;
+        }
+
+        .canvas-tab {
+            padding: 0.4rem 0.75rem;
+            border-radius: var(--radius);
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            color: var(--text-light);
+            background: transparent;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .canvas-tab:hover {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .canvas-tab.active {
+            background: var(--brand);
+            color: white;
+        }
+
+        .canvas-body {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .canvas-drop-zone {
+            min-height: 100%;
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1rem;
+            transition: all 0.2s;
+        }
+
+        .canvas-drop-zone.drag-over {
+            border-color: var(--accent);
+            background: var(--accent-bg);
+        }
+
+        .canvas-empty {
+            height: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+        }
+
+        .canvas-empty-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .canvas-empty-text {
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .canvas-empty-hint {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* ===== CANVAS BLOCKS ===== */
+        .canvas-block {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            margin-bottom: 0.75rem;
+            transition: all 0.2s;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .canvas-block:hover {
+            border-color: var(--accent);
+            box-shadow: var(--shadow-md);
+        }
+
+        .canvas-block.selected {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-bg);
+        }
+
+        .canvas-block-header {
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border-left: 4px solid var(--accent);
+        }
+
+        .canvas-block-header.service { border-left-color: var(--accent); }
+        .canvas-block-header.commercial { border-left-color: var(--success); }
+        .canvas-block-header.content { border-left-color: var(--warning); }
+        .canvas-block-header.core { border-left-color: var(--text-light); }
+
+        .canvas-block-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .canvas-block-icon.service { background: var(--accent-bg); }
+        .canvas-block-icon.commercial { background: var(--success-bg); }
+        .canvas-block-icon.content { background: var(--warning-bg); }
+        .canvas-block-icon.core { background: var(--border-light); }
+
+        .canvas-block-info {
+            flex: 1;
+        }
+
+        .canvas-block-title {
+            font-weight: 600;
+            font-size: 0.9375rem;
+            color: var(--brand);
+            margin-bottom: 0.25rem;
+        }
+
+        .canvas-block-subtitle {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .canvas-block-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .canvas-block-price {
+            font-weight: 700;
+            color: var(--brand);
+            font-size: 0.9375rem;
+        }
+
+        .canvas-block-qty {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            background: var(--bg);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .canvas-block-actions {
+            display: flex;
+            gap: 0.25rem;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .canvas-block:hover .canvas-block-actions {
+            opacity: 1;
+        }
+
+        .block-action-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: all 0.2s;
+        }
+
+        .block-action-btn:hover {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .block-action-btn.delete:hover {
+            background: var(--danger-bg);
+            color: var(--danger);
+            border-color: var(--danger);
+        }
+
+        /* Block Rules Indicator */
+        .canvas-block-rules {
+            padding: 0.75rem 1.25rem;
+            background: var(--bg);
+            border-top: 1px solid var(--border-light);
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .rule-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .rule-tag.evidence {
+            background: var(--accent-bg);
+            color: var(--accent);
+        }
+
+        .rule-tag.sla {
+            background: var(--warning-bg);
+            color: var(--warning);
+        }
+
+        .rule-tag.agent {
+            background: #F0F9FF;
+            color: #0369A1;
+        }
+
+        /* ===== PREVIEW PANEL ===== */
+        .preview-panel {
+            width: 380px;
+            background: var(--surface);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .preview-header {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .preview-header h3 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .preview-toggle {
+            display: flex;
+            background: var(--bg);
+            border-radius: 6px;
+            padding: 3px;
+        }
+
+        .preview-toggle-btn {
+            padding: 0.35rem 0.6rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            color: var(--text-light);
+            transition: all 0.2s;
+        }
+
+        .preview-toggle-btn.active {
+            background: var(--surface);
+            color: var(--text);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .preview-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.25rem;
+            background: var(--bg);
+        }
+
+        /* Preview Card */
+        .preview-card {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+        }
+
+        .preview-card-header {
+            padding: 1.5rem;
+            background: linear-gradient(135deg, var(--brand) 0%, var(--brand-light) 100%);
+            color: white;
+        }
+
+        .preview-card-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            opacity: 0.9;
+        }
+
+        .preview-card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .preview-card-subtitle {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        .preview-card-body {
+            padding: 1.5rem;
+        }
+
+        .preview-price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .preview-price {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--brand);
+        }
+
+        .preview-price-label {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .preview-duration {
+            text-align: right;
+        }
+
+        .preview-duration-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--brand);
+        }
+
+        .preview-duration-label {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .preview-services {
+            margin-bottom: 1.5rem;
+        }
+
+        .preview-services-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-light);
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .preview-service-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.6rem 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .preview-service-item:last-child {
+            border-bottom: none;
+        }
+
+        .preview-service-check {
+            color: var(--success);
+            font-size: 1rem;
+        }
+
+        .preview-service-name {
+            flex: 1;
+            font-size: 0.875rem;
+            color: var(--text);
+        }
+
+        .preview-service-qty {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            background: var(--bg);
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .preview-card-footer {
+            padding: 1rem 1.5rem;
+            background: var(--bg);
+            border-top: 1px solid var(--border-light);
+        }
+
+        .preview-cta {
+            width: 100%;
+            padding: 0.875rem;
+            background: var(--brand);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 0.9375rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .preview-cta:hover {
+            background: var(--brand-light);
+        }
+
+        /* Summary Stats */
+        .preview-summary {
+            margin-top: 1.25rem;
+            padding: 1rem;
+            background: var(--surface);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+
+        .summary-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-light);
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.4rem 0;
+            font-size: 0.8rem;
+        }
+
+        .summary-row span:first-child {
+            color: var(--text-light);
+        }
+
+        .summary-row span:last-child {
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        /* ===== CONFIG DRAWER ===== */
+        .config-drawer {
+            position: fixed;
+            top: 0;
+            right: -500px;
+            width: 480px;
+            height: 100vh;
+            background: var(--surface);
+            box-shadow: -10px 0 30px rgba(0,0,0,0.1);
+            z-index: 100;
+            transition: right 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .config-drawer.open {
+            right: 0;
+        }
+
+        .drawer-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.3);
+            z-index: 99;
+            display: none;
+        }
+
+        .drawer-overlay.show {
+            display: block;
+        }
+
+        .drawer-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .drawer-header h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--brand);
+        }
+
+        .drawer-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.25rem;
+            transition: all 0.2s;
+        }
+
+        .drawer-close:hover {
+            background: var(--danger-bg);
+            color: var(--danger);
+            border-color: var(--danger);
+        }
+
+        .drawer-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+        }
+
+        .drawer-section {
+            margin-bottom: 2rem;
+        }
+
+        .drawer-section-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-light);
+            font-weight: 700;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .drawer-section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 0.65rem 0.875rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.875rem;
+            color: var(--text);
+            transition: all 0.2s;
+        }
+
+        .form-input:focus, .form-select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-bg);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        /* Toggle Switch */
+        .toggle-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: var(--bg);
+            border-radius: var(--radius);
+            margin-bottom: 0.5rem;
+        }
+
+        .toggle-label {
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .toggle-switch {
+            width: 44px;
+            height: 24px;
+            background: var(--border);
+            border-radius: 12px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.2s;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .toggle-switch.active {
+            background: var(--success);
+        }
+
+        .toggle-switch.active::after {
+            left: 22px;
+        }
+
+        /* Rule Builder */
+        .rule-builder {
+            background: var(--accent-bg);
+            border: 1px solid #C7D2FE;
+            border-radius: var(--radius);
+            padding: 1rem;
+        }
+
+        .rule-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        .rule-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .rule-keyword {
+            background: var(--surface);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--accent);
+            border: 1px solid #C7D2FE;
+        }
+
+        .rule-keyword.then {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .rule-text {
+            font-size: 0.8125rem;
+            color: var(--text);
+        }
+
+        .rule-select {
+            padding: 0.25rem 0.5rem;
+            border: 1px solid #C7D2FE;
+            border-radius: 4px;
+            font-size: 0.8125rem;
+            background: var(--surface);
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .drawer-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .drawer-footer .btn {
+            flex: 1;
+        }
+
+        /* ===== ANIMATIONS ===== */
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }
+            70% { box-shadow: 0 0 0 8px rgba(99, 102, 241, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .slide-in {
+            animation: slideIn 0.3s ease;
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- SIDEBAR - BLOCK LIBRARY -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon">⚡</div>
+                    <span>ContractNest</span>
+                </div>
+            </div>
+            
+            <div class="sidebar-content">
+                <!-- Service Blocks -->
+                <div class="block-category">
+                    <div class="category-label">Service Blocks</div>
+                    
+                    <div class="block-item" draggable="true" data-type="service" data-name="Yoga Session" data-price="1200" data-icon="🧘">
+                        <div class="block-icon service">🧘</div>
+                        <div class="block-info">
+                            <div class="block-name">Yoga Session</div>
+                            <div class="block-desc">1 hour wellness session</div>
+                        </div>
+                        <div class="block-add" onclick="addBlock(event, 'yoga')">+</div>
+                    </div>
+                    
+                    <div class="block-item" draggable="true" data-type="service" data-name="Nutrition Consult" data-price="2000" data-icon="🥗">
+                        <div class="block-icon service">🥗</div>
+                        <div class="block-info">
+                            <div class="block-name">Nutrition Consult</div>
+                            <div class="block-desc">Diet chart + consultation</div>
+                        </div>
+                        <div class="block-add" onclick="addBlock(event, 'nutrition')">+</div>
+                    </div>
+                    
+                    <div class="block-item" draggable="true" data-type="service" data-name="Gynec Consultation" data-price="2500" data-icon="🩺">
+                        <div class="block-icon service">🩺</div>
+                        <div class="block-info">
+                            <div class="block-name">Gynec Consultation</div>
+                            <div class="block-desc">Specialist consultation</div>
+                        </div>
+                        <div class="block-add" onclick="addBlock(event, 'gynec')">+</div>
+                    </div>
+                    
+                    <div class="block-item" draggable="true" data-type="service" data-name="AC Maintenance" data-price="2500" data-icon="❄️">
+                        <div class="block-icon service">❄️</div>
+                        <div class="block-info">
+                            <div class="block-name">AC Maintenance</div>
+                            <div class="block-desc">Wet service + filter check</div>
+                        </div>
+                        <div class="block-add" onclick="addBlock(event, 'ac')">+</div>
+                    </div>
+                    
+                    <div class="block-item" draggable="true" data-type="service" data-name="Equipment Calibration" data-price="5000" data-icon="⚙️">
+                        <div class="block-icon service">⚙️</div>
+                        <div class="block-info">
+                            <div class="block-name">Equipment Calibration</div>
+                            <div class="block-desc">Certified calibration</div>
+                        </div>
+                        <div class="block-add" onclick="addBlock(event, 'calibration')">+</div>
+                    </div>
+                </div>
+                
+                <!-- Commercial Blocks -->
+                <div class="block-category">
+                    <div class="category-label">Commercial Blocks</div>
+                    
+                    <div class="block-item" draggable="true" data-type="commercial" data-name="Monthly AMC" data-icon="💳">
+                        <div class="block-icon commercial">💳</div>
+                        <div class="block-info">
+                            <div class="block-name">Monthly Billing</div>
+                            <div class="block-desc">Recurring payment</div>
+                        </div>
+                        <div class="block-add" onclick="addBlock(event, 'monthly')">+</div>
+                    </div>
+                    
+                    <div class="block-item" draggable="true" data-type="commercial" data-name="Milestone Payment" data-icon="🎯">
+                        <div class="block-icon commercial">🎯</div>
+                        <div class="block-info">
+                            <div class="block-name">Milestone Payment</div>
+                            <div class="block-desc">Pay per completion</div>
+                        </div>
+                        <div class="block-add" onclick="addBlock(event, 'milestone')">+</div>
+                    </div>
+                    
+                    <div class="block-item" draggable="true" data-type="commercial" data-name="100% Advance" data-icon="💰">
+                        <div class="block-icon commercial">💰</div>
+                        <div class="block-info">
+                            <div class="block-name">100% Advance</div>
+                            <div class="block-desc">Upfront payment</div>
+                        </div>
+                        <div class="block-add" onclick="addBlock(event, 'advance')">+</div>
+                    </div>
+                </div>
+                
+                <!-- Content Blocks -->
+                <div class="block-category">
+                    <div class="category-label">Content Blocks</div>
+                    
+                    <div class="block-item" draggable="true" data-type="content" data-name="Terms & Conditions" data-icon="📋">
+                        <div class="block-icon content">📋</div>
+                        <div class="block-info">
+                            <div class="block-name">Terms & Conditions</div>
+                            <div class="block-desc">Legal clauses</div>
+                        </div>
+                        <div class="block-add" onclick="addBlock(event, 'terms')">+</div>
+                    </div>
+                    
+                    <div class="block-item" draggable="true" data-type="content" data-name="Benefits" data-icon="✨">
+                        <div class="block-icon content">✨</div>
+                        <div class="block-info">
+                            <div class="block-name">Benefits List</div>
+                            <div class="block-desc">Value propositions</div>
+                        </div>
+                        <div class="block-add" onclick="addBlock(event, 'benefits')">+</div>
+                    </div>
+                </div>
+                
+                <!-- Core Blocks -->
+                <div class="block-category">
+                    <div class="category-label">Core Blocks</div>
+                    
+                    <div class="block-item" draggable="true" data-type="core" data-name="Contact Selection" data-icon="👤">
+                        <div class="block-icon core">👤</div>
+                        <div class="block-info">
+                            <div class="block-name">Contact Selection</div>
+                            <div class="block-desc">Buyer/Client details</div>
+                        </div>
+                        <div class="block-add" onclick="addBlock(event, 'contact')">+</div>
+                    </div>
+                    
+                    <div class="block-item" draggable="true" data-type="core" data-name="Equipment Binding" data-icon="🔧">
+                        <div class="block-icon core">🔧</div>
+                        <div class="block-info">
+                            <div class="block-name">Equipment Binding</div>
+                            <div class="block-desc">Link to asset</div>
+                        </div>
+                        <div class="block-add" onclick="addBlock(event, 'equipment')">+</div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            <!-- TOP BAR -->
+            <div class="top-bar">
+                <div class="template-title-section">
+                    <button class="back-btn">←</button>
+                    <input type="text" class="template-title-input" value="PCOD Balance Program" id="templateTitle">
+                    <div class="template-meta">
+                        <span class="meta-badge draft">Draft</span>
+                        <span class="meta-badge industry">Wellness</span>
+                    </div>
+                </div>
+                
+                <div class="top-actions">
+                    <button class="btn btn-outline">
+                        <span>📋</span> Duplicate
+                    </button>
+                    <button class="btn btn-outline">
+                        <span>👁️</span> Preview PDF
+                    </button>
+                    <button class="btn btn-primary" onclick="saveTemplate()">
+                        <span>💾</span> Save Template
+                    </button>
+                    <button class="btn btn-accent">
+                        <span>🚀</span> Publish
+                    </button>
+                </div>
+            </div>
+
+            <!-- COMPOSER AREA -->
+            <div class="composer-area">
+                <!-- CANVAS -->
+                <div class="canvas-section">
+                    <div class="canvas-header">
+                        <h3>
+                            Contract Blocks 
+                            <span class="block-count" id="blockCount">5</span>
+                        </h3>
+                        <div class="canvas-tabs">
+                            <button class="canvas-tab active">All Blocks</button>
+                            <button class="canvas-tab">Services</button>
+                            <button class="canvas-tab">Payments</button>
+                        </div>
+                    </div>
+                    
+                    <div class="canvas-body">
+                        <div class="canvas-drop-zone" id="canvasDropZone">
+                            <!-- Pre-populated blocks for PCOD example -->
+                            
+                            <div class="canvas-block selected slide-in" onclick="openConfig('yoga')">
+                                <div class="canvas-block-header service">
+                                    <div class="canvas-block-icon service">🧘</div>
+                                    <div class="canvas-block-info">
+                                        <div class="canvas-block-title">Yoga Session</div>
+                                        <div class="canvas-block-subtitle">Weekly wellness session with trainer</div>
+                                    </div>
+                                    <div class="canvas-block-meta">
+                                        <span class="canvas-block-price">₹1,200</span>
+                                        <span class="canvas-block-qty">×4</span>
+                                    </div>
+                                    <div class="canvas-block-actions">
+                                        <button class="block-action-btn">⚙️</button>
+                                        <button class="block-action-btn">📋</button>
+                                        <button class="block-action-btn delete">🗑️</button>
+                                    </div>
+                                </div>
+                                <div class="canvas-block-rules">
+                                    <span class="rule-tag evidence">📷 Photo Required</span>
+                                    <span class="rule-tag sla">⏱️ 24hr SLA</span>
+                                    <span class="rule-tag agent">⚡ Auto-Nudge</span>
+                                </div>
+                            </div>
+                            
+                            <div class="canvas-block slide-in" onclick="openConfig('nutrition')">
+                                <div class="canvas-block-header service">
+                                    <div class="canvas-block-icon service">🥗</div>
+                                    <div class="canvas-block-info">
+                                        <div class="canvas-block-title">Nutrition Consultation</div>
+                                        <div class="canvas-block-subtitle">1-on-1 with dietician + diet chart</div>
+                                    </div>
+                                    <div class="canvas-block-meta">
+                                        <span class="canvas-block-price">₹2,000</span>
+                                        <span class="canvas-block-qty">×1</span>
+                                    </div>
+                                    <div class="canvas-block-actions">
+                                        <button class="block-action-btn">⚙️</button>
+                                        <button class="block-action-btn">📋</button>
+                                        <button class="block-action-btn delete">🗑️</button>
+                                    </div>
+                                </div>
+                                <div class="canvas-block-rules">
+                                    <span class="rule-tag evidence">📄 Report Upload</span>
+                                    <span class="rule-tag agent">⚡ Trigger Invoice</span>
+                                </div>
+                            </div>
+                            
+                            <div class="canvas-block slide-in" onclick="openConfig('gynec')">
+                                <div class="canvas-block-header service">
+                                    <div class="canvas-block-icon service">🩺</div>
+                                    <div class="canvas-block-info">
+                                        <div class="canvas-block-title">Gynecologist Consultation</div>
+                                        <div class="canvas-block-subtitle">Senior specialist consultation</div>
+                                    </div>
+                                    <div class="canvas-block-meta">
+                                        <span class="canvas-block-price">₹2,500</span>
+                                        <span class="canvas-block-qty">×2</span>
+                                    </div>
+                                    <div class="canvas-block-actions">
+                                        <button class="block-action-btn">⚙️</button>
+                                        <button class="block-action-btn">📋</button>
+                                        <button class="block-action-btn delete">🗑️</button>
+                                    </div>
+                                </div>
+                                <div class="canvas-block-rules">
+                                    <span class="rule-tag evidence">✍️ Signature Req</span>
+                                    <span class="rule-tag sla">⏱️ 48hr Window</span>
+                                </div>
+                            </div>
+                            
+                            <div class="canvas-block slide-in" onclick="openConfig('payment')">
+                                <div class="canvas-block-header commercial">
+                                    <div class="canvas-block-icon commercial">💰</div>
+                                    <div class="canvas-block-info">
+                                        <div class="canvas-block-title">100% Advance Payment</div>
+                                        <div class="canvas-block-subtitle">Full payment before services begin</div>
+                                    </div>
+                                    <div class="canvas-block-meta">
+                                        <span class="canvas-block-price">₹12,000</span>
+                                    </div>
+                                    <div class="canvas-block-actions">
+                                        <button class="block-action-btn">⚙️</button>
+                                        <button class="block-action-btn">📋</button>
+                                        <button class="block-action-btn delete">🗑️</button>
+                                    </div>
+                                </div>
+                                <div class="canvas-block-rules">
+                                    <span class="rule-tag agent">⚡ Auto-Invoice on Sign</span>
+                                </div>
+                            </div>
+                            
+                            <div class="canvas-block slide-in" onclick="openConfig('terms')">
+                                <div class="canvas-block-header content">
+                                    <div class="canvas-block-icon content">📋</div>
+                                    <div class="canvas-block-info">
+                                        <div class="canvas-block-title">Terms & Conditions</div>
+                                        <div class="canvas-block-subtitle">Wellness program standard terms</div>
+                                    </div>
+                                    <div class="canvas-block-actions">
+                                        <button class="block-action-btn">⚙️</button>
+                                        <button class="block-action-btn">📋</button>
+                                        <button class="block-action-btn delete">🗑️</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PREVIEW PANEL -->
+                <div class="preview-panel">
+                    <div class="preview-header">
+                        <h3>Live Preview</h3>
+                        <div class="preview-toggle">
+                            <button class="preview-toggle-btn active">Buyer</button>
+                            <button class="preview-toggle-btn">Vendor</button>
+                        </div>
+                    </div>
+                    
+                    <div class="preview-body">
+                        <div class="preview-card">
+                            <div class="preview-card-header">
+                                <div class="preview-card-logo">
+                                    <span>⚡</span> Vikuna Wellness
+                                </div>
+                                <div class="preview-card-title">PCOD Balance Program</div>
+                                <div class="preview-card-subtitle">3-month holistic wellness journey</div>
+                            </div>
+                            
+                            <div class="preview-card-body">
+                                <div class="preview-price-row">
+                                    <div>
+                                        <div class="preview-price">₹12,000</div>
+                                        <div class="preview-price-label">Total Investment</div>
+                                    </div>
+                                    <div class="preview-duration">
+                                        <div class="preview-duration-value">3 Months</div>
+                                        <div class="preview-duration-label">Program Duration</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="preview-services">
+                                    <div class="preview-services-title">What's Included</div>
+                                    
+                                    <div class="preview-service-item">
+                                        <span class="preview-service-check">✓</span>
+                                        <span class="preview-service-name">Yoga Sessions</span>
+                                        <span class="preview-service-qty">×4</span>
+                                    </div>
+                                    
+                                    <div class="preview-service-item">
+                                        <span class="preview-service-check">✓</span>
+                                        <span class="preview-service-name">Nutrition Consultation</span>
+                                        <span class="preview-service-qty">×1</span>
+                                    </div>
+                                    
+                                    <div class="preview-service-item">
+                                        <span class="preview-service-check">✓</span>
+                                        <span class="preview-service-name">Gynec Consultation</span>
+                                        <span class="preview-service-qty">×2</span>
+                                    </div>
+                                    
+                                    <div class="preview-service-item">
+                                        <span class="preview-service-check">✓</span>
+                                        <span class="preview-service-name">Digital Progress Reports</span>
+                                        <span class="preview-service-qty">Included</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="preview-card-footer">
+                                <button class="preview-cta">Accept & Start Program →</button>
+                            </div>
+                        </div>
+                        
+                        <div class="preview-summary">
+                            <div class="summary-title">Template Stats</div>
+                            <div class="summary-row">
+                                <span>Total Blocks</span>
+                                <span>5</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Service Events</span>
+                                <span>7</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Avg. Duration</span>
+                                <span>~12 weeks</span>
+                            </div>
+                            <div class="summary-row">
+                                <span>Agent Rules</span>
+                                <span style="color: var(--accent);">4 Active</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- CONFIGURATION DRAWER -->
+    <div class="drawer-overlay" id="drawerOverlay" onclick="closeConfig()"></div>
+    <div class="config-drawer" id="configDrawer">
+        <div class="drawer-header">
+            <h3>⚙️ Configure: Yoga Session</h3>
+            <button class="drawer-close" onclick="closeConfig()">×</button>
+        </div>
+        
+        <div class="drawer-body">
+            <!-- Basic Info -->
+            <div class="drawer-section">
+                <div class="drawer-section-title">📦 Block Data</div>
+                
+                <div class="form-group">
+                    <label class="form-label">Display Name</label>
+                    <input type="text" class="form-input" value="Yoga Session">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Price per Session</label>
+                        <input type="text" class="form-input" value="₹1,200">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Quantity</label>
+                        <input type="number" class="form-input" value="4">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Cycle (Days Between)</label>
+                    <select class="form-select">
+                        <option value="7" selected>Weekly (7 days)</option>
+                        <option value="14">Bi-weekly (14 days)</option>
+                        <option value="30">Monthly (30 days)</option>
+                        <option value="custom">Custom</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Evidence Rules -->
+            <div class="drawer-section">
+                <div class="drawer-section-title">📸 Evidence Requirements</div>
+                
+                <div class="toggle-row">
+                    <span class="toggle-label">Require Photo Upload</span>
+                    <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                </div>
+                
+                <div class="toggle-row">
+                    <span class="toggle-label">Require GPS Geo-Tag</span>
+                    <div class="toggle-switch" onclick="this.classList.toggle('active')"></div>
+                </div>
+                
+                <div class="toggle-row">
+                    <span class="toggle-label">Require Client Signature</span>
+                    <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                </div>
+            </div>
+            
+            <!-- Agent Rules -->
+            <div class="drawer-section">
+                <div class="drawer-section-title">⚡ Agent Rules (Automation)</div>
+                
+                <div class="rule-builder">
+                    <div class="rule-row">
+                        <span class="rule-keyword">IF</span>
+                        <span class="rule-text">task is not started</span>
+                        <select class="rule-select">
+                            <option>2 hours</option>
+                            <option>4 hours</option>
+                            <option>1 day</option>
+                        </select>
+                        <span class="rule-text">before deadline</span>
+                    </div>
+                    <div class="rule-row">
+                        <span class="rule-keyword then">THEN</span>
+                        <select class="rule-select">
+                            <option>Send WhatsApp Nudge</option>
+                            <option>Send Email</option>
+                            <option>Call Vendor</option>
+                        </select>
+                        <span class="rule-text">to Assignee</span>
+                    </div>
+                </div>
+                
+                <div class="rule-builder" style="margin-top: 0.75rem; background: #FEF2F2; border-color: #FECACA;">
+                    <div class="rule-row">
+                        <span class="rule-keyword" style="color: #DC2626;">IF</span>
+                        <span class="rule-text">task breaches SLA deadline</span>
+                    </div>
+                    <div class="rule-row">
+                        <span class="rule-keyword then" style="background: #DC2626;">THEN</span>
+                        <select class="rule-select" style="border-color: #FECACA; color: #DC2626;">
+                            <option>Escalate to Manager</option>
+                            <option>Apply Penalty</option>
+                            <option>Notify Client</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Billing Trigger -->
+            <div class="drawer-section">
+                <div class="drawer-section-title">💰 Billing Logic</div>
+                
+                <div class="toggle-row">
+                    <span class="toggle-label">Trigger Invoice on Completion</span>
+                    <div class="toggle-switch" onclick="this.classList.toggle('active')"></div>
+                </div>
+                
+                <div class="toggle-row">
+                    <span class="toggle-label">Include in Milestone Payment</span>
+                    <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="drawer-footer">
+            <button class="btn btn-outline" onclick="closeConfig()">Cancel</button>
+            <button class="btn btn-primary" onclick="saveBlockConfig()">Save Changes</button>
+        </div>
+    </div>
+
+    <script>
+        // ===== DRAG AND DROP =====
+        const blockItems = document.querySelectorAll('.block-item');
+        const dropZone = document.getElementById('canvasDropZone');
+        
+        blockItems.forEach(item => {
+            item.addEventListener('dragstart', handleDragStart);
+            item.addEventListener('dragend', handleDragEnd);
+        });
+        
+        dropZone.addEventListener('dragover', handleDragOver);
+        dropZone.addEventListener('dragleave', handleDragLeave);
+        dropZone.addEventListener('drop', handleDrop);
+        
+        function handleDragStart(e) {
+            this.classList.add('dragging');
+            e.dataTransfer.setData('text/plain', JSON.stringify({
+                type: this.dataset.type,
+                name: this.dataset.name,
+                price: this.dataset.price,
+                icon: this.dataset.icon
+            }));
+        }
+        
+        function handleDragEnd(e) {
+            this.classList.remove('dragging');
+        }
+        
+        function handleDragOver(e) {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        }
+        
+        function handleDragLeave(e) {
+            dropZone.classList.remove('drag-over');
+        }
+        
+        function handleDrop(e) {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            
+            const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+            addBlockToCanvas(data);
+        }
+        
+        // ===== ADD BLOCK =====
+        function addBlock(event, type) {
+            event.stopPropagation();
+            const blockItem = event.target.closest('.block-item');
+            const data = {
+                type: blockItem.dataset.type,
+                name: blockItem.dataset.name,
+                price: blockItem.dataset.price,
+                icon: blockItem.dataset.icon
+            };
+            addBlockToCanvas(data);
+        }
+        
+        function addBlockToCanvas(data) {
+            const newBlock = document.createElement('div');
+            newBlock.className = 'canvas-block slide-in';
+            newBlock.onclick = () => openConfig(data.name);
+            
+            newBlock.innerHTML = `
+                <div class="canvas-block-header ${data.type}">
+                    <div class="canvas-block-icon ${data.type}">${data.icon}</div>
+                    <div class="canvas-block-info">
+                        <div class="canvas-block-title">${data.name}</div>
+                        <div class="canvas-block-subtitle">Click to configure</div>
+                    </div>
+                    <div class="canvas-block-meta">
+                        ${data.price ? `<span class="canvas-block-price">₹${data.price}</span>` : ''}
+                        <span class="canvas-block-qty">×1</span>
+                    </div>
+                    <div class="canvas-block-actions">
+                        <button class="block-action-btn">⚙️</button>
+                        <button class="block-action-btn">📋</button>
+                        <button class="block-action-btn delete" onclick="removeBlock(event)">🗑️</button>
+                    </div>
+                </div>
+            `;
+            
+            dropZone.appendChild(newBlock);
+            updateBlockCount();
+            
+            // Show toast notification
+            showToast(`${data.name} block added!`);
+        }
+        
+        function removeBlock(event) {
+            event.stopPropagation();
+            const block = event.target.closest('.canvas-block');
+            block.style.opacity = '0';
+            block.style.transform = 'translateX(20px)';
+            setTimeout(() => {
+                block.remove();
+                updateBlockCount();
+            }, 200);
+        }
+        
+        function updateBlockCount() {
+            const count = dropZone.querySelectorAll('.canvas-block').length;
+            document.getElementById('blockCount').textContent = count;
+        }
+        
+        // ===== CONFIG DRAWER =====
+        function openConfig(blockName) {
+            document.getElementById('configDrawer').classList.add('open');
+            document.getElementById('drawerOverlay').classList.add('show');
+            
+            // Update drawer title
+            document.querySelector('.drawer-header h3').textContent = `⚙️ Configure: ${blockName}`;
+        }
+        
+        function closeConfig() {
+            document.getElementById('configDrawer').classList.remove('open');
+            document.getElementById('drawerOverlay').classList.remove('show');
+        }
+        
+        function saveBlockConfig() {
+            showToast('Block configuration saved!');
+            closeConfig();
+        }
+        
+        // ===== SAVE TEMPLATE =====
+        function saveTemplate() {
+            const title = document.getElementById('templateTitle').value;
+            showToast(`Template "${title}" saved successfully!`);
+        }
+        
+        // ===== TOAST NOTIFICATION =====
+        function showToast(message) {
+            // Create toast element
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background: #0F172A;
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 8px;
+                font-size: 0.875rem;
+                font-weight: 500;
+                box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+                z-index: 1000;
+                animation: slideUp 0.3s ease;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            `;
+            toast.innerHTML = `<span style="color: #10B981;">✓</span> ${message}`;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(10px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 2500);
+        }
+        
+        // ===== PREVIEW TOGGLE =====
+        const previewToggles = document.querySelectorAll('.preview-toggle-btn');
+        previewToggles.forEach(btn => {
+            btn.addEventListener('click', () => {
+                previewToggles.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            });
+        });
+        
+        // ===== CANVAS TABS =====
+        const canvasTabs = document.querySelectorAll('.canvas-tab');
+        canvasTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                canvasTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+            });
+        });
+        
+        // ===== BLOCK SELECTION =====
+        const canvasBlocks = document.querySelectorAll('.canvas-block');
+        canvasBlocks.forEach(block => {
+            block.addEventListener('click', function(e) {
+                if (!e.target.closest('.block-action-btn')) {
+                    canvasBlocks.forEach(b => b.classList.remove('selected'));
+                    this.classList.add('selected');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ContractNest - Embed Widget Demo</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand: #0F172A;
+            --brand-light: #1E293B;
+            --accent: #6366F1;
+            --accent-light: #818CF8;
+            --accent-bg: #EEF2FF;
+            --success: #10B981;
+            --success-bg: #ECFDF5;
+            --warning: #F59E0B;
+            --warning-bg: #FFFBEB;
+            --bg: #F8FAFC;
+            --surface: #FFFFFF;
+            --border: #E2E8F0;
+            --border-light: #F1F5F9;
+            --text: #334155;
+            --text-light: #64748B;
+            --text-muted: #94A3B8;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1);
+            --radius: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ===== DEMO HEADER ===== */
+        .demo-header {
+            background: var(--brand);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .demo-header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .demo-badge {
+            background: var(--accent);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .demo-header h1 {
+            font-size: 1rem;
+            font-weight: 700;
+        }
+
+        .demo-tabs {
+            display: flex;
+            gap: 0.25rem;
+            background: var(--brand-light);
+            padding: 4px;
+            border-radius: var(--radius);
+        }
+
+        .demo-tab {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            transition: all 0.2s;
+        }
+
+        .demo-tab:hover {
+            color: white;
+        }
+
+        .demo-tab.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        /* ===== SPLIT VIEW ===== */
+        .split-view {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            min-height: calc(100vh - 56px);
+        }
+
+        /* ===== PREVIEW PANEL ===== */
+        .preview-panel {
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .preview-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .preview-label .dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* ===== MOCK WEBSITE ===== */
+        .mock-website {
+            background: var(--surface);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-xl);
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .mock-browser-bar {
+            background: var(--bg);
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .browser-dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .browser-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--border);
+        }
+
+        .browser-dot.red { background: #EF4444; }
+        .browser-dot.yellow { background: #F59E0B; }
+        .browser-dot.green { background: #10B981; }
+
+        .browser-url {
+            flex: 1;
+            background: var(--surface);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            color: var(--text-light);
+            border: 1px solid var(--border);
+        }
+
+        .mock-website-content {
+            padding: 2rem;
+            background: linear-gradient(180deg, #FAFAFA 0%, #FFFFFF 100%);
+            min-height: 500px;
+        }
+
+        /* Fake website content */
+        .fake-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+        }
+
+        .fake-logo {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #7C3AED;
+        }
+
+        .fake-nav-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .fake-nav-link {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        .fake-hero {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .fake-hero h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--brand);
+            margin-bottom: 0.75rem;
+        }
+
+        .fake-hero p {
+            color: var(--text-light);
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .fake-section-label {
+            text-align: center;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        /* ===== EMBEDDED WIDGET ===== */
+        .cn-widget {
+            max-width: 360px;
+            margin: 0 auto;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .cn-widget-card {
+            background: var(--surface);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+        }
+
+        .cn-widget-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .cn-widget-header {
+            padding: 1.25rem;
+            background: linear-gradient(135deg, #7C3AED 0%, #9333EA 100%);
+            color: white;
+        }
+
+        .cn-widget-seller {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .cn-widget-seller-logo {
+            width: 40px;
+            height: 40px;
+            background: rgba(255,255,255,0.2);
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .cn-widget-seller-name {
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .cn-widget-seller-verified {
+            font-size: 0.7rem;
+            opacity: 0.8;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .cn-widget-title {
+            font-size: 1.125rem;
+            font-weight: 800;
+            margin-bottom: 0.25rem;
+        }
+
+        .cn-widget-desc {
+            font-size: 0.8rem;
+            opacity: 0.9;
+        }
+
+        .cn-widget-body {
+            padding: 1.25rem;
+        }
+
+        .cn-widget-features {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .cn-widget-feature {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: var(--text);
+        }
+
+        .cn-widget-feature-icon {
+            color: var(--success);
+        }
+
+        .cn-widget-pricing {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background: var(--bg);
+            border-radius: var(--radius);
+            margin-bottom: 1rem;
+        }
+
+        .cn-widget-price {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--brand);
+        }
+
+        .cn-widget-price span {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-light);
+        }
+
+        .cn-widget-duration {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .cn-widget-cta {
+            width: 100%;
+            padding: 0.875rem;
+            background: var(--brand);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .cn-widget-cta:hover {
+            background: var(--brand-light);
+        }
+
+        .cn-widget-footer {
+            padding: 0.75rem 1.25rem;
+            background: var(--bg);
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .cn-widget-footer img {
+            height: 14px;
+        }
+
+        /* ===== CUSTOMIZE PANEL ===== */
+        .customize-panel {
+            background: var(--surface);
+            border-left: 1px solid var(--border);
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .customize-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .customize-header h2 {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--brand);
+            margin-bottom: 0.25rem;
+        }
+
+        .customize-header p {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .customize-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .customize-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+        }
+
+        .customize-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.875rem;
+            color: var(--text);
+            transition: all 0.2s;
+        }
+
+        .customize-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-bg);
+        }
+
+        .customize-select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.875rem;
+            color: var(--text);
+            background: var(--surface);
+            cursor: pointer;
+        }
+
+        .color-picker-row {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .color-option {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius);
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .color-option:hover {
+            transform: scale(1.1);
+        }
+
+        .color-option.active {
+            border-color: var(--brand);
+            box-shadow: 0 0 0 2px white, 0 0 0 4px var(--brand);
+        }
+
+        .toggle-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .toggle-row:last-child {
+            border-bottom: none;
+        }
+
+        .toggle-label {
+            font-size: 0.85rem;
+            color: var(--text);
+        }
+
+        .toggle-switch {
+            width: 44px;
+            height: 24px;
+            background: var(--border);
+            border-radius: 12px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .toggle-switch.active {
+            background: var(--accent);
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: all 0.2s;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .toggle-switch.active::after {
+            left: 22px;
+        }
+
+        /* Code Block */
+        .code-block {
+            background: var(--brand);
+            border-radius: var(--radius);
+            padding: 1rem;
+            margin-top: 0.75rem;
+            position: relative;
+        }
+
+        .code-block pre {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.7rem;
+            color: #A5B4FC;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .code-block .tag {
+            color: #F472B6;
+        }
+
+        .code-block .attr {
+            color: #A5B4FC;
+        }
+
+        .code-block .string {
+            color: #86EFAC;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            padding: 0.4rem 0.75rem;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .copy-btn.copied {
+            background: var(--success);
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn {
+            padding: 0.875rem;
+            border-radius: var(--radius);
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-light);
+        }
+
+        .btn-outline {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .btn-outline:hover {
+            background: var(--bg);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* ===== WIDGET MODAL ===== */
+        .widget-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .widget-modal-overlay.show {
+            display: flex;
+        }
+
+        .widget-modal {
+            background: var(--surface);
+            border-radius: var(--radius-xl);
+            width: 480px;
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow: hidden;
+            animation: modalPop 0.3s ease;
+        }
+
+        @keyframes modalPop {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .widget-modal-header {
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #7C3AED 0%, #9333EA 100%);
+            color: white;
+            position: relative;
+        }
+
+        .widget-modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            font-size: 1.25rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .widget-modal-seller {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .widget-modal-seller-logo {
+            width: 56px;
+            height: 56px;
+            background: rgba(255,255,255,0.2);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+        }
+
+        .widget-modal-seller h3 {
+            font-size: 1.125rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .widget-modal-seller p {
+            font-size: 0.8rem;
+            opacity: 0.9;
+        }
+
+        .widget-modal-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+
+        .widget-modal-body {
+            padding: 1.5rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .modal-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .modal-section-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+        }
+
+        .modal-features {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+
+        .modal-feature {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            background: var(--bg);
+            border-radius: var(--radius);
+            font-size: 0.8rem;
+        }
+
+        .modal-feature-icon {
+            font-size: 1.25rem;
+        }
+
+        .modal-pricing-card {
+            background: var(--accent-bg);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            text-align: center;
+        }
+
+        .modal-price {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--brand);
+        }
+
+        .modal-price span {
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--text-light);
+        }
+
+        .modal-price-desc {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-top: 0.25rem;
+        }
+
+        .widget-modal-footer {
+            padding: 1rem 1.5rem;
+            background: var(--bg);
+            border-top: 1px solid var(--border);
+        }
+
+        .modal-cta {
+            width: 100%;
+            padding: 1rem;
+            background: var(--brand);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .modal-cta:hover {
+            background: var(--brand-light);
+        }
+
+        .modal-trust {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 0.75rem;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .modal-trust span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+    </style>
+</head>
+<body>
+    <!-- DEMO HEADER -->
+    <header class="demo-header">
+        <div class="demo-header-left">
+            <span class="demo-badge">Preview</span>
+            <h1>Embed Widget Demo</h1>
+        </div>
+        <div class="demo-tabs">
+            <button class="demo-tab active">Live Preview</button>
+            <button class="demo-tab">Code</button>
+            <button class="demo-tab">Analytics</button>
+        </div>
+    </header>
+
+    <!-- SPLIT VIEW -->
+    <div class="split-view">
+        <!-- PREVIEW PANEL -->
+        <div class="preview-panel">
+            <div class="preview-label">
+                <span class="dot"></span>
+                Live Preview — How it appears on your website
+            </div>
+
+            <!-- MOCK WEBSITE -->
+            <div class="mock-website">
+                <div class="mock-browser-bar">
+                    <div class="browser-dots">
+                        <div class="browser-dot red"></div>
+                        <div class="browser-dot yellow"></div>
+                        <div class="browser-dot green"></div>
+                    </div>
+                    <div class="browser-url">🔒 vikunawellness.com/programs</div>
+                </div>
+                
+                <div class="mock-website-content">
+                    <!-- Fake website nav -->
+                    <div class="fake-nav">
+                        <div class="fake-logo">🧘 Vikuna Wellness</div>
+                        <div class="fake-nav-links">
+                            <span class="fake-nav-link">Programs</span>
+                            <span class="fake-nav-link">About</span>
+                            <span class="fake-nav-link">Contact</span>
+                        </div>
+                    </div>
+
+                    <!-- Fake hero -->
+                    <div class="fake-hero">
+                        <h1>Transform Your Health</h1>
+                        <p>Holistic wellness programs designed for modern women. Start your journey today.</p>
+                    </div>
+
+                    <!-- Widget -->
+                    <div class="fake-section-label">Featured Program</div>
+                    
+                    <div class="cn-widget">
+                        <div class="cn-widget-card">
+                            <div class="cn-widget-header" id="widgetHeader">
+                                <div class="cn-widget-seller">
+                                    <div class="cn-widget-seller-logo">🧘</div>
+                                    <div>
+                                        <div class="cn-widget-seller-name">Vikuna Wellness</div>
+                                        <div class="cn-widget-seller-verified">✓ Verified Seller</div>
+                                    </div>
+                                </div>
+                                <div class="cn-widget-title" id="widgetTitle">PCOD Balance Program</div>
+                                <div class="cn-widget-desc" id="widgetDesc">3-month holistic wellness journey</div>
+                            </div>
+                            
+                            <div class="cn-widget-body">
+                                <div class="cn-widget-features" id="widgetFeatures">
+                                    <div class="cn-widget-feature">
+                                        <span class="cn-widget-feature-icon">✓</span>
+                                        <span>4 Yoga Sessions</span>
+                                    </div>
+                                    <div class="cn-widget-feature">
+                                        <span class="cn-widget-feature-icon">✓</span>
+                                        <span>2 Gynec Consultations</span>
+                                    </div>
+                                    <div class="cn-widget-feature">
+                                        <span class="cn-widget-feature-icon">✓</span>
+                                        <span>Nutrition Planning</span>
+                                    </div>
+                                    <div class="cn-widget-feature">
+                                        <span class="cn-widget-feature-icon">✓</span>
+                                        <span>Progress Tracking</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="cn-widget-pricing">
+                                    <div>
+                                        <div class="cn-widget-price" id="widgetPrice">₹12,000 <span>total</span></div>
+                                        <div class="cn-widget-duration">3 months • 7 sessions</div>
+                                    </div>
+                                </div>
+                                
+                                <button class="cn-widget-cta" id="widgetCta" onclick="openWidgetModal()">
+                                    <span>📋</span> View Contract & Book
+                                </button>
+                            </div>
+                            
+                            <div class="cn-widget-footer">
+                                <span>⚡</span>
+                                Powered by ContractNest
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CUSTOMIZE PANEL -->
+        <div class="customize-panel">
+            <div class="customize-header">
+                <h2>Customize Widget</h2>
+                <p>Configure how the widget appears on your site</p>
+            </div>
+
+            <!-- Service Selection -->
+            <div class="customize-section">
+                <div class="customize-label">Service Template</div>
+                <select class="customize-select" onchange="updateTemplate(this.value)">
+                    <option value="pcod">PCOD Balance Program</option>
+                    <option value="fitness">Corporate Fitness Program</option>
+                    <option value="ac">AC Annual Maintenance</option>
+                </select>
+            </div>
+
+            <!-- Brand Color -->
+            <div class="customize-section">
+                <div class="customize-label">Brand Color</div>
+                <div class="color-picker-row">
+                    <div class="color-option active" style="background: #7C3AED;" onclick="changeColor(this, '#7C3AED')"></div>
+                    <div class="color-option" style="background: #059669;" onclick="changeColor(this, '#059669')"></div>
+                    <div class="color-option" style="background: #0284C7;" onclick="changeColor(this, '#0284C7')"></div>
+                    <div class="color-option" style="background: #DC2626;" onclick="changeColor(this, '#DC2626')"></div>
+                    <div class="color-option" style="background: #EA580C;" onclick="changeColor(this, '#EA580C')"></div>
+                    <div class="color-option" style="background: #0F172A;" onclick="changeColor(this, '#0F172A')"></div>
+                </div>
+            </div>
+
+            <!-- CTA Text -->
+            <div class="customize-section">
+                <div class="customize-label">Button Text</div>
+                <input type="text" class="customize-input" value="View Contract & Book" oninput="updateCta(this.value)">
+            </div>
+
+            <!-- Toggle Options -->
+            <div class="customize-section">
+                <div class="customize-label">Display Options</div>
+                <div class="toggle-row">
+                    <span class="toggle-label">Show seller badge</span>
+                    <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+                </div>
+                <div class="toggle-row">
+                    <span class="toggle-label">Show pricing</span>
+                    <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+                </div>
+                <div class="toggle-row">
+                    <span class="toggle-label">Show features list</span>
+                    <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+                </div>
+                <div class="toggle-row">
+                    <span class="toggle-label">Show "Powered by"</span>
+                    <div class="toggle-switch active" onclick="toggleSwitch(this)"></div>
+                </div>
+            </div>
+
+            <!-- Embed Code -->
+            <div class="customize-section">
+                <div class="customize-label">Embed Code</div>
+                <div class="code-block">
+                    <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    <pre><span class="tag">&lt;script</span>
+  <span class="attr">src</span>=<span class="string">"https://cdn.contractnest.com/widget.js"</span>
+  <span class="attr">data-seller</span>=<span class="string">"vikuna-wellness"</span>
+  <span class="attr">data-template</span>=<span class="string">"pcod-balance"</span>
+  <span class="attr">data-color</span>=<span class="string">"#7C3AED"</span>
+<span class="tag">&gt;&lt;/script&gt;</span></pre>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="btn btn-primary">
+                    <span>💾</span> Save Widget Settings
+                </button>
+                <button class="btn btn-outline">
+                    <span>👁️</span> Preview Full Page
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- WIDGET MODAL -->
+    <div class="widget-modal-overlay" id="widgetModal" onclick="closeWidgetModal(event)">
+        <div class="widget-modal" onclick="event.stopPropagation()">
+            <div class="widget-modal-header">
+                <button class="widget-modal-close" onclick="closeWidgetModal()">×</button>
+                <div class="widget-modal-seller">
+                    <div class="widget-modal-seller-logo">🧘</div>
+                    <div>
+                        <h3>Vikuna Wellness</h3>
+                        <p>✓ Verified Seller • 4.9 ⭐ (127 reviews)</p>
+                    </div>
+                </div>
+                <div class="widget-modal-title">PCOD Balance Program</div>
+            </div>
+            
+            <div class="widget-modal-body">
+                <div class="modal-section">
+                    <div class="modal-section-title">What's Included</div>
+                    <div class="modal-features">
+                        <div class="modal-feature">
+                            <span class="modal-feature-icon">🧘</span>
+                            <span>4 Yoga Sessions</span>
+                        </div>
+                        <div class="modal-feature">
+                            <span class="modal-feature-icon">🩺</span>
+                            <span>2 Gynec Consults</span>
+                        </div>
+                        <div class="modal-feature">
+                            <span class="modal-feature-icon">🥗</span>
+                            <span>Diet Planning</span>
+                        </div>
+                        <div class="modal-feature">
+                            <span class="modal-feature-icon">📊</span>
+                            <span>Progress Reports</span>
+                        </div>
+                        <div class="modal-feature">
+                            <span class="modal-feature-icon">💬</span>
+                            <span>WhatsApp Support</span>
+                        </div>
+                        <div class="modal-feature">
+                            <span class="modal-feature-icon">📸</span>
+                            <span>Evidence Trail</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-section">
+                    <div class="modal-section-title">Investment</div>
+                    <div class="modal-pricing-card">
+                        <div class="modal-price">₹12,000 <span>/ 3 months</span></div>
+                        <div class="modal-price-desc">7 sessions • Pay once or in 3 installments</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="widget-modal-footer">
+                <button class="modal-cta">
+                    <span>✨</span> Accept Contract & Start Program
+                </button>
+                <div class="modal-trust">
+                    <span>🔒 Secure Payment</span>
+                    <span>📋 Legally Binding</span>
+                    <span>✓ Evidence Protected</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== COLOR PICKER =====
+        function changeColor(element, color) {
+            document.querySelectorAll('.color-option').forEach(opt => {
+                opt.classList.remove('active');
+            });
+            element.classList.add('active');
+            
+            document.getElementById('widgetHeader').style.background = `linear-gradient(135deg, ${color} 0%, ${adjustColor(color, -20)} 100%)`;
+        }
+
+        function adjustColor(color, amount) {
+            const hex = color.replace('#', '');
+            const num = parseInt(hex, 16);
+            const r = Math.min(255, Math.max(0, (num >> 16) + amount));
+            const g = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + amount));
+            const b = Math.min(255, Math.max(0, (num & 0x0000FF) + amount));
+            return `#${(1 << 24 | r << 16 | g << 8 | b).toString(16).slice(1)}`;
+        }
+
+        // ===== UPDATE CTA =====
+        function updateCta(text) {
+            document.getElementById('widgetCta').innerHTML = `<span>📋</span> ${text}`;
+        }
+
+        // ===== TOGGLE SWITCH =====
+        function toggleSwitch(element) {
+            element.classList.toggle('active');
+        }
+
+        // ===== COPY CODE =====
+        function copyCode(btn) {
+            const code = `<script src="https://cdn.contractnest.com/widget.js" data-seller="vikuna-wellness" data-template="pcod-balance" data-color="#7C3AED"><\/script>`;
+            navigator.clipboard.writeText(code).then(() => {
+                btn.textContent = 'Copied!';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = 'Copy';
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
+        // ===== UPDATE TEMPLATE =====
+        function updateTemplate(template) {
+            const templates = {
+                'pcod': {
+                    title: 'PCOD Balance Program',
+                    desc: '3-month holistic wellness journey',
+                    price: '₹12,000',
+                    features: ['4 Yoga Sessions', '2 Gynec Consultations', 'Nutrition Planning', 'Progress Tracking']
+                },
+                'fitness': {
+                    title: 'Corporate Fitness Program',
+                    desc: 'Quarterly team wellness package',
+                    price: '₹50,000',
+                    features: ['Weekly Group Sessions', 'Health Assessments', 'Wellness Workshops', 'Team Challenges']
+                },
+                'ac': {
+                    title: 'AC Annual Maintenance',
+                    desc: 'Complete yearly coverage',
+                    price: '₹4,999',
+                    features: ['4 Quarterly Services', 'Deep Cleaning', 'Gas Top-up', '24/7 Support']
+                }
+            };
+            
+            const t = templates[template];
+            document.getElementById('widgetTitle').textContent = t.title;
+            document.getElementById('widgetDesc').textContent = t.desc;
+            document.getElementById('widgetPrice').innerHTML = `${t.price} <span>total</span>`;
+            
+            const featuresHtml = t.features.map(f => `
+                <div class="cn-widget-feature">
+                    <span class="cn-widget-feature-icon">✓</span>
+                    <span>${f}</span>
+                </div>
+            `).join('');
+            document.getElementById('widgetFeatures').innerHTML = featuresHtml;
+        }
+
+        // ===== WIDGET MODAL =====
+        function openWidgetModal() {
+            document.getElementById('widgetModal').classList.add('show');
+        }
+
+        function closeWidgetModal(event) {
+            if (!event || event.target === document.getElementById('widgetModal')) {
+                document.getElementById('widgetModal').classList.remove('show');
+            }
+        }
+
+        // ===== DEMO TABS =====
+        document.querySelectorAll('.demo-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.demo-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

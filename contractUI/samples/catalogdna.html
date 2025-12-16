@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Polymorphic Widget</title>
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #F1F5F9; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        
+        /* CONTROL PANEL (Just for demo) */
+        .controls { margin-bottom: 2rem; background: white; padding: 1rem; border-radius: 50px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: flex; gap: 10px; }
+        .role-btn { border: none; padding: 0.5rem 1.5rem; border-radius: 30px; cursor: pointer; font-weight: 600; color: #64748B; background: transparent; transition: all 0.2s; }
+        .role-btn:hover { background: #F8FAFC; }
+        .role-btn.active { background: #0F172A; color: white; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.3); }
+
+        /* THE WIDGET CONTAINER */
+        .widget-card {
+            width: 400px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px -5px rgba(0,0,0,0.1);
+            overflow: hidden;
+            border: 1px solid #E2E8F0;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        /* HEADER (Common to All) */
+        .w-header { padding: 1.5rem; border-bottom: 1px solid #F1F5F9; display: flex; justify-content: space-between; align-items: flex-start; }
+        .w-icon { width: 48px; height: 48px; background: #EEF2FF; color: #6366F1; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+        .w-meta { flex: 1; margin-left: 1rem; }
+        .w-title { font-weight: 700; color: #1E293B; margin-bottom: 4px; }
+        .w-desc { font-size: 0.85rem; color: #64748B; }
+        .w-status { font-size: 0.7rem; font-weight: 700; padding: 4px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        /* BODY (Changes dynamically) */
+        .w-body { padding: 1.5rem; background: #F8FAFC; min-height: 120px; display: flex; flex-direction: column; justify-content: center; }
+
+        /* VIEWS SPECIFIC STYLES */
+        
+        /* 1. SELLER VIEW (Monitoring) */
+        .seller-view .stat-row { display: flex; justify-content: space-between; margin-bottom: 0.8rem; font-size: 0.9rem; }
+        .seller-view .alert-box { background: #FEF2F2; color: #B91C1C; padding: 0.8rem; border-radius: 8px; border: 1px dashed #FCA5A5; font-size: 0.8rem; display: flex; gap: 8px; align-items: center; }
+
+        /* 2. BUYER VIEW (Value & Verification) */
+        .buyer-view .value-row { display: flex; align-items: center; gap: 10px; margin-bottom: 1rem; }
+        .buyer-view .price-tag { font-size: 1.5rem; font-weight: 800; color: #0F172A; }
+        .buyer-view .evidence-thumb { width: 100%; height: 80px; background: #E2E8F0; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #64748B; font-size: 0.9rem; cursor: pointer; border: 2px dashed #CBD5E1; }
+
+        /* 3. VENDOR VIEW (Action) */
+        .vendor-view .task-timer { text-align: center; margin-bottom: 1rem; font-weight: 600; color: #B45309; background: #FFFBEB; padding: 0.5rem; border-radius: 6px; border: 1px solid #FDE68A; }
+        .vendor-view .btn-upload { width: 100%; background: #0F172A; color: white; border: none; padding: 1rem; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .vendor-view .btn-upload:hover { background: #1E293B; transform: translateY(-2px); }
+
+        /* Animations */
+        .view-content { display: none; animation: fadeIn 0.4s; }
+        .view-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+    </style>
+</head>
+<body>
+
+    <div class="controls">
+        <button class="role-btn active" onclick="setView('seller')">👀 Seller View</button>
+        <button class="role-btn" onclick="setView('buyer')">🛍 Buyer View</button>
+        <button class="role-btn" onclick="setView('vendor')">🔧 Vendor View</button>
+    </div>
+
+    <div class="widget-card">
+        
+        <div class="w-header">
+            <div class="w-icon">❄️</div>
+            <div class="w-meta">
+                <div class="w-title">Split AC Wet Service</div>
+                <div class="w-desc">Maintenance • Unit #4 (Master Bed)</div>
+            </div>
+            <div class="w-status" id="status-badge" style="background: #E0F2FE; color: #0369A1;">Lined Up</div>
+        </div>
+
+        <div class="w-body">
+            
+            <div id="view-seller" class="view-content active seller-view">
+                <div class="stat-row">
+                    <span style="color:#64748B;">Assigned To:</span>
+                    <strong>Mark (Vendor)</strong>
+                </div>
+                <div class="stat-row">
+                    <span style="color:#64748B;">Scheduled:</span>
+                    <strong>Oct 15, 10:00 AM</strong>
+                </div>
+                <div class="alert-box">
+                    <span>⚡</span> 
+                    <strong>Agent Rule:</strong> Auto-nudge if not started by 9:00 AM.
+                </div>
+            </div>
+
+            <div id="view-buyer" class="view-content buyer-view">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <div class="price-tag">₹499</div>
+                    <div style="color: #10B981; font-weight: 600; font-size: 0.85rem;">✓ Included in AMC</div>
+                </div>
+                <div style="font-size: 0.85rem; color: #64748B; margin-bottom: 0.5rem;">Proof of Work (Pending):</div>
+                <div class="evidence-thumb">
+                    Waiting for Technician upload...
+                </div>
+            </div>
+
+            <div id="view-vendor" class="view-content vendor-view">
+                <div class="task-timer">
+                    ⏱ SLA Ticking: 47h 59m remaining
+                </div>
+                <div style="font-size: 0.9rem; margin-bottom: 1rem; color: #334155;">
+                    <strong>Requirement:</strong> Take clear photo of coils before and after washing.
+                </div>
+                <button class="btn-upload">
+                    <span>📷</span> Take Photo & Complete
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function setView(role) {
+            // Update Buttons
+            document.querySelectorAll('.role-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Update View
+            document.querySelectorAll('.view-content').forEach(v => v.classList.remove('active'));
+            document.getElementById('view-' + role).classList.add('active');
+
+            // Update Badge Color based on role context (Simulated)
+            const badge = document.getElementById('status-badge');
+            if(role === 'vendor') {
+                badge.style.background = '#FEF3C7'; badge.style.color = '#B45309'; badge.innerText = "Action Req";
+            } else {
+                badge.style.background = '#E0F2FE'; badge.style.color = '#0369A1'; badge.innerText = "Lined Up";
+            }
+        }
+    </script>
+</body>
+</html>

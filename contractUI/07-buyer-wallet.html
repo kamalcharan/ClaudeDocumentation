@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ContractNest - My Wallet</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand: #0F172A;
+            --brand-light: #1E293B;
+            --accent: #6366F1;
+            --accent-light: #818CF8;
+            --accent-bg: #EEF2FF;
+            --buyer-brand: #0284C7;
+            --buyer-light: #0EA5E9;
+            --buyer-bg: #F0F9FF;
+            --buyer-border: #BAE6FD;
+            --success: #10B981;
+            --success-bg: #ECFDF5;
+            --success-border: #A7F3D0;
+            --warning: #F59E0B;
+            --warning-bg: #FFFBEB;
+            --warning-border: #FDE68A;
+            --danger: #EF4444;
+            --danger-bg: #FEF2F2;
+            --danger-border: #FECACA;
+            --bg: #F8FAFC;
+            --surface: #FFFFFF;
+            --border: #E2E8F0;
+            --border-light: #F1F5F9;
+            --text: #334155;
+            --text-light: #64748B;
+            --text-muted: #94A3B8;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1);
+            --radius: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--brand);
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--buyer-brand);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .nav-tab {
+            padding: 0.6rem 1.25rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            background: transparent;
+        }
+
+        .nav-tab:hover {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .nav-tab.active {
+            background: var(--buyer-brand);
+            color: white;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .notification-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .notification-btn .dot {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 8px;
+            height: 8px;
+            background: var(--danger);
+            border-radius: 50%;
+            border: 2px solid var(--surface);
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 1rem 0.5rem 0.5rem;
+            background: var(--bg);
+            border-radius: 50px;
+            cursor: pointer;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--buyer-brand) 0%, var(--buyer-light) 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 0.875rem;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--text);
+        }
+
+        /* ===== MAIN CONTAINER ===== */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* ===== WELCOME SECTION ===== */
+        .welcome-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .welcome-text h1 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: var(--brand);
+            margin-bottom: 0.25rem;
+        }
+
+        .welcome-text p {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .btn {
+            padding: 0.6rem 1.25rem;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--buyer-brand);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--buyer-light);
+        }
+
+        .btn-outline {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .btn-outline:hover {
+            background: var(--bg);
+            border-color: var(--buyer-brand);
+            color: var(--buyer-brand);
+        }
+
+        /* ===== STATS ROW ===== */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border-radius: var(--radius-xl);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-md);
+            border-left: 4px solid var(--buyer-brand);
+        }
+
+        .stat-card.success { border-left-color: var(--success); }
+        .stat-card.warning { border-left-color: var(--warning); }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--buyer-bg);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card.success .stat-icon { background: var(--success-bg); }
+        .stat-card.warning .stat-icon { background: var(--warning-bg); }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--brand);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        /* ===== MAIN GRID ===== */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 1.5rem;
+        }
+
+        /* ===== CARD ===== */
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        .card:last-child {
+            margin-bottom: 0;
+        }
+
+        .card-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--brand);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-header-action {
+            font-size: 0.8rem;
+            color: var(--buyer-brand);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .card-header-action:hover {
+            text-decoration: underline;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        /* ===== ACTIVE CONTRACTS ===== */
+        .contract-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .contract-item {
+            display: flex;
+            gap: 1rem;
+            padding: 1.25rem;
+            background: var(--bg);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-light);
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .contract-item:hover {
+            border-color: var(--buyer-border);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .contract-icon {
+            width: 56px;
+            height: 56px;
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            box-shadow: var(--shadow-sm);
+            flex-shrink: 0;
+        }
+
+        .contract-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .contract-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
+        }
+
+        .contract-title {
+            font-weight: 700;
+            color: var(--brand);
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .contract-seller {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .contract-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .contract-status.active {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
+        .contract-status.pending {
+            background: var(--warning-bg);
+            color: var(--warning);
+        }
+
+        .contract-progress {
+            margin-bottom: 0.75rem;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.4rem;
+        }
+
+        .progress-label {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .progress-value {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--buyer-brand) 0%, var(--buyer-light) 100%);
+            border-radius: 3px;
+            transition: width 0.5s;
+        }
+
+        .contract-meta {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .contract-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .contract-meta-item span:first-child {
+            font-size: 0.875rem;
+        }
+
+        /* ===== SERVICE LOG ===== */
+        .service-log {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .service-item {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-light);
+        }
+
+        .service-icon {
+            width: 44px;
+            height: 44px;
+            background: var(--surface);
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            box-shadow: var(--shadow-sm);
+            flex-shrink: 0;
+        }
+
+        .service-content {
+            flex: 1;
+        }
+
+        .service-title {
+            font-weight: 600;
+            color: var(--text);
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .service-date {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .service-evidence {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .evidence-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 0.3rem 0.6rem;
+            background: var(--buyer-bg);
+            border: 1px solid var(--buyer-border);
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--buyer-brand);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .evidence-btn:hover {
+            background: var(--buyer-brand);
+            color: white;
+        }
+
+        .service-status {
+            display: flex;
+            align-items: center;
+        }
+
+        .status-badge {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+        }
+
+        .status-badge.completed {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
+        /* ===== SIDEBAR SECTIONS ===== */
+        .sidebar-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .sidebar-section:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Upcoming Services */
+        .upcoming-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .upcoming-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg);
+            border-radius: var(--radius);
+            border-left: 3px solid var(--buyer-brand);
+        }
+
+        .upcoming-date {
+            text-align: center;
+            min-width: 50px;
+        }
+
+        .upcoming-date .day {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--brand);
+            line-height: 1;
+        }
+
+        .upcoming-date .month {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .upcoming-content {
+            flex: 1;
+        }
+
+        .upcoming-title {
+            font-weight: 600;
+            color: var(--text);
+            font-size: 0.85rem;
+            margin-bottom: 0.15rem;
+        }
+
+        .upcoming-time {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .upcoming-action {
+            padding: 0.4rem 0.75rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .upcoming-action:hover {
+            background: var(--buyer-brand);
+            border-color: var(--buyer-brand);
+            color: white;
+        }
+
+        /* Payment History */
+        .payment-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .payment-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem;
+            background: var(--bg);
+            border-radius: var(--radius);
+        }
+
+        .payment-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .payment-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--success-bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--success);
+            font-size: 0.875rem;
+        }
+
+        .payment-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .payment-desc {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .payment-date {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .payment-amount {
+            font-weight: 700;
+            color: var(--text);
+            font-size: 0.875rem;
+        }
+
+        /* Alerts Card */
+        .alert-card {
+            background: linear-gradient(135deg, var(--warning-bg) 0%, #FEF3C7 100%);
+            border: 1px solid var(--warning-border);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .alert-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .alert-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .alert-header h4 {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #92400E;
+        }
+
+        .alert-text {
+            font-size: 0.8rem;
+            color: #78350F;
+            margin-bottom: 0.75rem;
+            line-height: 1.5;
+        }
+
+        .alert-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0.75rem;
+            background: var(--warning);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .alert-action:hover {
+            background: #D97706;
+        }
+
+        /* Renewal Card */
+        .renewal-card {
+            background: linear-gradient(135deg, var(--success-bg) 0%, #D1FAE5 100%);
+            border: 1px solid var(--success-border);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+        }
+
+        .renewal-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .renewal-header h4 {
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: #065F46;
+        }
+
+        .renewal-offer {
+            background: var(--surface);
+            border-radius: var(--radius);
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .renewal-offer-title {
+            font-weight: 600;
+            color: var(--text);
+            font-size: 0.85rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .renewal-offer-price {
+            display: flex;
+            align-items: baseline;
+            gap: 0.5rem;
+        }
+
+        .renewal-price-new {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--success);
+        }
+
+        .renewal-price-old {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            text-decoration: line-through;
+        }
+
+        .renewal-discount {
+            background: var(--success);
+            color: white;
+            padding: 0.15rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.65rem;
+            font-weight: 700;
+        }
+
+        .renewal-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .renewal-btn {
+            flex: 1;
+            padding: 0.5rem;
+            border-radius: var(--radius);
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .renewal-btn.primary {
+            background: var(--success);
+            color: white;
+        }
+
+        .renewal-btn.secondary {
+            background: var(--surface);
+            color: var(--text-light);
+            border: 1px solid var(--border);
+        }
+
+        /* ===== EMPTY STATE ===== */
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state-text {
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">
+                <div class="logo-icon">⚡</div>
+                ContractNest
+            </div>
+            
+            <div class="nav-tabs">
+                <button class="nav-tab">Discover</button>
+                <button class="nav-tab active">My Wallet</button>
+                <button class="nav-tab">Messages</button>
+            </div>
+        </div>
+        
+        <div class="header-right">
+            <div class="notification-btn">
+                <span>🔔</span>
+                <span class="dot"></span>
+            </div>
+            <div class="user-menu">
+                <div class="user-avatar">AS</div>
+                <span class="user-name">Anita Sharma</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <div class="main-container">
+        <!-- WELCOME SECTION -->
+        <div class="welcome-section">
+            <div class="welcome-text">
+                <h1>My Wallet</h1>
+                <p>Track your services, payments, and evidence all in one place</p>
+            </div>
+            <div class="quick-actions">
+                <button class="btn btn-outline">
+                    <span>📥</span> Download All Evidence
+                </button>
+                <button class="btn btn-primary">
+                    <span>➕</span> Find New Services
+                </button>
+            </div>
+        </div>
+
+        <!-- STATS ROW -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-icon">📋</div>
+                <div class="stat-value">3</div>
+                <div class="stat-label">Active Contracts</div>
+            </div>
+            <div class="stat-card success">
+                <div class="stat-icon">✅</div>
+                <div class="stat-value">12</div>
+                <div class="stat-label">Services Received</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">💰</div>
+                <div class="stat-value">₹58,500</div>
+                <div class="stat-label">Total Investment</div>
+            </div>
+            <div class="stat-card warning">
+                <div class="stat-icon">📅</div>
+                <div class="stat-value">2</div>
+                <div class="stat-label">Upcoming This Week</div>
+            </div>
+        </div>
+
+        <!-- MAIN GRID -->
+        <div class="main-grid">
+            <!-- LEFT COLUMN -->
+            <div>
+                <!-- Active Contracts -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>📋 My Active Contracts</h3>
+                        <span class="card-header-action">View All →</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="contract-list">
+                            <!-- Contract 1 -->
+                            <div class="contract-item">
+                                <div class="contract-icon">🧘</div>
+                                <div class="contract-content">
+                                    <div class="contract-header">
+                                        <div>
+                                            <div class="contract-title">PCOD Balance Program</div>
+                                            <div class="contract-seller">Vikuna Wellness</div>
+                                        </div>
+                                        <span class="contract-status active">Active</span>
+                                    </div>
+                                    <div class="contract-progress">
+                                        <div class="progress-header">
+                                            <span class="progress-label">3 of 7 services completed</span>
+                                            <span class="progress-value">43%</span>
+                                        </div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 43%;"></div>
+                                        </div>
+                                    </div>
+                                    <div class="contract-meta">
+                                        <div class="contract-meta-item">
+                                            <span>📅</span>
+                                            <span>Next: Jan 12</span>
+                                        </div>
+                                        <div class="contract-meta-item">
+                                            <span>💰</span>
+                                            <span>₹12,000 paid</span>
+                                        </div>
+                                        <div class="contract-meta-item">
+                                            <span>⏱️</span>
+                                            <span>Ends Mar 20</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Contract 2 -->
+                            <div class="contract-item">
+                                <div class="contract-icon">❄️</div>
+                                <div class="contract-content">
+                                    <div class="contract-header">
+                                        <div>
+                                            <div class="contract-title">AC Annual Maintenance</div>
+                                            <div class="contract-seller">RapidFix Services</div>
+                                        </div>
+                                        <span class="contract-status active">Active</span>
+                                    </div>
+                                    <div class="contract-progress">
+                                        <div class="progress-header">
+                                            <span class="progress-label">2 of 4 services completed</span>
+                                            <span class="progress-value">50%</span>
+                                        </div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 50%;"></div>
+                                        </div>
+                                    </div>
+                                    <div class="contract-meta">
+                                        <div class="contract-meta-item">
+                                            <span>📅</span>
+                                            <span>Next: Jan 25</span>
+                                        </div>
+                                        <div class="contract-meta-item">
+                                            <span>💰</span>
+                                            <span>₹18,500 paid</span>
+                                        </div>
+                                        <div class="contract-meta-item">
+                                            <span>⏱️</span>
+                                            <span>Ends Nov 15</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Contract 3 -->
+                            <div class="contract-item">
+                                <div class="contract-icon">🖥️</div>
+                                <div class="contract-content">
+                                    <div class="contract-header">
+                                        <div>
+                                            <div class="contract-title">Server Support Contract</div>
+                                            <div class="contract-seller">TechCare IT</div>
+                                        </div>
+                                        <span class="contract-status pending">Pending Start</span>
+                                    </div>
+                                    <div class="contract-progress">
+                                        <div class="progress-header">
+                                            <span class="progress-label">Starts Jan 15, 2025</span>
+                                            <span class="progress-value">0%</span>
+                                        </div>
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: 0%;"></div>
+                                        </div>
+                                    </div>
+                                    <div class="contract-meta">
+                                        <div class="contract-meta-item">
+                                            <span>📅</span>
+                                            <span>Starts: Jan 15</span>
+                                        </div>
+                                        <div class="contract-meta-item">
+                                            <span>💰</span>
+                                            <span>₹28,000 paid</span>
+                                        </div>
+                                        <div class="contract-meta-item">
+                                            <span>⏱️</span>
+                                            <span>12 months</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Service History -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>📜 Recent Services</h3>
+                        <span class="card-header-action">View All →</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="service-log">
+                            <div class="service-item">
+                                <div class="service-icon">🧘</div>
+                                <div class="service-content">
+                                    <div class="service-title">Yoga Session #2</div>
+                                    <div class="service-date">Dec 29, 2024 • 10:00 AM • Priya (Trainer)</div>
+                                    <div class="service-evidence">
+                                        <button class="evidence-btn">📷 View Photos</button>
+                                        <button class="evidence-btn">📄 Session Notes</button>
+                                    </div>
+                                </div>
+                                <div class="service-status">
+                                    <div class="status-badge completed">✓</div>
+                                </div>
+                            </div>
+
+                            <div class="service-item">
+                                <div class="service-icon">🥗</div>
+                                <div class="service-content">
+                                    <div class="service-title">Nutrition Consultation</div>
+                                    <div class="service-date">Dec 26, 2024 • 2:00 PM • Dr. Meera</div>
+                                    <div class="service-evidence">
+                                        <button class="evidence-btn">📄 Diet Chart.pdf</button>
+                                        <button class="evidence-btn">📋 Meal Plan</button>
+                                    </div>
+                                </div>
+                                <div class="service-status">
+                                    <div class="status-badge completed">✓</div>
+                                </div>
+                            </div>
+
+                            <div class="service-item">
+                                <div class="service-icon">🧘</div>
+                                <div class="service-content">
+                                    <div class="service-title">Yoga Session #1</div>
+                                    <div class="service-date">Dec 22, 2024 • 10:00 AM • Priya (Trainer)</div>
+                                    <div class="service-evidence">
+                                        <button class="evidence-btn">📷 View Photos</button>
+                                    </div>
+                                </div>
+                                <div class="service-status">
+                                    <div class="status-badge completed">✓</div>
+                                </div>
+                            </div>
+
+                            <div class="service-item">
+                                <div class="service-icon">❄️</div>
+                                <div class="service-content">
+                                    <div class="service-title">AC Deep Service - Q4</div>
+                                    <div class="service-date">Dec 15, 2024 • 11:00 AM • Ramesh (Tech)</div>
+                                    <div class="service-evidence">
+                                        <button class="evidence-btn">📷 Before/After</button>
+                                        <button class="evidence-btn">📄 Service Report</button>
+                                    </div>
+                                </div>
+                                <div class="service-status">
+                                    <div class="status-badge completed">✓</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN - SIDEBAR -->
+            <div>
+                <!-- Upcoming Services -->
+                <div class="sidebar-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>📅 Upcoming</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="upcoming-list">
+                                <div class="upcoming-item">
+                                    <div class="upcoming-date">
+                                        <div class="day">12</div>
+                                        <div class="month">Jan</div>
+                                    </div>
+                                    <div class="upcoming-content">
+                                        <div class="upcoming-title">Yoga Session #3</div>
+                                        <div class="upcoming-time">10:00 AM • Priya</div>
+                                    </div>
+                                    <button class="upcoming-action">Reschedule</button>
+                                </div>
+
+                                <div class="upcoming-item">
+                                    <div class="upcoming-date">
+                                        <div class="day">15</div>
+                                        <div class="month">Jan</div>
+                                    </div>
+                                    <div class="upcoming-content">
+                                        <div class="upcoming-title">Server Setup Call</div>
+                                        <div class="upcoming-time">3:00 PM • TechCare</div>
+                                    </div>
+                                    <button class="upcoming-action">Join Call</button>
+                                </div>
+
+                                <div class="upcoming-item">
+                                    <div class="upcoming-date">
+                                        <div class="day">19</div>
+                                        <div class="month">Jan</div>
+                                    </div>
+                                    <div class="upcoming-content">
+                                        <div class="upcoming-title">Yoga Session #4</div>
+                                        <div class="upcoming-time">10:00 AM • Priya</div>
+                                    </div>
+                                    <button class="upcoming-action">Reschedule</button>
+                                </div>
+
+                                <div class="upcoming-item">
+                                    <div class="upcoming-date">
+                                        <div class="day">25</div>
+                                        <div class="month">Jan</div>
+                                    </div>
+                                    <div class="upcoming-content">
+                                        <div class="upcoming-title">AC Service - Q1</div>
+                                        <div class="upcoming-time">11:00 AM • RapidFix</div>
+                                    </div>
+                                    <button class="upcoming-action">Confirm</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alerts -->
+                <div class="sidebar-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>🔔 Alerts</h3>
+                        </div>
+                        <div class="card-body" style="padding: 1rem;">
+                            <div class="alert-card">
+                                <div class="alert-header">
+                                    <span>⚠️</span>
+                                    <h4>Service Pending</h4>
+                                </div>
+                                <p class="alert-text">
+                                    Gynec Consultation #1 hasn't been scheduled yet. Contact Vikuna Wellness to arrange.
+                                </p>
+                                <button class="alert-action">
+                                    <span>💬</span> Message Seller
+                                </button>
+                            </div>
+
+                            <div class="renewal-card">
+                                <div class="renewal-header">
+                                    <span>🎉</span>
+                                    <h4>Early Renewal Offer!</h4>
+                                </div>
+                                <div class="renewal-offer">
+                                    <div class="renewal-offer-title">PCOD Balance - Year 2</div>
+                                    <div class="renewal-offer-price">
+                                        <span class="renewal-price-new">₹10,800</span>
+                                        <span class="renewal-price-old">₹12,000</span>
+                                        <span class="renewal-discount">10% OFF</span>
+                                    </div>
+                                </div>
+                                <div class="renewal-actions">
+                                    <button class="renewal-btn primary">Renew Now</button>
+                                    <button class="renewal-btn secondary">Remind Later</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment History -->
+                <div class="sidebar-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>💳 Recent Payments</h3>
+                            <span class="card-header-action">View All →</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="payment-list">
+                                <div class="payment-item">
+                                    <div class="payment-info">
+                                        <div class="payment-icon">✓</div>
+                                        <div class="payment-details">
+                                            <span class="payment-desc">Server Support</span>
+                                            <span class="payment-date">Jan 5, 2025</span>
+                                        </div>
+                                    </div>
+                                    <span class="payment-amount">₹28,000</span>
+                                </div>
+
+                                <div class="payment-item">
+                                    <div class="payment-info">
+                                        <div class="payment-icon">✓</div>
+                                        <div class="payment-details">
+                                            <span class="payment-desc">PCOD Program</span>
+                                            <span class="payment-date">Dec 20, 2024</span>
+                                        </div>
+                                    </div>
+                                    <span class="payment-amount">₹12,000</span>
+                                </div>
+
+                                <div class="payment-item">
+                                    <div class="payment-info">
+                                        <div class="payment-icon">✓</div>
+                                        <div class="payment-details">
+                                            <span class="payment-desc">AC Maintenance</span>
+                                            <span class="payment-date">Nov 15, 2024</span>
+                                        </div>
+                                    </div>
+                                    <span class="payment-amount">₹18,500</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== NAV TABS =====
+        const navTabs = document.querySelectorAll('.nav-tab');
+        navTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                navTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+            });
+        });
+
+        // ===== CONTRACT ITEM CLICK =====
+        const contractItems = document.querySelectorAll('.contract-item');
+        contractItems.forEach(item => {
+            item.addEventListener('click', () => {
+                alert('Opening contract details...');
+            });
+        });
+    </script>
+</body>
+</html>

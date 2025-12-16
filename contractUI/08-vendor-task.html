@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ContractNest - Your Task</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand: #0F172A;
+            --vendor-brand: #059669;
+            --vendor-light: #10B981;
+            --vendor-bg: #ECFDF5;
+            --vendor-border: #A7F3D0;
+            --vendor-dark: #047857;
+            --accent: #6366F1;
+            --accent-bg: #EEF2FF;
+            --success: #10B981;
+            --success-bg: #ECFDF5;
+            --warning: #F59E0B;
+            --warning-bg: #FFFBEB;
+            --warning-border: #FDE68A;
+            --danger: #EF4444;
+            --danger-bg: #FEF2F2;
+            --bg: #F8FAFC;
+            --surface: #FFFFFF;
+            --border: #E2E8F0;
+            --border-light: #F1F5F9;
+            --text: #334155;
+            --text-light: #64748B;
+            --text-muted: #94A3B8;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+            --radius: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            background: var(--vendor-brand);
+            color: white;
+            padding: 1rem 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .header-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .header-logo-icon {
+            width: 28px;
+            height: 28px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-help {
+            padding: 0.4rem 0.75rem;
+            background: rgba(255,255,255,0.15);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* ===== TASK HERO ===== */
+        .task-hero {
+            background: linear-gradient(135deg, var(--vendor-brand) 0%, var(--vendor-dark) 100%);
+            color: white;
+            padding: 1.5rem 1.25rem 2rem;
+            text-align: center;
+        }
+
+        .task-icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            margin: 0 auto 1rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .task-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .task-subtitle {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-bottom: 0.25rem;
+        }
+
+        .task-contract {
+            font-size: 0.75rem;
+            opacity: 0.7;
+        }
+
+        /* ===== SLA COUNTDOWN ===== */
+        .sla-section {
+            background: var(--surface);
+            margin: -1.5rem 1rem 0;
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            padding: 1.25rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .sla-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .sla-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        .sla-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 0.25rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+
+        .sla-status.on-track {
+            background: var(--vendor-bg);
+            color: var(--vendor-brand);
+        }
+
+        .sla-status.at-risk {
+            background: var(--warning-bg);
+            color: var(--warning);
+        }
+
+        .sla-status.breached {
+            background: var(--danger-bg);
+            color: var(--danger);
+        }
+
+        .sla-status .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .sla-countdown {
+            display: flex;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .countdown-block {
+            text-align: center;
+            min-width: 60px;
+        }
+
+        .countdown-value {
+            font-size: 2.25rem;
+            font-weight: 800;
+            color: var(--brand);
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .countdown-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        .countdown-separator {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--border);
+            line-height: 1;
+        }
+
+        .sla-deadline {
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .sla-deadline strong {
+            color: var(--text);
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            padding: 1rem;
+        }
+
+        /* ===== CARD ===== */
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-header h3 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--brand);
+        }
+
+        .card-body {
+            padding: 1.25rem;
+        }
+
+        /* ===== DETAIL ROWS ===== */
+        .detail-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 0.875rem 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .detail-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .detail-row:first-child {
+            padding-top: 0;
+        }
+
+        .detail-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--bg);
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.125rem;
+            flex-shrink: 0;
+        }
+
+        .detail-content {
+            flex: 1;
+        }
+
+        .detail-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-bottom: 0.2rem;
+        }
+
+        .detail-value {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .detail-sub {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-top: 0.15rem;
+        }
+
+        .detail-action {
+            align-self: center;
+        }
+
+        .action-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1.125rem;
+        }
+
+        .action-btn:hover {
+            background: var(--vendor-brand);
+            border-color: var(--vendor-brand);
+            color: white;
+        }
+
+        /* ===== EVIDENCE CHECKLIST ===== */
+        .checklist {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            gap: 0.875rem;
+            padding: 1rem;
+            background: var(--bg);
+            border-radius: var(--radius-lg);
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .checklist-item:hover {
+            border-color: var(--vendor-border);
+        }
+
+        .checklist-item.checked {
+            background: var(--vendor-bg);
+            border-color: var(--vendor-border);
+        }
+
+        .checklist-checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s;
+            color: white;
+            font-size: 0.875rem;
+        }
+
+        .checklist-item.checked .checklist-checkbox {
+            background: var(--vendor-brand);
+            border-color: var(--vendor-brand);
+        }
+
+        .checklist-content {
+            flex: 1;
+        }
+
+        .checklist-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.15rem;
+        }
+
+        .checklist-desc {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .checklist-required {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--danger);
+            padding: 0.2rem 0.4rem;
+            background: var(--danger-bg);
+            border-radius: 4px;
+        }
+
+        .checklist-item.checked .checklist-required {
+            background: var(--vendor-bg);
+            color: var(--vendor-brand);
+        }
+
+        .checklist-item.checked .checklist-required::after {
+            content: ' ✓';
+        }
+
+        /* ===== NOTES SECTION ===== */
+        .notes-textarea {
+            width: 100%;
+            padding: 1rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.875rem;
+            font-family: inherit;
+            resize: none;
+            min-height: 100px;
+            color: var(--text);
+        }
+
+        .notes-textarea:focus {
+            outline: none;
+            border-color: var(--vendor-brand);
+            box-shadow: 0 0 0 3px var(--vendor-bg);
+        }
+
+        .notes-textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        /* ===== BOTTOM CTA ===== */
+        .bottom-cta {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--surface);
+            padding: 1rem;
+            border-top: 1px solid var(--border);
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .cta-button {
+            width: 100%;
+            padding: 1rem;
+            border-radius: var(--radius-lg);
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .cta-button.primary {
+            background: var(--vendor-brand);
+            color: white;
+        }
+
+        .cta-button.primary:hover {
+            background: var(--vendor-dark);
+        }
+
+        .cta-button.primary:disabled {
+            background: var(--border);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        .cta-progress {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .cta-progress-bar {
+            flex: 1;
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .cta-progress-fill {
+            height: 100%;
+            background: var(--vendor-brand);
+            transition: width 0.3s;
+        }
+
+        /* ===== SPACER FOR FIXED BOTTOM ===== */
+        .bottom-spacer {
+            height: 120px;
+        }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed;
+            bottom: 140px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--brand);
+            color: white;
+            padding: 0.75rem 1.25rem;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            box-shadow: var(--shadow-lg);
+            display: none;
+            z-index: 100;
+        }
+
+        .toast.show {
+            display: block;
+            animation: toastPop 0.3s ease;
+        }
+
+        @keyframes toastPop {
+            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        /* ===== AGENT TIP ===== */
+        .agent-tip {
+            background: var(--accent-bg);
+            border: 1px solid #C7D2FE;
+            border-radius: var(--radius-lg);
+            padding: 1rem;
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .agent-tip-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .agent-tip-text {
+            font-size: 0.8rem;
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        /* ===== PREVIOUS TASKS LINK ===== */
+        .previous-tasks {
+            text-align: center;
+            padding: 1rem;
+            font-size: 0.85rem;
+            color: var(--vendor-brand);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .previous-tasks:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <header class="header">
+        <div class="header-logo">
+            <div class="header-logo-icon">⚡</div>
+            ContractNest
+        </div>
+        <div class="header-help">Need Help?</div>
+    </header>
+
+    <!-- TASK HERO -->
+    <div class="task-hero">
+        <div class="task-icon">🧘</div>
+        <h1 class="task-title">Yoga Session #3</h1>
+        <p class="task-subtitle">PCOD Balance Program</p>
+        <p class="task-contract">Contract #CN-9921 • Vikuna Wellness</p>
+    </div>
+
+    <!-- SLA COUNTDOWN -->
+    <div class="sla-section">
+        <div class="sla-header">
+            <span class="sla-label">Time Remaining</span>
+            <div class="sla-status on-track">
+                <span class="dot"></span>
+                On Track
+            </div>
+        </div>
+        <div class="sla-countdown">
+            <div class="countdown-block">
+                <div class="countdown-value" id="hours">47</div>
+                <div class="countdown-label">Hours</div>
+            </div>
+            <div class="countdown-separator">:</div>
+            <div class="countdown-block">
+                <div class="countdown-value" id="minutes">59</div>
+                <div class="countdown-label">Minutes</div>
+            </div>
+            <div class="countdown-separator">:</div>
+            <div class="countdown-block">
+                <div class="countdown-value" id="seconds">23</div>
+                <div class="countdown-label">Seconds</div>
+            </div>
+        </div>
+        <p class="sla-deadline">Complete by <strong>Jan 12, 2025 at 11:00 AM</strong></p>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        <!-- Task Details -->
+        <div class="card">
+            <div class="card-header">
+                <span>📋</span>
+                <h3>Task Details</h3>
+            </div>
+            <div class="card-body">
+                <div class="detail-row">
+                    <div class="detail-icon">📅</div>
+                    <div class="detail-content">
+                        <div class="detail-label">Date & Time</div>
+                        <div class="detail-value">Sunday, Jan 12, 2025</div>
+                        <div class="detail-sub">10:00 AM - 11:00 AM</div>
+                    </div>
+                </div>
+                
+                <div class="detail-row">
+                    <div class="detail-icon">📍</div>
+                    <div class="detail-content">
+                        <div class="detail-label">Location</div>
+                        <div class="detail-value">Wellness Studio A</div>
+                        <div class="detail-sub">Jubilee Hills, Hyderabad</div>
+                    </div>
+                    <div class="detail-action">
+                        <button class="action-btn" title="Get Directions">🗺️</button>
+                    </div>
+                </div>
+                
+                <div class="detail-row">
+                    <div class="detail-icon">👤</div>
+                    <div class="detail-content">
+                        <div class="detail-label">Client</div>
+                        <div class="detail-value">Anita Sharma</div>
+                        <div class="detail-sub">+91 98765 43210</div>
+                    </div>
+                    <div class="detail-action">
+                        <button class="action-btn" title="Call Client">📞</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Special Instructions -->
+        <div class="card">
+            <div class="card-header">
+                <span>📝</span>
+                <h3>Instructions</h3>
+            </div>
+            <div class="card-body">
+                <p style="font-size: 0.875rem; color: var(--text); line-height: 1.6;">
+                    Focus on <strong>PCOD-specific asanas</strong> including Supta Baddha Konasana, Bharadvajasana, and breathing exercises. Client prefers <strong>low-impact modifications</strong>. Previous session notes: Good progress on flexibility, continue core strengthening.
+                </p>
+                
+                <div class="agent-tip">
+                    <div class="agent-tip-icon">⚡</div>
+                    <div class="agent-tip-text">
+                        <strong>Tip:</strong> Take photos during the session for evidence. The client signed a consent form for session documentation.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Evidence Checklist -->
+        <div class="card">
+            <div class="card-header">
+                <span>📸</span>
+                <h3>Evidence Required</h3>
+            </div>
+            <div class="card-body">
+                <div class="checklist">
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <div class="checklist-checkbox"></div>
+                        <div class="checklist-content">
+                            <div class="checklist-title">Photo at start of session</div>
+                            <div class="checklist-desc">Capture setup and client ready position</div>
+                        </div>
+                        <span class="checklist-required">Required</span>
+                    </div>
+                    
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <div class="checklist-checkbox"></div>
+                        <div class="checklist-content">
+                            <div class="checklist-title">Photo during session</div>
+                            <div class="checklist-desc">At least one mid-session action shot</div>
+                        </div>
+                        <span class="checklist-required">Required</span>
+                    </div>
+                    
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <div class="checklist-checkbox"></div>
+                        <div class="checklist-content">
+                            <div class="checklist-title">Client signature</div>
+                            <div class="checklist-desc">Digital sign-off on session completion</div>
+                        </div>
+                        <span class="checklist-required">Required</span>
+                    </div>
+                    
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <div class="checklist-checkbox"></div>
+                        <div class="checklist-content">
+                            <div class="checklist-title">Session notes</div>
+                            <div class="checklist-desc">Brief summary of exercises performed</div>
+                        </div>
+                        <span class="checklist-required">Optional</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="card">
+            <div class="card-header">
+                <span>✏️</span>
+                <h3>Your Notes</h3>
+            </div>
+            <div class="card-body">
+                <textarea class="notes-textarea" placeholder="Add any notes about this session..."></textarea>
+            </div>
+        </div>
+
+        <!-- Previous Tasks Link -->
+        <div class="previous-tasks">
+            View your other tasks (2 pending) →
+        </div>
+
+        <!-- Bottom Spacer -->
+        <div class="bottom-spacer"></div>
+    </div>
+
+    <!-- BOTTOM CTA -->
+    <div class="bottom-cta">
+        <div class="cta-progress">
+            <span id="progressText">0 of 3 required items</span>
+            <div class="cta-progress-bar">
+                <div class="cta-progress-fill" id="progressFill" style="width: 0%;"></div>
+            </div>
+        </div>
+        <button class="cta-button primary" id="completeBtn" disabled onclick="openComplete()">
+            <span>📸</span> Upload Evidence & Complete
+        </button>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast">Item checked!</div>
+
+    <script>
+        // ===== COUNTDOWN TIMER =====
+        let totalSeconds = 47 * 3600 + 59 * 60 + 23;
+        
+        function updateCountdown() {
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = totalSeconds % 60;
+            
+            document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
+            document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
+            document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
+            
+            totalSeconds--;
+            
+            if (totalSeconds < 0) {
+                totalSeconds = 0;
+            }
+        }
+        
+        setInterval(updateCountdown, 1000);
+
+        // ===== CHECKLIST =====
+        let checkedCount = 0;
+        const requiredCount = 3;
+        
+        function toggleCheck(item) {
+            const wasChecked = item.classList.contains('checked');
+            item.classList.toggle('checked');
+            
+            const checkbox = item.querySelector('.checklist-checkbox');
+            if (item.classList.contains('checked')) {
+                checkbox.textContent = '✓';
+                checkedCount++;
+                showToast('Item checked!');
+            } else {
+                checkbox.textContent = '';
+                checkedCount--;
+            }
+            
+            updateProgress();
+        }
+        
+        function updateProgress() {
+            const requiredChecked = Math.min(checkedCount, requiredCount);
+            const percentage = (requiredChecked / requiredCount) * 100;
+            
+            document.getElementById('progressFill').style.width = percentage + '%';
+            document.getElementById('progressText').textContent = `${requiredChecked} of ${requiredCount} required items`;
+            
+            const btn = document.getElementById('completeBtn');
+            if (requiredChecked >= requiredCount) {
+                btn.disabled = false;
+            } else {
+                btn.disabled = true;
+            }
+        }
+        
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 2000);
+        }
+        
+        function openComplete() {
+            alert('Opening evidence upload screen...\n\nThis would navigate to the evidence upload flow (09-vendor-complete.html)');
+        }
+    </script>
+</body>
+</html>

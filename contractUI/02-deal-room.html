@@ -1,0 +1,1440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ContractNest - Deal Room</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand: #0F172A;
+            --brand-light: #1E293B;
+            --accent: #6366F1;
+            --accent-light: #818CF8;
+            --accent-bg: #EEF2FF;
+            --buyer-brand: #0284C7;
+            --buyer-light: #0EA5E9;
+            --buyer-bg: #F0F9FF;
+            --buyer-border: #BAE6FD;
+            --success: #10B981;
+            --success-bg: #ECFDF5;
+            --success-border: #A7F3D0;
+            --warning: #F59E0B;
+            --warning-bg: #FFFBEB;
+            --warning-border: #FDE68A;
+            --danger: #EF4444;
+            --danger-bg: #FEF2F2;
+            --bg: #F8FAFC;
+            --surface: #FFFFFF;
+            --border: #E2E8F0;
+            --border-light: #F1F5F9;
+            --text: #334155;
+            --text-light: #64748B;
+            --text-muted: #94A3B8;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1);
+            --radius: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+            background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .back-link {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-light);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            padding: 0.5rem 0.75rem;
+            border-radius: var(--radius);
+            transition: all 0.2s;
+        }
+
+        .back-link:hover {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .seller-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg);
+            border-radius: 50px;
+            border: 1px solid var(--border);
+        }
+
+        .seller-avatar {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--buyer-brand) 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 0.75rem;
+        }
+
+        .seller-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .seller-name {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--text);
+        }
+
+        .seller-verified {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.7rem;
+            color: var(--success);
+            font-weight: 500;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .security-badge {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .security-badge .icon {
+            color: var(--success);
+        }
+
+        /* ===== MAIN LAYOUT ===== */
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 2rem;
+        }
+
+        /* ===== CONTRACT CARD ===== */
+        .contract-card {
+            background: var(--surface);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-xl);
+            overflow: hidden;
+        }
+
+        .contract-hero {
+            background: linear-gradient(135deg, var(--brand) 0%, var(--brand-light) 100%);
+            padding: 2.5rem;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .contract-hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .contract-hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.15);
+            padding: 0.4rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .contract-title {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.5px;
+        }
+
+        .contract-subtitle {
+            font-size: 1rem;
+            opacity: 0.85;
+            margin-bottom: 1.5rem;
+        }
+
+        .contract-meta-row {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .contract-meta-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .meta-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            opacity: 0.7;
+            margin-bottom: 0.25rem;
+        }
+
+        .meta-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        /* ===== CONTRACT BODY ===== */
+        .contract-body {
+            padding: 2rem;
+        }
+
+        /* Price Section */
+        .price-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding-bottom: 1.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .price-main {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .price-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-light);
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .price-value {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--brand);
+            line-height: 1;
+            display: flex;
+            align-items: baseline;
+            gap: 0.5rem;
+        }
+
+        .price-currency {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .price-breakdown {
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .savings-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--success-bg);
+            color: var(--success);
+            padding: 0.5rem 0.75rem;
+            border-radius: var(--radius);
+            font-size: 0.8rem;
+            font-weight: 600;
+            border: 1px solid var(--success-border);
+        }
+
+        /* Services Section */
+        .section-title {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-light);
+            font-weight: 700;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .services-grid {
+            display: grid;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+        }
+
+        .service-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-light);
+            transition: all 0.2s;
+        }
+
+        .service-item:hover {
+            border-color: var(--buyer-border);
+            background: var(--buyer-bg);
+        }
+
+        .service-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--surface);
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .service-details {
+            flex: 1;
+        }
+
+        .service-name {
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.25rem;
+        }
+
+        .service-desc {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .service-qty {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .qty-value {
+            font-weight: 700;
+            color: var(--brand);
+            font-size: 1.1rem;
+        }
+
+        .qty-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        .service-check {
+            width: 24px;
+            height: 24px;
+            background: var(--success-bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--success);
+            font-size: 0.875rem;
+        }
+
+        /* Payment Options */
+        .payment-options {
+            margin-bottom: 2rem;
+        }
+
+        .payment-option {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.25rem;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-lg);
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .payment-option:hover {
+            border-color: var(--buyer-brand);
+        }
+
+        .payment-option.selected {
+            border-color: var(--buyer-brand);
+            background: var(--buyer-bg);
+        }
+
+        .payment-radio {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .payment-option.selected .payment-radio {
+            border-color: var(--buyer-brand);
+        }
+
+        .payment-radio::after {
+            content: '';
+            width: 10px;
+            height: 10px;
+            background: var(--buyer-brand);
+            border-radius: 50%;
+            transform: scale(0);
+            transition: transform 0.2s;
+        }
+
+        .payment-option.selected .payment-radio::after {
+            transform: scale(1);
+        }
+
+        .payment-details {
+            flex: 1;
+        }
+
+        .payment-name {
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.25rem;
+        }
+
+        .payment-desc {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .payment-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .payment-badge.recommended {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
+        .payment-badge.popular {
+            background: var(--warning-bg);
+            color: var(--warning);
+        }
+
+        /* Terms Section */
+        .terms-section {
+            padding: 1.25rem;
+            background: var(--bg);
+            border-radius: var(--radius-lg);
+            margin-bottom: 1.5rem;
+        }
+
+        .terms-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .terms-header h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .terms-list {
+            list-style: none;
+        }
+
+        .terms-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+            padding: 0.4rem 0;
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .terms-list li span {
+            color: var(--success);
+        }
+
+        .view-full-terms {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+            font-size: 0.8rem;
+            color: var(--buyer-brand);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .view-full-terms:hover {
+            text-decoration: underline;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            padding: 1.5rem;
+            background: linear-gradient(135deg, var(--buyer-bg) 0%, #E0F2FE 100%);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--buyer-border);
+        }
+
+        .cta-checkbox {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--buyer-brand);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .checkbox.checked {
+            background: var(--buyer-brand);
+        }
+
+        .checkbox.checked::after {
+            content: '✓';
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .checkbox-label {
+            font-size: 0.8rem;
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        .checkbox-label a {
+            color: var(--buyer-brand);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .checkbox-label a:hover {
+            text-decoration: underline;
+        }
+
+        .cta-button {
+            width: 100%;
+            padding: 1.25rem 2rem;
+            background: linear-gradient(135deg, var(--buyer-brand) 0%, var(--buyer-light) 100%);
+            color: white;
+            border: none;
+            border-radius: var(--radius-lg);
+            font-size: 1.125rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            box-shadow: 0 4px 15px rgba(2, 132, 199, 0.4);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(2, 132, 199, 0.5);
+        }
+
+        .cta-button:active {
+            transform: translateY(0);
+        }
+
+        .cta-button:disabled {
+            background: var(--border);
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .cta-subtext {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* Chat Widget */
+        .chat-widget {
+            background: var(--surface);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 450px;
+        }
+
+        .chat-header {
+            padding: 1rem 1.25rem;
+            background: var(--brand);
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .chat-status {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+            70% { box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        .chat-header-text h4 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.15rem;
+        }
+
+        .chat-header-text span {
+            font-size: 0.7rem;
+            opacity: 0.8;
+        }
+
+        .chat-body {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .chat-message {
+            max-width: 85%;
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius-lg);
+            font-size: 0.8rem;
+            line-height: 1.5;
+        }
+
+        .chat-message.seller {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-bottom-left-radius: 4px;
+            align-self: flex-start;
+        }
+
+        .chat-message.buyer {
+            background: var(--buyer-brand);
+            color: white;
+            border-bottom-right-radius: 4px;
+            align-self: flex-end;
+        }
+
+        .chat-message.agent {
+            background: var(--accent-bg);
+            border: 1px solid #C7D2FE;
+            color: var(--accent);
+            align-self: center;
+            max-width: 95%;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+        }
+
+        .chat-footer {
+            padding: 1rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 50px;
+            font-size: 0.8rem;
+            outline: none;
+            transition: border 0.2s;
+        }
+
+        .chat-input:focus {
+            border-color: var(--buyer-brand);
+        }
+
+        .chat-send {
+            width: 40px;
+            height: 40px;
+            background: var(--buyer-brand);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .chat-send:hover {
+            background: var(--buyer-light);
+            transform: scale(1.05);
+        }
+
+        /* Trust Signals */
+        .trust-card {
+            background: var(--surface);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            padding: 1.5rem;
+        }
+
+        .trust-card h4 {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-light);
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .trust-items {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .trust-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: var(--bg);
+            border-radius: var(--radius);
+        }
+
+        .trust-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--success-bg);
+            color: var(--success);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+
+        .trust-text {
+            flex: 1;
+        }
+
+        .trust-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.15rem;
+        }
+
+        .trust-desc {
+            font-size: 0.7rem;
+            color: var(--text-light);
+        }
+
+        /* Help Card */
+        .help-card {
+            background: var(--warning-bg);
+            border: 1px solid var(--warning-border);
+            border-radius: var(--radius-xl);
+            padding: 1.25rem;
+        }
+
+        .help-card h4 {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--warning);
+            margin-bottom: 0.5rem;
+        }
+
+        .help-card p {
+            font-size: 0.8rem;
+            color: #92400E;
+            line-height: 1.5;
+            margin-bottom: 0.75rem;
+        }
+
+        .help-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+            color: #B45309;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .help-link:hover {
+            text-decoration: underline;
+        }
+
+        /* ===== SUCCESS MODAL ===== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .success-modal {
+            background: var(--surface);
+            border-radius: var(--radius-xl);
+            padding: 3rem;
+            max-width: 480px;
+            text-align: center;
+            animation: modalPop 0.3s ease;
+        }
+
+        @keyframes modalPop {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--success-bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            margin: 0 auto 1.5rem;
+            animation: successPop 0.5s ease 0.2s both;
+        }
+
+        @keyframes successPop {
+            from { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            to { transform: scale(1); }
+        }
+
+        .success-modal h2 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--brand);
+            margin-bottom: 0.5rem;
+        }
+
+        .success-modal p {
+            color: var(--text-light);
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .success-details {
+            background: var(--bg);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+            text-align: left;
+        }
+
+        .success-detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .success-detail-row:last-child {
+            border-bottom: none;
+        }
+
+        .success-detail-row span:first-child {
+            color: var(--text-light);
+            font-size: 0.875rem;
+        }
+
+        .success-detail-row span:last-child {
+            font-weight: 600;
+            color: var(--text);
+            font-size: 0.875rem;
+        }
+
+        .success-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .success-btn {
+            flex: 1;
+            padding: 0.875rem 1.5rem;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .success-btn.primary {
+            background: var(--buyer-brand);
+            color: white;
+        }
+
+        .success-btn.primary:hover {
+            background: var(--buyer-light);
+        }
+
+        .success-btn.secondary {
+            background: var(--bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .success-btn.secondary:hover {
+            background: var(--border-light);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1024px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                display: none;
+            }
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <header class="header">
+        <div class="header-left">
+            <a href="#" class="back-link">
+                <span>←</span>
+                Back to Dashboard
+            </a>
+            
+            <div class="seller-badge">
+                <div class="seller-avatar">VW</div>
+                <div class="seller-info">
+                    <span class="seller-name">Vikuna Wellness</span>
+                    <span class="seller-verified">
+                        <span>✓</span> Verified Seller
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="header-right">
+            <div class="security-badge">
+                <span class="icon">🔒</span>
+                <span>Secure & Encrypted</span>
+            </div>
+            <div class="security-badge">
+                <span class="icon">⚡</span>
+                <span>Powered by ContractNest</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <div class="main-container">
+        <!-- CONTRACT CARD -->
+        <div class="contract-card">
+            <div class="contract-hero">
+                <div class="contract-hero-badge">
+                    <span>📋</span>
+                    Service Agreement #CN-9921
+                </div>
+                <h1 class="contract-title">PCOD Balance Program</h1>
+                <p class="contract-subtitle">A comprehensive 3-month holistic wellness journey designed for hormonal balance and well-being.</p>
+                
+                <div class="contract-meta-row">
+                    <div class="contract-meta-item">
+                        <span class="meta-label">Duration</span>
+                        <span class="meta-value">3 Months</span>
+                    </div>
+                    <div class="contract-meta-item">
+                        <span class="meta-label">Start Date</span>
+                        <span class="meta-value">Dec 20, 2024</span>
+                    </div>
+                    <div class="contract-meta-item">
+                        <span class="meta-label">Total Services</span>
+                        <span class="meta-value">7 Sessions</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="contract-body">
+                <!-- Price Section -->
+                <div class="price-section">
+                    <div class="price-main">
+                        <span class="price-label">Total Investment</span>
+                        <div class="price-value">
+                            <span class="price-currency">₹</span>12,000
+                        </div>
+                        <span class="price-breakdown">Inclusive of all services & materials</span>
+                    </div>
+                    <div class="savings-badge">
+                        <span>🎉</span>
+                        Save ₹2,400 vs individual bookings
+                    </div>
+                </div>
+                
+                <!-- Services Section -->
+                <div class="section-title">
+                    <span>✨</span>
+                    What's Included
+                </div>
+                
+                <div class="services-grid">
+                    <div class="service-item">
+                        <div class="service-icon">🧘</div>
+                        <div class="service-details">
+                            <div class="service-name">Yoga Sessions</div>
+                            <div class="service-desc">Weekly personalized yoga with certified trainer</div>
+                        </div>
+                        <div class="service-qty">
+                            <span class="qty-value">4</span>
+                            <span class="qty-label">sessions</span>
+                        </div>
+                        <div class="service-check">✓</div>
+                    </div>
+                    
+                    <div class="service-item">
+                        <div class="service-icon">🥗</div>
+                        <div class="service-details">
+                            <div class="service-name">Nutrition Consultation</div>
+                            <div class="service-desc">Personalized diet chart & meal planning</div>
+                        </div>
+                        <div class="service-qty">
+                            <span class="qty-value">1</span>
+                            <span class="qty-label">session</span>
+                        </div>
+                        <div class="service-check">✓</div>
+                    </div>
+                    
+                    <div class="service-item">
+                        <div class="service-icon">🩺</div>
+                        <div class="service-details">
+                            <div class="service-name">Gynecologist Consultation</div>
+                            <div class="service-desc">Expert consultation with senior specialist</div>
+                        </div>
+                        <div class="service-qty">
+                            <span class="qty-value">2</span>
+                            <span class="qty-label">sessions</span>
+                        </div>
+                        <div class="service-check">✓</div>
+                    </div>
+                    
+                    <div class="service-item">
+                        <div class="service-icon">📊</div>
+                        <div class="service-details">
+                            <div class="service-name">Digital Progress Reports</div>
+                            <div class="service-desc">Track your journey with detailed reports</div>
+                        </div>
+                        <div class="service-qty">
+                            <span class="qty-value">∞</span>
+                            <span class="qty-label">included</span>
+                        </div>
+                        <div class="service-check">✓</div>
+                    </div>
+                </div>
+                
+                <!-- Payment Options -->
+                <div class="section-title">
+                    <span>💳</span>
+                    Payment Options
+                </div>
+                
+                <div class="payment-options">
+                    <div class="payment-option selected" onclick="selectPayment(this)">
+                        <div class="payment-radio"></div>
+                        <div class="payment-details">
+                            <div class="payment-name">100% Advance</div>
+                            <div class="payment-desc">Pay ₹12,000 now and get started immediately</div>
+                        </div>
+                        <span class="payment-badge recommended">Recommended</span>
+                    </div>
+                    
+                    <div class="payment-option" onclick="selectPayment(this)">
+                        <div class="payment-radio"></div>
+                        <div class="payment-details">
+                            <div class="payment-name">Monthly Installments</div>
+                            <div class="payment-desc">Pay ₹4,000/month for 3 months</div>
+                        </div>
+                        <span class="payment-badge popular">Popular</span>
+                    </div>
+                    
+                    <div class="payment-option" onclick="selectPayment(this)">
+                        <div class="payment-radio"></div>
+                        <div class="payment-details">
+                            <div class="payment-name">Milestone Payments</div>
+                            <div class="payment-desc">Pay as services are completed</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Terms Section -->
+                <div class="terms-section">
+                    <div class="terms-header">
+                        <span>📋</span>
+                        <h4>Key Terms & Guarantees</h4>
+                    </div>
+                    <ul class="terms-list">
+                        <li><span>✓</span> Free rescheduling up to 24 hours before session</li>
+                        <li><span>✓</span> 100% refund if first session doesn't meet expectations</li>
+                        <li><span>✓</span> All sessions recorded digitally for your records</li>
+                        <li><span>✓</span> Direct WhatsApp support with your care team</li>
+                    </ul>
+                    <div class="view-full-terms" onclick="showTermsModal()">
+                        View full terms & conditions →
+                    </div>
+                </div>
+                
+                <!-- CTA Section -->
+                <div class="cta-section">
+                    <div class="cta-checkbox">
+                        <div class="checkbox" id="termsCheckbox" onclick="toggleCheckbox()"></div>
+                        <span class="checkbox-label">
+                            I have read and agree to the <a href="#">Terms of Service</a>, 
+                            <a href="#">Privacy Policy</a>, and <a href="#">Cancellation Policy</a>
+                        </span>
+                    </div>
+                    
+                    <button class="cta-button" id="acceptBtn" onclick="acceptContract()" disabled>
+                        <span>🚀</span>
+                        Accept & Start Program
+                    </button>
+                    
+                    <p class="cta-subtext">
+                        🔒 Your payment is secured. Cancel anytime within the first 7 days for full refund.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <!-- Chat Widget -->
+            <div class="chat-widget">
+                <div class="chat-header">
+                    <div class="chat-status"></div>
+                    <div class="chat-header-text">
+                        <h4>Deal Room Chat</h4>
+                        <span>Vikuna team is online</span>
+                    </div>
+                </div>
+                
+                <div class="chat-body" id="chatBody">
+                    <div class="chat-message seller">
+                        Hi there! 👋 I'm Priya from Vikuna Wellness. I see you're reviewing our PCOD Balance Program. Do you have any questions?
+                    </div>
+                    
+                    <div class="chat-message buyer">
+                        Yes! Can I add more yoga sessions if I want?
+                    </div>
+                    
+                    <div class="chat-message seller">
+                        Absolutely! After accepting, you can request additional sessions at ₹1,200 each. They'll be added to your contract automatically.
+                    </div>
+                    
+                    <div class="chat-message agent">
+                        <span>⚡</span>
+                        Agent Note: This contract includes free rescheduling - great flexibility for your schedule!
+                    </div>
+                </div>
+                
+                <div class="chat-footer">
+                    <input type="text" class="chat-input" placeholder="Type your question..." id="chatInput" onkeypress="handleChatKeypress(event)">
+                    <button class="chat-send" onclick="sendMessage()">➤</button>
+                </div>
+            </div>
+            
+            <!-- Trust Card -->
+            <div class="trust-card">
+                <h4>Why Trust This Contract</h4>
+                
+                <div class="trust-items">
+                    <div class="trust-item">
+                        <div class="trust-icon">🔐</div>
+                        <div class="trust-text">
+                            <div class="trust-title">Legally Binding</div>
+                            <div class="trust-desc">Digitally signed & timestamped</div>
+                        </div>
+                    </div>
+                    
+                    <div class="trust-item">
+                        <div class="trust-icon">📸</div>
+                        <div class="trust-text">
+                            <div class="trust-title">Evidence Trail</div>
+                            <div class="trust-desc">Every service documented</div>
+                        </div>
+                    </div>
+                    
+                    <div class="trust-item">
+                        <div class="trust-icon">⚡</div>
+                        <div class="trust-text">
+                            <div class="trust-title">Auto-Monitored</div>
+                            <div class="trust-desc">AI ensures SLA compliance</div>
+                        </div>
+                    </div>
+                    
+                    <div class="trust-item">
+                        <div class="trust-icon">💬</div>
+                        <div class="trust-text">
+                            <div class="trust-title">Direct Support</div>
+                            <div class="trust-desc">Chat with seller anytime</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Help Card -->
+            <div class="help-card">
+                <h4>
+                    <span>💡</span>
+                    Need Help Deciding?
+                </h4>
+                <p>
+                    Not sure if this program is right for you? Schedule a free 15-minute call with our wellness advisor.
+                </p>
+                <div class="help-link">
+                    📞 Schedule a call →
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SUCCESS MODAL -->
+    <div class="modal-overlay" id="successModal">
+        <div class="success-modal">
+            <div class="success-icon">🎉</div>
+            <h2>Contract Accepted!</h2>
+            <p>Your PCOD Balance Program has been activated. Welcome to your wellness journey with Vikuna!</p>
+            
+            <div class="success-details">
+                <div class="success-detail-row">
+                    <span>Contract ID</span>
+                    <span>#CN-9921</span>
+                </div>
+                <div class="success-detail-row">
+                    <span>Status</span>
+                    <span style="color: var(--success);">✓ Active</span>
+                </div>
+                <div class="success-detail-row">
+                    <span>First Session</span>
+                    <span>Dec 22, 2024</span>
+                </div>
+                <div class="success-detail-row">
+                    <span>Payment</span>
+                    <span>₹12,000 (Processing)</span>
+                </div>
+            </div>
+            
+            <div class="success-actions">
+                <button class="success-btn secondary" onclick="closeModal()">
+                    Download PDF
+                </button>
+                <button class="success-btn primary" onclick="goToWallet()">
+                    View My Contract →
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== PAYMENT SELECTION =====
+        function selectPayment(element) {
+            document.querySelectorAll('.payment-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            element.classList.add('selected');
+        }
+
+        // ===== CHECKBOX =====
+        function toggleCheckbox() {
+            const checkbox = document.getElementById('termsCheckbox');
+            const btn = document.getElementById('acceptBtn');
+            
+            checkbox.classList.toggle('checked');
+            btn.disabled = !checkbox.classList.contains('checked');
+        }
+
+        // ===== ACCEPT CONTRACT =====
+        function acceptContract() {
+            const btn = document.getElementById('acceptBtn');
+            
+            // Show loading state
+            btn.innerHTML = '<span>⏳</span> Processing...';
+            btn.disabled = true;
+            
+            // Simulate processing
+            setTimeout(() => {
+                document.getElementById('successModal').classList.add('show');
+                btn.innerHTML = '<span>✓</span> Accepted!';
+            }, 1500);
+        }
+
+        // ===== MODAL =====
+        function closeModal() {
+            document.getElementById('successModal').classList.remove('show');
+        }
+
+        function goToWallet() {
+            alert('Navigating to Buyer Wallet...');
+            closeModal();
+        }
+
+        // ===== CHAT =====
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const chatBody = document.getElementById('chatBody');
+            
+            if (input.value.trim()) {
+                // Add buyer message
+                const buyerMsg = document.createElement('div');
+                buyerMsg.className = 'chat-message buyer';
+                buyerMsg.textContent = input.value;
+                chatBody.appendChild(buyerMsg);
+                
+                input.value = '';
+                chatBody.scrollTop = chatBody.scrollHeight;
+                
+                // Simulate seller response
+                setTimeout(() => {
+                    const sellerMsg = document.createElement('div');
+                    sellerMsg.className = 'chat-message seller';
+                    sellerMsg.textContent = "Thanks for your message! I'll get back to you shortly. In the meantime, feel free to review the contract details.";
+                    chatBody.appendChild(sellerMsg);
+                    chatBody.scrollTop = chatBody.scrollHeight;
+                }, 1000);
+            }
+        }
+
+        function handleChatKeypress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        // ===== TERMS MODAL =====
+        function showTermsModal() {
+            alert('Full terms modal would open here');
+        }
+    </script>
+</body>
+</html>

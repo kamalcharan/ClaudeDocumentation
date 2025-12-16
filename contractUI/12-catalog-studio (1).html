@@ -1,0 +1,1904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ContractNest - Catalog Studio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand: #0F172A;
+            --brand-light: #1E293B;
+            --accent: #6366F1;
+            --accent-light: #818CF8;
+            --accent-bg: #EEF2FF;
+            --seller: #7C3AED;
+            --seller-light: #8B5CF6;
+            --seller-bg: #F5F3FF;
+            --seller-border: #DDD6FE;
+            --success: #10B981;
+            --success-bg: #ECFDF5;
+            --success-border: #A7F3D0;
+            --warning: #F59E0B;
+            --warning-bg: #FFFBEB;
+            --warning-border: #FDE68A;
+            --danger: #EF4444;
+            --danger-bg: #FEF2F2;
+            --bg: #F8FAFC;
+            --surface: #FFFFFF;
+            --border: #E2E8F0;
+            --border-light: #F1F5F9;
+            --text: #334155;
+            --text-light: #64748B;
+            --text-muted: #94A3B8;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1);
+            --radius: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+            
+            /* Category Colors */
+            --cat-service: #7C3AED;
+            --cat-service-bg: #F5F3FF;
+            --cat-spare: #0891B2;
+            --cat-spare-bg: #ECFEFF;
+            --cat-text: #64748B;
+            --cat-text-bg: #F8FAFC;
+            --cat-billing: #059669;
+            --cat-billing-bg: #ECFDF5;
+            --cat-video: #DC2626;
+            --cat-video-bg: #FEF2F2;
+            --cat-image: #EA580C;
+            --cat-image-bg: #FFF7ED;
+            --cat-checklist: #0284C7;
+            --cat-checklist-bg: #F0F9FF;
+            --cat-document: #CA8A04;
+            --cat-document-bg: #FEFCE8;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ===== LAYOUT ===== */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: 240px;
+            background: var(--brand);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            padding: 1.25rem;
+            border-bottom: 1px solid var(--brand-light);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.125rem;
+            font-weight: 800;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--seller);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            padding: 1rem 0.75rem;
+            overflow-y: auto;
+        }
+
+        .nav-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .nav-section-label {
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            padding: 0 0.75rem;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0.65rem 0.75rem;
+            border-radius: var(--radius);
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            cursor: pointer;
+            margin-bottom: 2px;
+        }
+
+        .nav-item:hover {
+            background: var(--brand-light);
+            color: white;
+        }
+
+        .nav-item.active {
+            background: var(--seller);
+            color: white;
+        }
+
+        .nav-item .icon {
+            font-size: 1rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            flex: 1;
+            margin-left: 240px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ===== TOP BAR ===== */
+        .top-bar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .page-title h1 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--brand);
+            margin-bottom: 0.15rem;
+        }
+
+        .page-title p {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--seller);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--seller-light);
+        }
+
+        .btn-outline {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .btn-outline:hover {
+            background: var(--bg);
+            border-color: var(--seller);
+            color: var(--seller);
+        }
+
+        /* ===== STUDIO LAYOUT ===== */
+        .studio-layout {
+            display: grid;
+            grid-template-columns: 220px 1fr 360px;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* ===== CATEGORY PANEL ===== */
+        .category-panel {
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 0.875rem 1rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-header h3 {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--brand);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .category-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.5rem;
+        }
+
+        .category-item {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.6rem 0.75rem;
+            border-radius: var(--radius);
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 0.25rem;
+            border: 2px solid transparent;
+        }
+
+        .category-item:hover {
+            background: var(--bg);
+        }
+
+        .category-item.selected {
+            background: var(--seller-bg);
+            border-color: var(--seller);
+        }
+
+        .category-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .category-item.service .category-icon { background: var(--cat-service-bg); }
+        .category-item.spare .category-icon { background: var(--cat-spare-bg); }
+        .category-item.text .category-icon { background: var(--cat-text-bg); }
+        .category-item.billing .category-icon { background: var(--cat-billing-bg); }
+        .category-item.video .category-icon { background: var(--cat-video-bg); }
+        .category-item.image .category-icon { background: var(--cat-image-bg); }
+        .category-item.checklist .category-icon { background: var(--cat-checklist-bg); }
+        .category-item.document .category-icon { background: var(--cat-document-bg); }
+
+        .category-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .category-name {
+            font-weight: 600;
+            font-size: 0.75rem;
+            color: var(--text);
+            margin-bottom: 0.1rem;
+        }
+
+        .category-count {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+        }
+
+        .category-add {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            padding: 0.6rem;
+            margin: 0.5rem;
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            color: var(--text-light);
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .category-add:hover {
+            border-color: var(--seller);
+            color: var(--seller);
+            background: var(--seller-bg);
+        }
+
+        /* ===== BLOCK LIBRARY ===== */
+        .block-library {
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .library-header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0.875rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .library-title {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .library-title-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--cat-service-bg);
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.125rem;
+        }
+
+        .library-title h2 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--brand);
+        }
+
+        .library-title p {
+            font-size: 0.7rem;
+            color: var(--text-light);
+        }
+
+        .library-search {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .search-input {
+            padding: 0.45rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.75rem;
+            width: 180px;
+            color: var(--text);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: var(--seller);
+        }
+
+        .library-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+
+        .blocks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 0.875rem;
+        }
+
+        .block-card {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 2px solid transparent;
+        }
+
+        .block-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .block-card.selected {
+            border-color: var(--seller);
+            box-shadow: var(--shadow-md);
+        }
+
+        .block-card-header {
+            padding: 0.875rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.6rem;
+        }
+
+        .block-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .block-card.service .block-icon { background: var(--cat-service-bg); }
+        .block-card.spare .block-icon { background: var(--cat-spare-bg); }
+        .block-card.text .block-icon { background: var(--cat-text-bg); }
+        .block-card.billing .block-icon { background: var(--cat-billing-bg); }
+        .block-card.video .block-icon { background: var(--cat-video-bg); }
+        .block-card.image .block-icon { background: var(--cat-image-bg); }
+        .block-card.checklist .block-icon { background: var(--cat-checklist-bg); }
+        .block-card.document .block-icon { background: var(--cat-document-bg); }
+
+        .block-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .block-name {
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: var(--brand);
+            margin-bottom: 0.2rem;
+        }
+
+        .block-desc {
+            font-size: 0.7rem;
+            color: var(--text-light);
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .block-card-body {
+            padding: 0 0.875rem 0.875rem;
+        }
+
+        .block-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .block-meta-item {
+            font-size: 0.65rem;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .block-meta-item strong {
+            color: var(--text);
+        }
+
+        .block-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+
+        .block-tag {
+            font-size: 0.55rem;
+            padding: 0.12rem 0.35rem;
+            background: var(--bg);
+            border-radius: 3px;
+            color: var(--text-muted);
+        }
+
+        .block-tag.evidence {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
+        .block-usage {
+            padding: 0.4rem 0.875rem;
+            background: var(--bg);
+            border-top: 1px solid var(--border-light);
+            font-size: 0.6rem;
+            color: var(--text-muted);
+        }
+
+        /* Add Block Card */
+        .add-block-card {
+            background: var(--surface);
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem 1rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-height: 150px;
+        }
+
+        .add-block-card:hover {
+            border-color: var(--seller);
+            background: var(--seller-bg);
+        }
+
+        .add-block-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.125rem;
+            color: var(--text-muted);
+        }
+
+        .add-block-card:hover .add-block-icon {
+            background: var(--seller);
+            color: white;
+        }
+
+        .add-block-text {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-light);
+        }
+
+        /* ===== BLOCK EDITOR ===== */
+        .block-editor {
+            background: var(--surface);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .editor-header {
+            padding: 0.875rem 1rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .editor-header h3 {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--brand);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .editor-header-badge {
+            font-size: 0.55rem;
+            padding: 0.15rem 0.4rem;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .editor-header-badge.service { background: var(--cat-service-bg); color: var(--cat-service); }
+        .editor-header-badge.spare { background: var(--cat-spare-bg); color: var(--cat-spare); }
+        .editor-header-badge.text { background: var(--cat-text-bg); color: var(--cat-text); }
+        .editor-header-badge.billing { background: var(--cat-billing-bg); color: var(--cat-billing); }
+        .editor-header-badge.video { background: var(--cat-video-bg); color: var(--cat-video); }
+        .editor-header-badge.image { background: var(--cat-image-bg); color: var(--cat-image); }
+        .editor-header-badge.checklist { background: var(--cat-checklist-bg); color: var(--cat-checklist); }
+        .editor-header-badge.document { background: var(--cat-document-bg); color: var(--cat-document); }
+
+        .editor-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+
+        .editor-section {
+            margin-bottom: 1.25rem;
+        }
+
+        .editor-section-title {
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 0.6rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .form-group {
+            margin-bottom: 0.75rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.3rem;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 0.5rem 0.65rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.75rem;
+            color: var(--text);
+            transition: all 0.2s;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--seller);
+            box-shadow: 0 0 0 3px var(--seller-bg);
+        }
+
+        .form-textarea {
+            resize: none;
+            min-height: 60px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.6rem;
+        }
+
+        .input-with-addon {
+            display: flex;
+        }
+
+        .input-addon {
+            padding: 0.5rem 0.5rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-right: none;
+            border-radius: var(--radius) 0 0 var(--radius);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .input-with-addon .form-input {
+            border-radius: 0 var(--radius) var(--radius) 0;
+        }
+
+        /* Toggle List */
+        .toggle-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        .toggle-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.45rem 0.6rem;
+            background: var(--bg);
+            border-radius: var(--radius);
+        }
+
+        .toggle-item-label {
+            font-size: 0.7rem;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+
+        .toggle-switch {
+            width: 32px;
+            height: 18px;
+            background: var(--border);
+            border-radius: 9px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .toggle-switch.active {
+            background: var(--seller);
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: all 0.2s;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .toggle-switch.active::after {
+            left: 16px;
+        }
+
+        /* Schedule Preview */
+        .schedule-preview {
+            background: var(--bg);
+            border-radius: var(--radius);
+            padding: 0.6rem;
+            margin-top: 0.4rem;
+        }
+
+        .schedule-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.3rem 0;
+            font-size: 0.7rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .schedule-item:last-child {
+            border-bottom: none;
+        }
+
+        .schedule-item span:first-child {
+            color: var(--text-light);
+        }
+
+        .schedule-item span:last-child {
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        /* Usage Stats */
+        .usage-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.4rem;
+        }
+
+        .usage-stat {
+            background: var(--bg);
+            border-radius: var(--radius);
+            padding: 0.5rem;
+            text-align: center;
+        }
+
+        .usage-stat-value {
+            font-size: 1rem;
+            font-weight: 800;
+            color: var(--brand);
+        }
+
+        .usage-stat-label {
+            font-size: 0.55rem;
+            color: var(--text-muted);
+        }
+
+        /* Editor Footer */
+        .editor-footer {
+            padding: 0.75rem 1rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .editor-footer .btn {
+            flex: 1;
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--brand);
+            color: white;
+            padding: 0.75rem 1.25rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            box-shadow: var(--shadow-xl);
+            display: none;
+            z-index: 200;
+        }
+
+        .toast.show {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            animation: toastIn 0.3s ease;
+        }
+
+        @keyframes toastIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
+        /* ===== MODAL STYLES ===== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.show { display: flex; }
+
+        .modal {
+            background: var(--surface);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-xl);
+            max-height: 90vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            animation: modalIn 0.3s ease;
+        }
+
+        @keyframes modalIn {
+            from { opacity: 0; transform: scale(0.95) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .modal-header {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--brand);
+        }
+
+        .modal-close {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: none;
+            background: var(--bg);
+            color: var(--text-light);
+            font-size: 1.125rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: var(--danger-bg);
+            color: var(--danger);
+        }
+
+        .modal-body {
+            padding: 1.25rem;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .modal-footer {
+            padding: 0.875rem 1.25rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+        }
+
+        /* Block Type Grid */
+        .block-type-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.6rem;
+        }
+
+        .block-type-option {
+            padding: 0.875rem;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-lg);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .block-type-option:hover {
+            border-color: var(--seller-border);
+            background: var(--seller-bg);
+        }
+
+        .block-type-option.selected {
+            border-color: var(--seller);
+            background: var(--seller-bg);
+        }
+
+        .block-type-option .type-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.125rem;
+        }
+
+        .block-type-option .type-info h4 {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--brand);
+        }
+
+        .block-type-option .type-info p {
+            font-size: 0.65rem;
+            color: var(--text-light);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon">⚡</div>
+                    <span>ContractNest</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-label">Catalog</div>
+                    <div class="nav-item active">
+                        <span class="icon">🧱</span>
+                        Block Library
+                    </div>
+                    <div class="nav-item">
+                        <span class="icon">📦</span>
+                        Templates
+                    </div>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-label">Operations</div>
+                    <div class="nav-item">
+                        <span class="icon">📊</span>
+                        Ops Cockpit
+                    </div>
+                    <div class="nav-item">
+                        <span class="icon">📋</span>
+                        Contracts
+                    </div>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-label">Distribution</div>
+                    <div class="nav-item">
+                        <span class="icon">🔗</span>
+                        Embed Widgets
+                    </div>
+                    <div class="nav-item">
+                        <span class="icon">💬</span>
+                        WhatsApp
+                    </div>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            <!-- TOP BAR -->
+            <div class="top-bar">
+                <div class="page-title">
+                    <h1>Block Library</h1>
+                    <p>Build reusable blocks → Assemble into templates → Create contracts</p>
+                </div>
+                
+                <div class="top-actions">
+                    <button class="btn btn-outline">
+                        <span>📥</span> Import
+                    </button>
+                    <button class="btn btn-primary" onclick="openModal('newBlockModal')">
+                        <span>➕</span> New Block
+                    </button>
+                </div>
+            </div>
+
+            <!-- STUDIO LAYOUT -->
+            <div class="studio-layout">
+                <!-- CATEGORY PANEL (Block Types) -->
+                <div class="category-panel">
+                    <div class="panel-header">
+                        <h3>📁 Block Types</h3>
+                    </div>
+                    
+                    <div class="category-list">
+                        <div class="category-item service selected" onclick="selectCategory(this, 'service')">
+                            <div class="category-icon">🎯</div>
+                            <div class="category-info">
+                                <div class="category-name">Service</div>
+                                <div class="category-count">12 blocks</div>
+                            </div>
+                        </div>
+                        
+                        <div class="category-item spare" onclick="selectCategory(this, 'spare')">
+                            <div class="category-icon">📦</div>
+                            <div class="category-info">
+                                <div class="category-name">Spare Parts</div>
+                                <div class="category-count">8 blocks</div>
+                            </div>
+                        </div>
+                        
+                        <div class="category-item text" onclick="selectCategory(this, 'text')">
+                            <div class="category-icon">📄</div>
+                            <div class="category-info">
+                                <div class="category-name">Text / Content</div>
+                                <div class="category-count">5 blocks</div>
+                            </div>
+                        </div>
+                        
+                        <div class="category-item billing" onclick="selectCategory(this, 'billing')">
+                            <div class="category-icon">💰</div>
+                            <div class="category-info">
+                                <div class="category-name">Billing</div>
+                                <div class="category-count">4 blocks</div>
+                            </div>
+                        </div>
+                        
+                        <div class="category-item video" onclick="selectCategory(this, 'video')">
+                            <div class="category-icon">🎬</div>
+                            <div class="category-info">
+                                <div class="category-name">Video</div>
+                                <div class="category-count">2 blocks</div>
+                            </div>
+                        </div>
+                        
+                        <div class="category-item image" onclick="selectCategory(this, 'image')">
+                            <div class="category-icon">🖼️</div>
+                            <div class="category-info">
+                                <div class="category-name">Image</div>
+                                <div class="category-count">3 blocks</div>
+                            </div>
+                        </div>
+                        
+                        <div class="category-item checklist" onclick="selectCategory(this, 'checklist')">
+                            <div class="category-icon">☑️</div>
+                            <div class="category-info">
+                                <div class="category-name">Checklist</div>
+                                <div class="category-count">4 blocks</div>
+                            </div>
+                        </div>
+                        
+                        <div class="category-item document" onclick="selectCategory(this, 'document')">
+                            <div class="category-icon">📎</div>
+                            <div class="category-info">
+                                <div class="category-name">Document</div>
+                                <div class="category-count">2 blocks</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="category-add" onclick="openModal('newCategoryModal')">
+                        <span>➕</span> Add Type
+                    </div>
+                </div>
+
+                <!-- BLOCK LIBRARY -->
+                <div class="block-library">
+                    <div class="library-header">
+                        <div class="library-title">
+                            <div class="library-title-icon" id="libraryIcon">🎯</div>
+                            <div>
+                                <h2 id="libraryTitle">Service Blocks</h2>
+                                <p id="librarySubtitle">Deliverable work items with SLA and evidence</p>
+                            </div>
+                        </div>
+                        <div class="library-search">
+                            <input type="text" class="search-input" placeholder="Search blocks...">
+                        </div>
+                    </div>
+                    
+                    <div class="library-content">
+                        <!-- SERVICE BLOCKS -->
+                        <div class="blocks-grid" id="serviceBlocks">
+                            <div class="block-card service selected" onclick="selectBlock(this, 'service')">
+                                <div class="block-card-header">
+                                    <div class="block-icon">🧘</div>
+                                    <div class="block-info">
+                                        <div class="block-name">Yoga Session</div>
+                                        <div class="block-desc">60-min yoga session with PCOD-specific asanas</div>
+                                    </div>
+                                </div>
+                                <div class="block-card-body">
+                                    <div class="block-meta">
+                                        <div class="block-meta-item">💰 <strong>₹2,000</strong></div>
+                                        <div class="block-meta-item">⏱️ <strong>60</strong> min</div>
+                                    </div>
+                                    <div class="block-tags">
+                                        <span class="block-tag evidence">📷 Photo</span>
+                                        <span class="block-tag">✍️ Sign</span>
+                                    </div>
+                                </div>
+                                <div class="block-usage">3 templates • 47 contracts</div>
+                            </div>
+
+                            <div class="block-card service" onclick="selectBlock(this, 'service')">
+                                <div class="block-card-header">
+                                    <div class="block-icon">🩺</div>
+                                    <div class="block-info">
+                                        <div class="block-name">Gynec Consultation</div>
+                                        <div class="block-desc">30-min specialist consultation</div>
+                                    </div>
+                                </div>
+                                <div class="block-card-body">
+                                    <div class="block-meta">
+                                        <div class="block-meta-item">💰 <strong>₹1,500</strong></div>
+                                        <div class="block-meta-item">⏱️ <strong>30</strong> min</div>
+                                    </div>
+                                    <div class="block-tags">
+                                        <span class="block-tag evidence">📄 Report</span>
+                                    </div>
+                                </div>
+                                <div class="block-usage">2 templates • 31 contracts</div>
+                            </div>
+
+                            <div class="block-card service" onclick="selectBlock(this, 'service')">
+                                <div class="block-card-header">
+                                    <div class="block-icon">❄️</div>
+                                    <div class="block-info">
+                                        <div class="block-name">AC Deep Service</div>
+                                        <div class="block-desc">Complete cleaning and gas check</div>
+                                    </div>
+                                </div>
+                                <div class="block-card-body">
+                                    <div class="block-meta">
+                                        <div class="block-meta-item">💰 <strong>₹1,200</strong></div>
+                                        <div class="block-meta-item">⏱️ <strong>90</strong> min</div>
+                                    </div>
+                                    <div class="block-tags">
+                                        <span class="block-tag evidence">📷 Before/After</span>
+                                        <span class="block-tag">📍 GPS</span>
+                                    </div>
+                                </div>
+                                <div class="block-usage">1 template • 89 contracts</div>
+                            </div>
+
+                            <div class="add-block-card" onclick="openModal('newBlockModal')">
+                                <div class="add-block-icon">➕</div>
+                                <div class="add-block-text">Add Service Block</div>
+                            </div>
+                        </div>
+
+                        <!-- SPARE BLOCKS -->
+                        <div class="blocks-grid" id="spareBlocks" style="display: none;">
+                            <div class="block-card spare" onclick="selectBlock(this, 'spare')">
+                                <div class="block-card-header">
+                                    <div class="block-icon">🌀</div>
+                                    <div class="block-info">
+                                        <div class="block-name">AC Filter 1.5T</div>
+                                        <div class="block-desc">Replacement filter for 1.5 ton units</div>
+                                    </div>
+                                </div>
+                                <div class="block-card-body">
+                                    <div class="block-meta">
+                                        <div class="block-meta-item">💰 <strong>₹450</strong>/unit</div>
+                                        <div class="block-meta-item">📦 <strong>24</strong> stock</div>
+                                    </div>
+                                    <div class="block-tags">
+                                        <span class="block-tag">SKU: ACF-150</span>
+                                    </div>
+                                </div>
+                                <div class="block-usage">2 templates</div>
+                            </div>
+
+                            <div class="block-card spare" onclick="selectBlock(this, 'spare')">
+                                <div class="block-card-header">
+                                    <div class="block-icon">💨</div>
+                                    <div class="block-info">
+                                        <div class="block-name">Refrigerant Gas R32</div>
+                                        <div class="block-desc">Eco-friendly refrigerant</div>
+                                    </div>
+                                </div>
+                                <div class="block-card-body">
+                                    <div class="block-meta">
+                                        <div class="block-meta-item">💰 <strong>₹800</strong>/unit</div>
+                                        <div class="block-meta-item">📦 <strong>12</strong> stock</div>
+                                    </div>
+                                    <div class="block-tags">
+                                        <span class="block-tag">SKU: GAS-R32</span>
+                                    </div>
+                                </div>
+                                <div class="block-usage">1 template</div>
+                            </div>
+
+                            <div class="add-block-card" onclick="openModal('newBlockModal')">
+                                <div class="add-block-icon">➕</div>
+                                <div class="add-block-text">Add Spare Part</div>
+                            </div>
+                        </div>
+
+                        <!-- BILLING BLOCKS -->
+                        <div class="blocks-grid" id="billingBlocks" style="display: none;">
+                            <div class="block-card billing" onclick="selectBlock(this, 'billing')">
+                                <div class="block-card-header">
+                                    <div class="block-icon">💳</div>
+                                    <div class="block-info">
+                                        <div class="block-name">3-Month EMI</div>
+                                        <div class="block-desc">Split into 3 monthly installments</div>
+                                    </div>
+                                </div>
+                                <div class="block-card-body">
+                                    <div class="block-meta">
+                                        <div class="block-meta-item">🔄 <strong>3</strong> payments</div>
+                                        <div class="block-meta-item">📅 Monthly</div>
+                                    </div>
+                                    <div class="block-tags">
+                                        <span class="block-tag">Auto-Invoice</span>
+                                    </div>
+                                </div>
+                                <div class="block-usage">4 templates</div>
+                            </div>
+
+                            <div class="block-card billing" onclick="selectBlock(this, 'billing')">
+                                <div class="block-card-header">
+                                    <div class="block-icon">💵</div>
+                                    <div class="block-info">
+                                        <div class="block-name">100% Advance</div>
+                                        <div class="block-desc">Full payment upfront</div>
+                                    </div>
+                                </div>
+                                <div class="block-card-body">
+                                    <div class="block-meta">
+                                        <div class="block-meta-item">💰 <strong>100%</strong> upfront</div>
+                                    </div>
+                                    <div class="block-tags">
+                                        <span class="block-tag">Instant</span>
+                                    </div>
+                                </div>
+                                <div class="block-usage">6 templates</div>
+                            </div>
+
+                            <div class="add-block-card" onclick="openModal('newBlockModal')">
+                                <div class="add-block-icon">➕</div>
+                                <div class="add-block-text">Add Billing Block</div>
+                            </div>
+                        </div>
+
+                        <!-- TEXT BLOCKS -->
+                        <div class="blocks-grid" id="textBlocks" style="display: none;">
+                            <div class="block-card text" onclick="selectBlock(this, 'text')">
+                                <div class="block-card-header">
+                                    <div class="block-icon">📜</div>
+                                    <div class="block-info">
+                                        <div class="block-name">Standard T&C</div>
+                                        <div class="block-desc">General terms and conditions</div>
+                                    </div>
+                                </div>
+                                <div class="block-card-body">
+                                    <div class="block-tags">
+                                        <span class="block-tag">Legal</span>
+                                        <span class="block-tag">✍️ Sign Required</span>
+                                    </div>
+                                </div>
+                                <div class="block-usage">8 templates</div>
+                            </div>
+
+                            <div class="block-card text" onclick="selectBlock(this, 'text')">
+                                <div class="block-card-header">
+                                    <div class="block-icon">🚫</div>
+                                    <div class="block-info">
+                                        <div class="block-name">Cancellation Policy</div>
+                                        <div class="block-desc">24-hour notice required</div>
+                                    </div>
+                                </div>
+                                <div class="block-card-body">
+                                    <div class="block-tags">
+                                        <span class="block-tag">Policy</span>
+                                    </div>
+                                </div>
+                                <div class="block-usage">5 templates</div>
+                            </div>
+
+                            <div class="add-block-card" onclick="openModal('newBlockModal')">
+                                <div class="add-block-icon">➕</div>
+                                <div class="add-block-text">Add Text Block</div>
+                            </div>
+                        </div>
+
+                        <!-- VIDEO BLOCKS -->
+                        <div class="blocks-grid" id="videoBlocks" style="display: none;">
+                            <div class="block-card video" onclick="selectBlock(this, 'video')">
+                                <div class="block-card-header">
+                                    <div class="block-icon">🎬</div>
+                                    <div class="block-info">
+                                        <div class="block-name">Welcome Video</div>
+                                        <div class="block-desc">Introduction to the program</div>
+                                    </div>
+                                </div>
+                                <div class="block-card-body">
+                                    <div class="block-meta">
+                                        <div class="block-meta-item">⏱️ <strong>3:24</strong></div>
+                                        <div class="block-meta-item">👁️ Required</div>
+                                    </div>
+                                </div>
+                                <div class="block-usage">2 templates</div>
+                            </div>
+
+                            <div class="add-block-card" onclick="openModal('newBlockModal')">
+                                <div class="add-block-icon">➕</div>
+                                <div class="add-block-text">Add Video Block</div>
+                            </div>
+                        </div>
+
+                        <!-- IMAGE BLOCKS -->
+                        <div class="blocks-grid" id="imageBlocks" style="display: none;">
+                            <div class="block-card image" onclick="selectBlock(this, 'image')">
+                                <div class="block-card-header">
+                                    <div class="block-icon">🖼️</div>
+                                    <div class="block-info">
+                                        <div class="block-name">Service Brochure</div>
+                                        <div class="block-desc">Visual overview of services</div>
+                                    </div>
+                                </div>
+                                <div class="block-card-body">
+                                    <div class="block-meta">
+                                        <div class="block-meta-item">📐 <strong>1200×800</strong></div>
+                                    </div>
+                                </div>
+                                <div class="block-usage">3 templates</div>
+                            </div>
+
+                            <div class="add-block-card" onclick="openModal('newBlockModal')">
+                                <div class="add-block-icon">➕</div>
+                                <div class="add-block-text">Add Image Block</div>
+                            </div>
+                        </div>
+
+                        <!-- CHECKLIST BLOCKS -->
+                        <div class="blocks-grid" id="checklistBlocks" style="display: none;">
+                            <div class="block-card checklist" onclick="selectBlock(this, 'checklist')">
+                                <div class="block-card-header">
+                                    <div class="block-icon">☑️</div>
+                                    <div class="block-info">
+                                        <div class="block-name">Pre-Service Checklist</div>
+                                        <div class="block-desc">Items to verify before work</div>
+                                    </div>
+                                </div>
+                                <div class="block-card-body">
+                                    <div class="block-meta">
+                                        <div class="block-meta-item">📋 <strong>8</strong> items</div>
+                                        <div class="block-meta-item">📸 Photo/item</div>
+                                    </div>
+                                </div>
+                                <div class="block-usage">2 templates</div>
+                            </div>
+
+                            <div class="add-block-card" onclick="openModal('newBlockModal')">
+                                <div class="add-block-icon">➕</div>
+                                <div class="add-block-text">Add Checklist Block</div>
+                            </div>
+                        </div>
+
+                        <!-- DOCUMENT BLOCKS -->
+                        <div class="blocks-grid" id="documentBlocks" style="display: none;">
+                            <div class="block-card document" onclick="selectBlock(this, 'document')">
+                                <div class="block-card-header">
+                                    <div class="block-icon">📎</div>
+                                    <div class="block-info">
+                                        <div class="block-name">Certificate Upload</div>
+                                        <div class="block-desc">Completion certificate</div>
+                                    </div>
+                                </div>
+                                <div class="block-card-body">
+                                    <div class="block-meta">
+                                        <div class="block-meta-item">📄 PDF, DOC</div>
+                                    </div>
+                                </div>
+                                <div class="block-usage">1 template</div>
+                            </div>
+
+                            <div class="add-block-card" onclick="openModal('newBlockModal')">
+                                <div class="add-block-icon">➕</div>
+                                <div class="add-block-text">Add Document Block</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BLOCK EDITOR -->
+                <div class="block-editor">
+                    <div class="editor-header">
+                        <h3>✏️ Edit Block</h3>
+                        <span class="editor-header-badge service" id="editorBadge">Service</span>
+                    </div>
+                    
+                    <div class="editor-content" id="editorContent">
+                        <!-- SERVICE EDITOR -->
+                        <div id="serviceEditor">
+                            <div class="editor-section">
+                                <div class="editor-section-title"><span>📝</span> Basic Info</div>
+                                <div class="form-group">
+                                    <label class="form-label">Block Name</label>
+                                    <input type="text" class="form-input" value="Yoga Session">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Description</label>
+                                    <textarea class="form-textarea">60-minute yoga session with PCOD-specific asanas and breathing.</textarea>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Duration</label>
+                                        <input type="number" class="form-input" value="60">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Unit</label>
+                                        <select class="form-select">
+                                            <option selected>Minutes</option>
+                                            <option>Hours</option>
+                                            <option>Days</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="editor-section">
+                                <div class="editor-section-title"><span>💰</span> Pricing</div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Base Price</label>
+                                        <div class="input-with-addon">
+                                            <span class="input-addon">₹</span>
+                                            <input type="number" class="form-input" value="2000">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Type</label>
+                                        <select class="form-select">
+                                            <option selected>Per Session</option>
+                                            <option>Per Hour</option>
+                                            <option>Fixed</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="editor-section">
+                                <div class="editor-section-title"><span>📸</span> Evidence</div>
+                                <div class="toggle-list">
+                                    <div class="toggle-item">
+                                        <span class="toggle-item-label">📷 Photo</span>
+                                        <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                                    </div>
+                                    <div class="toggle-item">
+                                        <span class="toggle-item-label">📍 GPS</span>
+                                        <div class="toggle-switch" onclick="this.classList.toggle('active')"></div>
+                                    </div>
+                                    <div class="toggle-item">
+                                        <span class="toggle-item-label">✍️ Signature</span>
+                                        <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                                    </div>
+                                    <div class="toggle-item">
+                                        <span class="toggle-item-label">📝 Notes</span>
+                                        <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="editor-section">
+                                <div class="editor-section-title"><span>⏰</span> SLA</div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Complete Within</label>
+                                        <input type="number" class="form-input" value="48">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Unit</label>
+                                        <select class="form-select">
+                                            <option selected>Hours</option>
+                                            <option>Days</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="editor-section">
+                                <div class="editor-section-title"><span>🤖</span> Automation</div>
+                                <div class="toggle-list">
+                                    <div class="toggle-item">
+                                        <span class="toggle-item-label">🔔 Remind 24h before</span>
+                                        <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                                    </div>
+                                    <div class="toggle-item">
+                                        <span class="toggle-item-label">⚠️ SLA breach alert</span>
+                                        <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="editor-section">
+                                <div class="editor-section-title"><span>📊</span> Usage</div>
+                                <div class="usage-stats">
+                                    <div class="usage-stat">
+                                        <div class="usage-stat-value">3</div>
+                                        <div class="usage-stat-label">Templates</div>
+                                    </div>
+                                    <div class="usage-stat">
+                                        <div class="usage-stat-value">47</div>
+                                        <div class="usage-stat-label">Contracts</div>
+                                    </div>
+                                    <div class="usage-stat">
+                                        <div class="usage-stat-value">98%</div>
+                                        <div class="usage-stat-label">Completion</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SPARE EDITOR -->
+                        <div id="spareEditor" style="display: none;">
+                            <div class="editor-section">
+                                <div class="editor-section-title"><span>📝</span> Basic Info</div>
+                                <div class="form-group">
+                                    <label class="form-label">Part Name</label>
+                                    <input type="text" class="form-input" value="AC Filter 1.5T">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Description</label>
+                                    <textarea class="form-textarea">Replacement filter for 1.5 ton AC units.</textarea>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">SKU</label>
+                                        <input type="text" class="form-input" value="ACF-150">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">HSN Code</label>
+                                        <input type="text" class="form-input" value="84159000">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="editor-section">
+                                <div class="editor-section-title"><span>💰</span> Pricing</div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Unit Price</label>
+                                        <div class="input-with-addon">
+                                            <span class="input-addon">₹</span>
+                                            <input type="number" class="form-input" value="450">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">UOM</label>
+                                        <select class="form-select">
+                                            <option selected>Each</option>
+                                            <option>Box</option>
+                                            <option>Set</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- BILLING EDITOR -->
+                        <div id="billingEditor" style="display: none;">
+                            <div class="editor-section">
+                                <div class="editor-section-title"><span>📝</span> Basic Info</div>
+                                <div class="form-group">
+                                    <label class="form-label">Plan Name</label>
+                                    <input type="text" class="form-input" value="3-Month EMI">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Description</label>
+                                    <textarea class="form-textarea">Split payment into 3 monthly installments.</textarea>
+                                </div>
+                            </div>
+                            <div class="editor-section">
+                                <div class="editor-section-title"><span>💳</span> Payment Structure</div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">Type</label>
+                                        <select class="form-select">
+                                            <option>Full Advance</option>
+                                            <option selected>EMI</option>
+                                            <option>Milestone</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Installments</label>
+                                        <select class="form-select">
+                                            <option>2</option>
+                                            <option selected>3</option>
+                                            <option>4</option>
+                                            <option>6</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="schedule-preview">
+                                    <div class="schedule-item"><span>Payment 1</span><span>33.3% on signing</span></div>
+                                    <div class="schedule-item"><span>Payment 2</span><span>33.3% after 30 days</span></div>
+                                    <div class="schedule-item"><span>Payment 3</span><span>33.4% after 60 days</span></div>
+                                </div>
+                            </div>
+                            <div class="editor-section">
+                                <div class="editor-section-title"><span>🤖</span> Automation</div>
+                                <div class="toggle-list">
+                                    <div class="toggle-item">
+                                        <span class="toggle-item-label">📧 Auto-invoice</span>
+                                        <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                                    </div>
+                                    <div class="toggle-item">
+                                        <span class="toggle-item-label">🔔 Payment reminders</span>
+                                        <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TEXT EDITOR -->
+                        <div id="textEditor" style="display: none;">
+                            <div class="editor-section">
+                                <div class="editor-section-title"><span>📝</span> Basic Info</div>
+                                <div class="form-group">
+                                    <label class="form-label">Title</label>
+                                    <input type="text" class="form-input" value="Standard T&C">
+                                </div>
+                            </div>
+                            <div class="editor-section">
+                                <div class="editor-section-title"><span>📄</span> Content</div>
+                                <div class="form-group">
+                                    <label class="form-label">Text</label>
+                                    <textarea class="form-textarea" style="min-height: 120px;">1. Services will be provided as described.
+2. Payment terms are as specified.
+3. Cancellation requires 24 hours notice.</textarea>
+                                </div>
+                            </div>
+                            <div class="editor-section">
+                                <div class="editor-section-title"><span>⚙️</span> Settings</div>
+                                <div class="toggle-list">
+                                    <div class="toggle-item">
+                                        <span class="toggle-item-label">✍️ Requires Signature</span>
+                                        <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="editor-footer">
+                        <button class="btn btn-outline">Cancel</button>
+                        <button class="btn btn-primary" onclick="saveBlock()">
+                            <span>💾</span> Save
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast">✓ Block saved!</div>
+
+    <!-- NEW BLOCK MODAL -->
+    <div class="modal-overlay" id="newBlockModal">
+        <div class="modal" style="width: 480px;">
+            <div class="modal-header">
+                <h2>➕ New Block</h2>
+                <button class="modal-close" onclick="closeModal('newBlockModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <p style="color: var(--text-light); font-size: 0.8rem; margin-bottom: 1rem;">Select block type:</p>
+                <div class="block-type-grid">
+                    <div class="block-type-option selected" onclick="selectBlockTypeModal(this)">
+                        <div class="type-icon" style="background: var(--cat-service-bg);">🎯</div>
+                        <div class="type-info"><h4>Service</h4><p>Work item with SLA</p></div>
+                    </div>
+                    <div class="block-type-option" onclick="selectBlockTypeModal(this)">
+                        <div class="type-icon" style="background: var(--cat-spare-bg);">📦</div>
+                        <div class="type-info"><h4>Spare Part</h4><p>Physical product</p></div>
+                    </div>
+                    <div class="block-type-option" onclick="selectBlockTypeModal(this)">
+                        <div class="type-icon" style="background: var(--cat-text-bg);">📄</div>
+                        <div class="type-info"><h4>Text</h4><p>T&C, policies</p></div>
+                    </div>
+                    <div class="block-type-option" onclick="selectBlockTypeModal(this)">
+                        <div class="type-icon" style="background: var(--cat-billing-bg);">💰</div>
+                        <div class="type-info"><h4>Billing</h4><p>Payment terms</p></div>
+                    </div>
+                    <div class="block-type-option" onclick="selectBlockTypeModal(this)">
+                        <div class="type-icon" style="background: var(--cat-video-bg);">🎬</div>
+                        <div class="type-info"><h4>Video</h4><p>Embedded media</p></div>
+                    </div>
+                    <div class="block-type-option" onclick="selectBlockTypeModal(this)">
+                        <div class="type-icon" style="background: var(--cat-image-bg);">🖼️</div>
+                        <div class="type-info"><h4>Image</h4><p>Photos, diagrams</p></div>
+                    </div>
+                    <div class="block-type-option" onclick="selectBlockTypeModal(this)">
+                        <div class="type-icon" style="background: var(--cat-checklist-bg);">☑️</div>
+                        <div class="type-info"><h4>Checklist</h4><p>Task items</p></div>
+                    </div>
+                    <div class="block-type-option" onclick="selectBlockTypeModal(this)">
+                        <div class="type-icon" style="background: var(--cat-document-bg);">📎</div>
+                        <div class="type-info"><h4>Document</h4><p>File attachment</p></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('newBlockModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="createNewBlock()"><span>➕</span> Create</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW CATEGORY MODAL -->
+    <div class="modal-overlay" id="newCategoryModal">
+        <div class="modal" style="width: 380px;">
+            <div class="modal-header">
+                <h2>➕ New Block Type</h2>
+                <button class="modal-close" onclick="closeModal('newCategoryModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Type Name</label>
+                    <input type="text" class="form-input" placeholder="e.g., Warranty, Training">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Icon (emoji)</label>
+                    <input type="text" class="form-input" placeholder="e.g., 🎓">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-textarea" placeholder="What blocks belong here?"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('newCategoryModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="createCategory()"><span>✓</span> Create</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const categoryMeta = {
+            service: { icon: '🎯', title: 'Service Blocks', subtitle: 'Work items with SLA and evidence', badge: 'Service' },
+            spare: { icon: '📦', title: 'Spare Part Blocks', subtitle: 'Physical products with inventory', badge: 'Spare' },
+            text: { icon: '📄', title: 'Text / Content Blocks', subtitle: 'Terms, conditions, policies', badge: 'Text' },
+            billing: { icon: '💰', title: 'Billing Blocks', subtitle: 'Payment structures', badge: 'Billing' },
+            video: { icon: '🎬', title: 'Video Blocks', subtitle: 'Embedded video content', badge: 'Video' },
+            image: { icon: '🖼️', title: 'Image Blocks', subtitle: 'Photos and diagrams', badge: 'Image' },
+            checklist: { icon: '☑️', title: 'Checklist Blocks', subtitle: 'Task lists', badge: 'Checklist' },
+            document: { icon: '📎', title: 'Document Blocks', subtitle: 'File attachments', badge: 'Document' }
+        };
+
+        function selectCategory(element, category) {
+            document.querySelectorAll('.category-item').forEach(c => c.classList.remove('selected'));
+            element.classList.add('selected');
+            
+            const meta = categoryMeta[category];
+            document.getElementById('libraryIcon').textContent = meta.icon;
+            document.getElementById('libraryIcon').style.background = `var(--cat-${category}-bg)`;
+            document.getElementById('libraryTitle').textContent = meta.title;
+            document.getElementById('librarySubtitle').textContent = meta.subtitle;
+            
+            document.querySelectorAll('.blocks-grid').forEach(g => g.style.display = 'none');
+            document.getElementById(`${category}Blocks`).style.display = 'grid';
+            
+            const badge = document.getElementById('editorBadge');
+            badge.textContent = meta.badge;
+            badge.className = `editor-header-badge ${category}`;
+            
+            showEditor(category);
+        }
+
+        function selectBlock(element, category) {
+            document.querySelectorAll('.block-card').forEach(b => b.classList.remove('selected'));
+            element.classList.add('selected');
+            showEditor(category);
+        }
+
+        function showEditor(category) {
+            ['serviceEditor', 'spareEditor', 'billingEditor', 'textEditor'].forEach(id => {
+                document.getElementById(id).style.display = 'none';
+            });
+            
+            const editorMap = { service: 'serviceEditor', spare: 'spareEditor', billing: 'billingEditor', text: 'textEditor' };
+            const editorId = editorMap[category] || 'serviceEditor';
+            document.getElementById(editorId).style.display = 'block';
+        }
+
+        function openModal(modalId) { document.getElementById(modalId).classList.add('show'); }
+        function closeModal(modalId) { document.getElementById(modalId).classList.remove('show'); }
+
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.remove('show'); });
+        });
+
+        function selectBlockTypeModal(element) {
+            document.querySelectorAll('.block-type-option').forEach(o => o.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+
+        function createNewBlock() { showToast('✓ Block created!'); closeModal('newBlockModal'); }
+        function createCategory() { showToast('✓ Type created!'); closeModal('newCategoryModal'); }
+        function saveBlock() { showToast('✓ Block saved!'); }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.innerHTML = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', () => {
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

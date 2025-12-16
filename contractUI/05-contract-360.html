@@ -1,0 +1,1496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ContractNest - Contract 360°</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand: #0F172A;
+            --brand-light: #1E293B;
+            --accent: #6366F1;
+            --accent-light: #818CF8;
+            --accent-bg: #EEF2FF;
+            --success: #10B981;
+            --success-bg: #ECFDF5;
+            --success-border: #A7F3D0;
+            --warning: #F59E0B;
+            --warning-bg: #FFFBEB;
+            --warning-border: #FDE68A;
+            --danger: #EF4444;
+            --danger-bg: #FEF2F2;
+            --danger-border: #FECACA;
+            --bg: #F8FAFC;
+            --surface: #FFFFFF;
+            --border: #E2E8F0;
+            --border-light: #F1F5F9;
+            --text: #334155;
+            --text-light: #64748B;
+            --text-muted: #94A3B8;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+            --radius: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            color: var(--text-light);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .back-btn:hover {
+            background: var(--surface);
+            color: var(--text);
+            border-color: var(--text-muted);
+        }
+
+        .contract-badge {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .contract-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--accent-bg) 0%, #C7D2FE 100%);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .contract-title-group h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--brand);
+            margin-bottom: 0.25rem;
+        }
+
+        .contract-meta {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .contract-id {
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 0.25rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .status-pill.active {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
+        .status-pill .dot {
+            width: 6px;
+            height: 6px;
+            background: currentColor;
+            border-radius: 50%;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .btn {
+            padding: 0.6rem 1.25rem;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            border: none;
+        }
+
+        .btn-outline {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .btn-outline:hover {
+            background: var(--bg);
+            border-color: var(--text-muted);
+        }
+
+        .btn-primary {
+            background: var(--brand);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--brand-light);
+        }
+
+        .btn-danger {
+            background: var(--danger-bg);
+            color: var(--danger);
+            border: 1px solid var(--danger-border);
+        }
+
+        .btn-danger:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        /* ===== CONTRACT SUMMARY BAR ===== */
+        .summary-bar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            gap: 2rem;
+        }
+
+        .summary-item {
+            display: flex;
+            flex-direction: column;
+            padding-right: 2rem;
+            border-right: 1px solid var(--border);
+        }
+
+        .summary-item:last-child {
+            border-right: none;
+            padding-right: 0;
+        }
+
+        .summary-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+            font-weight: 600;
+        }
+
+        .summary-value {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--brand);
+        }
+
+        .summary-value.success { color: var(--success); }
+        .summary-value.warning { color: var(--warning); }
+        .summary-value.danger { color: var(--danger); }
+
+        /* ===== TABS ===== */
+        .tabs-bar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 2rem;
+            display: flex;
+            gap: 0;
+        }
+
+        .tab {
+            padding: 1rem 1.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-light);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            color: var(--text);
+        }
+
+        .tab.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 420px;
+            gap: 1.5rem;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* ===== CARD ===== */
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--brand);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        /* ===== TASK TIMELINE ===== */
+        .task-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .task-item {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-light);
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .task-item:hover {
+            border-color: var(--accent);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .task-item.completed {
+            opacity: 0.7;
+        }
+
+        .task-item.active {
+            background: var(--warning-bg);
+            border-color: var(--warning-border);
+        }
+
+        .task-item.overdue {
+            background: var(--danger-bg);
+            border-color: var(--danger-border);
+        }
+
+        .task-status {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+            flex-shrink: 0;
+        }
+
+        .task-status.completed {
+            background: var(--success);
+            color: white;
+        }
+
+        .task-status.active {
+            background: var(--warning);
+            color: white;
+            animation: pulse 2s infinite;
+        }
+
+        .task-status.overdue {
+            background: var(--danger);
+            color: white;
+        }
+
+        .task-status.pending {
+            background: var(--border);
+            color: var(--text-muted);
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+            70% { box-shadow: 0 0 0 8px rgba(245, 158, 11, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+        }
+
+        .task-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
+        }
+
+        .task-title {
+            font-weight: 600;
+            color: var(--text);
+            font-size: 0.9rem;
+        }
+
+        .task-date {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .task-meta {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .task-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .task-tag.assignee {
+            background: var(--accent-bg);
+            color: var(--accent);
+        }
+
+        .task-tag.unassigned {
+            background: var(--warning-bg);
+            color: var(--warning);
+        }
+
+        .task-tag.evidence {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
+        .task-tag.sla {
+            background: var(--danger-bg);
+            color: var(--danger);
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-left: auto;
+            flex-shrink: 0;
+        }
+
+        .task-action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+
+        .task-action-btn:hover {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        /* ===== FINANCIAL PANEL ===== */
+        .financial-overview {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .financial-card {
+            padding: 1.25rem;
+            background: var(--bg);
+            border-radius: var(--radius-lg);
+            text-align: center;
+        }
+
+        .financial-card.highlight {
+            background: linear-gradient(135deg, var(--success-bg) 0%, #D1FAE5 100%);
+            border: 1px solid var(--success-border);
+        }
+
+        .financial-card-value {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: var(--brand);
+            margin-bottom: 0.25rem;
+        }
+
+        .financial-card-value.success { color: var(--success); }
+        .financial-card-value.warning { color: var(--warning); }
+        .financial-card-value.danger { color: var(--danger); }
+
+        .financial-card-label {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .progress-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-label {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .progress-value {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .progress-bar {
+            height: 10px;
+            background: var(--border);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--success) 0%, var(--accent) 100%);
+            border-radius: 5px;
+            transition: width 0.5s;
+        }
+
+        /* ===== INVOICE LIST ===== */
+        .invoice-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .invoice-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--bg);
+            border-radius: var(--radius);
+            border: 1px solid var(--border-light);
+        }
+
+        .invoice-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--surface);
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .invoice-info {
+            flex: 1;
+        }
+
+        .invoice-id {
+            font-weight: 600;
+            color: var(--text);
+            font-size: 0.875rem;
+            margin-bottom: 0.15rem;
+        }
+
+        .invoice-date {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .invoice-amount {
+            font-weight: 700;
+            color: var(--brand);
+            font-size: 0.9rem;
+        }
+
+        .invoice-status {
+            padding: 0.25rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .invoice-status.paid {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
+        .invoice-status.pending {
+            background: var(--warning-bg);
+            color: var(--warning);
+        }
+
+        .invoice-status.overdue {
+            background: var(--danger-bg);
+            color: var(--danger);
+        }
+
+        /* ===== AGENT SUGGESTION ===== */
+        .agent-suggestion {
+            background: var(--accent-bg);
+            border: 1px solid #C7D2FE;
+            border-radius: var(--radius-lg);
+            padding: 1.25rem;
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+            margin-top: 1.5rem;
+        }
+
+        .agent-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        .agent-content {
+            flex: 1;
+        }
+
+        .agent-content p {
+            font-size: 0.85rem;
+            color: var(--text);
+            margin-bottom: 0.75rem;
+            line-height: 1.5;
+        }
+
+        .agent-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .agent-btn {
+            padding: 0.4rem 0.75rem;
+            border-radius: var(--radius);
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .agent-btn.accept {
+            background: var(--accent);
+            color: white;
+        }
+
+        .agent-btn.accept:hover {
+            background: var(--accent-light);
+        }
+
+        .agent-btn.dismiss {
+            background: var(--surface);
+            color: var(--text-light);
+            border: 1px solid var(--border);
+        }
+
+        /* ===== SIDEBAR CARDS ===== */
+        .sidebar-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .sidebar-section:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Client Card */
+        .client-card {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.25rem;
+            background: var(--bg);
+            border-radius: var(--radius-lg);
+        }
+
+        .client-avatar {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--accent) 0%, #818CF8 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        .client-info {
+            flex: 1;
+        }
+
+        .client-name {
+            font-weight: 700;
+            color: var(--brand);
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .client-contact {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .client-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .client-action-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .client-action-btn:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        /* Quick Info */
+        .quick-info {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .quick-info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.6rem 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .quick-info-row:last-child {
+            border-bottom: none;
+        }
+
+        .quick-info-label {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        .quick-info-value {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        /* Audit Trail */
+        .audit-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .audit-item {
+            display: flex;
+            gap: 0.75rem;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .audit-item:last-child {
+            border-bottom: none;
+        }
+
+        .audit-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 50%;
+            margin-top: 6px;
+            flex-shrink: 0;
+        }
+
+        .audit-content {
+            flex: 1;
+        }
+
+        .audit-text {
+            font-size: 0.8rem;
+            color: var(--text);
+            margin-bottom: 0.25rem;
+        }
+
+        .audit-time {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+        }
+
+        /* ===== MODAL ===== */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            backdrop-filter: blur(4px);
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background: var(--surface);
+            border-radius: var(--radius-xl);
+            width: 480px;
+            max-width: 90vw;
+            animation: modalPop 0.3s ease;
+        }
+
+        @keyframes modalPop {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--brand);
+        }
+
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.25rem;
+        }
+
+        .modal-close:hover {
+            background: var(--danger-bg);
+            color: var(--danger);
+            border-color: var(--danger);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-select, .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.875rem;
+            color: var(--text);
+            transition: all 0.2s;
+        }
+
+        .form-select:focus, .form-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-bg);
+        }
+
+        .vendor-option {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .vendor-option:hover {
+            border-color: var(--accent);
+            background: var(--accent-bg);
+        }
+
+        .vendor-option.selected {
+            border-color: var(--accent);
+            background: var(--accent-bg);
+        }
+
+        .vendor-option .radio {
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--border);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .vendor-option.selected .radio {
+            border-color: var(--accent);
+        }
+
+        .vendor-option.selected .radio::after {
+            content: '';
+            width: 10px;
+            height: 10px;
+            background: var(--accent);
+            border-radius: 50%;
+        }
+
+        .vendor-details {
+            flex: 1;
+        }
+
+        .vendor-name {
+            font-weight: 600;
+            color: var(--text);
+            font-size: 0.875rem;
+        }
+
+        .vendor-role {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .modal-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <header class="header">
+        <div class="header-left">
+            <a href="#" class="back-btn">
+                ← Back to Cockpit
+            </a>
+            
+            <div class="contract-badge">
+                <div class="contract-icon">🧘</div>
+                <div class="contract-title-group">
+                    <h1>PCOD Balance Program</h1>
+                    <div class="contract-meta">
+                        <span class="contract-id">#CN-9921</span>
+                        <span>•</span>
+                        <span class="status-pill active">
+                            <span class="dot"></span>
+                            Active
+                        </span>
+                        <span>•</span>
+                        <span>Started Dec 20, 2024</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="header-right">
+            <button class="btn btn-outline">
+                <span>📄</span> View PDF
+            </button>
+            <button class="btn btn-outline">
+                <span>✏️</span> Edit
+            </button>
+            <button class="btn btn-outline">
+                <span>📤</span> Send Update
+            </button>
+            <button class="btn btn-primary">
+                <span>➕</span> Add Task
+            </button>
+        </div>
+    </header>
+
+    <!-- SUMMARY BAR -->
+    <div class="summary-bar">
+        <div class="summary-item">
+            <span class="summary-label">Contract Value</span>
+            <span class="summary-value">₹12,000</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-label">Collected</span>
+            <span class="summary-value success">₹12,000</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-label">Completion</span>
+            <span class="summary-value">45%</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-label">Tasks Done</span>
+            <span class="summary-value">3/7</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-label">SLA Status</span>
+            <span class="summary-value danger">1 Breach</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-label">DSO</span>
+            <span class="summary-value success">0 days</span>
+        </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tabs-bar">
+        <div class="tab active">📋 Overview</div>
+        <div class="tab">📅 Timeline</div>
+        <div class="tab">💰 Financials</div>
+        <div class="tab">📸 Evidence</div>
+        <div class="tab">💬 Communication</div>
+        <div class="tab">📜 Audit Log</div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        <!-- LEFT: TASK TIMELINE -->
+        <div class="card">
+            <div class="card-header">
+                <h3>📅 Execution Timeline</h3>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="btn btn-outline" style="padding: 0.4rem 0.75rem; font-size: 0.75rem;">
+                        Filter
+                    </button>
+                    <button class="btn btn-primary" style="padding: 0.4rem 0.75rem; font-size: 0.75rem;" onclick="openAssignModal()">
+                        + Add Task
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="task-list">
+                    <!-- Completed Task -->
+                    <div class="task-item completed">
+                        <div class="task-status completed">✓</div>
+                        <div class="task-content">
+                            <div class="task-header">
+                                <span class="task-title">🧘 Yoga Session #1</span>
+                                <span class="task-date">Dec 22, 2024</span>
+                            </div>
+                            <div class="task-meta">
+                                <span class="task-tag assignee">👤 Priya (Trainer)</span>
+                                <span class="task-tag evidence">📷 Evidence Verified</span>
+                            </div>
+                        </div>
+                        <div class="task-actions">
+                            <button class="task-action-btn" title="View Evidence">👁️</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Completed Task -->
+                    <div class="task-item completed">
+                        <div class="task-status completed">✓</div>
+                        <div class="task-content">
+                            <div class="task-header">
+                                <span class="task-title">🥗 Nutrition Consultation</span>
+                                <span class="task-date">Dec 26, 2024</span>
+                            </div>
+                            <div class="task-meta">
+                                <span class="task-tag assignee">👤 Dr. Meera</span>
+                                <span class="task-tag evidence">📄 Diet Chart Uploaded</span>
+                            </div>
+                        </div>
+                        <div class="task-actions">
+                            <button class="task-action-btn" title="View Evidence">👁️</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Completed Task -->
+                    <div class="task-item completed">
+                        <div class="task-status completed">✓</div>
+                        <div class="task-content">
+                            <div class="task-header">
+                                <span class="task-title">🧘 Yoga Session #2</span>
+                                <span class="task-date">Dec 29, 2024</span>
+                            </div>
+                            <div class="task-meta">
+                                <span class="task-tag assignee">👤 Priya (Trainer)</span>
+                                <span class="task-tag evidence">📷 Evidence Verified</span>
+                            </div>
+                        </div>
+                        <div class="task-actions">
+                            <button class="task-action-btn" title="View Evidence">👁️</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Overdue Task -->
+                    <div class="task-item overdue">
+                        <div class="task-status overdue">!</div>
+                        <div class="task-content">
+                            <div class="task-header">
+                                <span class="task-title">🩺 Gynec Consultation #1</span>
+                                <span class="task-date" style="color: var(--danger);">2 days overdue</span>
+                            </div>
+                            <div class="task-meta">
+                                <span class="task-tag unassigned">⚠️ Unassigned</span>
+                                <span class="task-tag sla">🚨 SLA Breach</span>
+                            </div>
+                        </div>
+                        <div class="task-actions">
+                            <button class="task-action-btn" title="Assign" onclick="openAssignModal()" style="background: var(--danger); color: white; border-color: var(--danger);">+</button>
+                            <button class="task-action-btn" title="Reschedule">📅</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Active Task -->
+                    <div class="task-item active">
+                        <div class="task-status active">●</div>
+                        <div class="task-content">
+                            <div class="task-header">
+                                <span class="task-title">🧘 Yoga Session #3</span>
+                                <span class="task-date">Jan 12, 2025</span>
+                            </div>
+                            <div class="task-meta">
+                                <span class="task-tag assignee">👤 Priya (Trainer)</span>
+                                <span class="task-tag" style="background: var(--warning-bg); color: var(--warning);">⏱️ In 5 days</span>
+                            </div>
+                        </div>
+                        <div class="task-actions">
+                            <button class="task-action-btn" title="Nudge">📤</button>
+                            <button class="task-action-btn" title="Reassign">🔄</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Pending Task -->
+                    <div class="task-item">
+                        <div class="task-status pending">○</div>
+                        <div class="task-content">
+                            <div class="task-header">
+                                <span class="task-title">🧘 Yoga Session #4</span>
+                                <span class="task-date">Jan 19, 2025</span>
+                            </div>
+                            <div class="task-meta">
+                                <span class="task-tag assignee">👤 Priya (Trainer)</span>
+                            </div>
+                        </div>
+                        <div class="task-actions">
+                            <button class="task-action-btn" title="Reassign">🔄</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Pending Task -->
+                    <div class="task-item">
+                        <div class="task-status pending">○</div>
+                        <div class="task-content">
+                            <div class="task-header">
+                                <span class="task-title">🩺 Gynec Consultation #2</span>
+                                <span class="task-date">Feb 15, 2025</span>
+                            </div>
+                            <div class="task-meta">
+                                <span class="task-tag unassigned">⚠️ Unassigned</span>
+                            </div>
+                        </div>
+                        <div class="task-actions">
+                            <button class="task-action-btn" title="Assign" onclick="openAssignModal()">+</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Agent Suggestion -->
+                <div class="agent-suggestion">
+                    <div class="agent-icon">⚡</div>
+                    <div class="agent-content">
+                        <p><strong>Agent Alert:</strong> Gynec Consultation #1 is 2 days overdue. I can auto-assign to Dr. Sunita (available tomorrow) or offer the client a reschedule. What would you prefer?</p>
+                        <div class="agent-actions">
+                            <button class="agent-btn accept">Assign to Dr. Sunita</button>
+                            <button class="agent-btn dismiss">Offer Reschedule</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: SIDEBAR -->
+        <div>
+            <!-- Client Info -->
+            <div class="sidebar-section">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>👤 Client</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="client-card">
+                            <div class="client-avatar">AS</div>
+                            <div class="client-info">
+                                <div class="client-name">Anita Sharma</div>
+                                <div class="client-contact">+91 98765 43210</div>
+                                <div class="client-contact">anita.sharma@email.com</div>
+                            </div>
+                            <div class="client-actions">
+                                <button class="client-action-btn" title="Call">📞</button>
+                                <button class="client-action-btn" title="WhatsApp">💬</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Financial Health -->
+            <div class="sidebar-section">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>💰 Financial Health</h3>
+                        <button class="btn btn-outline" style="padding: 0.35rem 0.6rem; font-size: 0.7rem;">
+                            + Invoice
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="financial-overview">
+                            <div class="financial-card highlight">
+                                <div class="financial-card-value success">₹12,000</div>
+                                <div class="financial-card-label">Collected</div>
+                            </div>
+                            <div class="financial-card">
+                                <div class="financial-card-value">₹0</div>
+                                <div class="financial-card-label">Pending</div>
+                            </div>
+                        </div>
+                        
+                        <div class="progress-section">
+                            <div class="progress-header">
+                                <span class="progress-label">Collection Progress</span>
+                                <span class="progress-value">100%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 100%;"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="invoice-list">
+                            <div class="invoice-item">
+                                <div class="invoice-icon">📄</div>
+                                <div class="invoice-info">
+                                    <div class="invoice-id">INV-9921-001</div>
+                                    <div class="invoice-date">Dec 20, 2024</div>
+                                </div>
+                                <div class="invoice-amount">₹12,000</div>
+                                <span class="invoice-status paid">Paid</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Info -->
+            <div class="sidebar-section">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>📋 Contract Details</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="quick-info">
+                            <div class="quick-info-row">
+                                <span class="quick-info-label">Template</span>
+                                <span class="quick-info-value">PCOD Balance Program</span>
+                            </div>
+                            <div class="quick-info-row">
+                                <span class="quick-info-label">Duration</span>
+                                <span class="quick-info-value">3 Months</span>
+                            </div>
+                            <div class="quick-info-row">
+                                <span class="quick-info-label">Start Date</span>
+                                <span class="quick-info-value">Dec 20, 2024</span>
+                            </div>
+                            <div class="quick-info-row">
+                                <span class="quick-info-label">End Date</span>
+                                <span class="quick-info-value">Mar 20, 2025</span>
+                            </div>
+                            <div class="quick-info-row">
+                                <span class="quick-info-label">Payment Type</span>
+                                <span class="quick-info-value">100% Advance</span>
+                            </div>
+                            <div class="quick-info-row">
+                                <span class="quick-info-label">Auto-Renew</span>
+                                <span class="quick-info-value">Off</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Audit Trail -->
+            <div class="sidebar-section">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>📜 Recent Activity</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="audit-list">
+                            <div class="audit-item">
+                                <div class="audit-dot" style="background: var(--danger);"></div>
+                                <div class="audit-content">
+                                    <div class="audit-text">SLA breach triggered for Gynec Consultation #1</div>
+                                    <div class="audit-time">2 hours ago</div>
+                                </div>
+                            </div>
+                            <div class="audit-item">
+                                <div class="audit-dot" style="background: var(--success);"></div>
+                                <div class="audit-content">
+                                    <div class="audit-text">Yoga Session #2 completed by Priya</div>
+                                    <div class="audit-time">Dec 29, 2024</div>
+                                </div>
+                            </div>
+                            <div class="audit-item">
+                                <div class="audit-dot" style="background: var(--success);"></div>
+                                <div class="audit-content">
+                                    <div class="audit-text">Diet chart uploaded by Dr. Meera</div>
+                                    <div class="audit-time">Dec 26, 2024</div>
+                                </div>
+                            </div>
+                            <div class="audit-item">
+                                <div class="audit-dot" style="background: var(--success);"></div>
+                                <div class="audit-content">
+                                    <div class="audit-text">Payment of ₹12,000 received</div>
+                                    <div class="audit-time">Dec 20, 2024</div>
+                                </div>
+                            </div>
+                            <div class="audit-item">
+                                <div class="audit-dot"></div>
+                                <div class="audit-content">
+                                    <div class="audit-text">Contract accepted by Anita Sharma</div>
+                                    <div class="audit-time">Dec 20, 2024</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ASSIGN MODAL -->
+    <div class="modal-overlay" id="assignModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Assign Vendor</h3>
+                <button class="modal-close" onclick="closeAssignModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Task</label>
+                    <input type="text" class="form-input" value="🩺 Gynec Consultation #1" disabled style="background: var(--bg);">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Select Vendor</label>
+                    <div class="vendor-option selected" onclick="selectVendor(this)">
+                        <div class="radio"></div>
+                        <div class="vendor-details">
+                            <div class="vendor-name">Dr. Sunita Rao</div>
+                            <div class="vendor-role">Gynecologist • Available Tomorrow</div>
+                        </div>
+                    </div>
+                    <div class="vendor-option" onclick="selectVendor(this)">
+                        <div class="radio"></div>
+                        <div class="vendor-details">
+                            <div class="vendor-name">Dr. Kavitha Sharma</div>
+                            <div class="vendor-role">Gynecologist • Available Jan 10</div>
+                        </div>
+                    </div>
+                    <div class="vendor-option" onclick="selectVendor(this)">
+                        <div class="radio"></div>
+                        <div class="vendor-details">
+                            <div class="vendor-name">Dr. Meena Patel</div>
+                            <div class="vendor-role">Gynecologist • Available Jan 8</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Preferred Date & Time</label>
+                    <input type="datetime-local" class="form-input">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Notes (Optional)</label>
+                    <input type="text" class="form-input" placeholder="Any special instructions...">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeAssignModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="assignVendor()">Assign & Notify</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== TABS =====
+        const tabs = document.querySelectorAll('.tab');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+            });
+        });
+
+        // ===== MODAL =====
+        function openAssignModal() {
+            document.getElementById('assignModal').classList.add('show');
+        }
+
+        function closeAssignModal() {
+            document.getElementById('assignModal').classList.remove('show');
+        }
+
+        function selectVendor(element) {
+            document.querySelectorAll('.vendor-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            element.classList.add('selected');
+        }
+
+        function assignVendor() {
+            alert('✅ Vendor assigned! WhatsApp notification sent to Dr. Sunita and client notified.');
+            closeAssignModal();
+        }
+
+        // Close modal on overlay click
+        document.getElementById('assignModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeAssignModal();
+            }
+        });
+    </script>
+</body>
+</html>

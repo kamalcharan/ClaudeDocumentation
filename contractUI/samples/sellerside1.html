@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ContractNest - Agentic Service Operations</title>
+    <style>
+        :root {
+            --brand: #0F172A;       /* Obsidian */
+            --accent: #6366F1;      /* Indigo (Agent Action) */
+            --success: #10B981;     /* Emerald */
+            --warning: #F59E0B;     /* Amber */
+            --danger: #EF4444;      /* Rose */
+            --bg: #F8FAFC;          /* Slate 50 */
+            --surface: #FFFFFF;
+            --border: #E2E8F0;
+            --text-main: #334155;
+            --text-light: #64748B;
+            --agent-glow: 0 0 15px rgba(99, 102, 241, 0.3);
+        }
+        * { box-sizing: border-box; font-family: 'Inter', -apple-system, system-ui, sans-serif; }
+        
+        body { margin: 0; background: var(--bg); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; }
+
+        /* --- SIDEBAR NAVIGATION --- */
+        aside { width: 260px; background: var(--brand); color: white; display: flex; flex-direction: column; border-right: 1px solid #1E293B; }
+        .logo { padding: 1.5rem; font-size: 1.3rem; font-weight: 800; display: flex; align-items: center; gap: 10px; color: white; letter-spacing: -0.5px; }
+        .logo span { color: var(--accent); }
+        
+        .nav-group { padding: 0 1rem; margin-bottom: 2rem; }
+        .nav-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: #94A3B8; margin-bottom: 0.5rem; font-weight: 700; }
+        
+        .nav-item { 
+            padding: 0.75rem 1rem; color: #CBD5E1; cursor: pointer; border-radius: 6px; 
+            margin-bottom: 2px; font-size: 0.9rem; font-weight: 500; display: flex; align-items: center; gap: 10px; transition: all 0.2s; 
+        }
+        .nav-item:hover { background: rgba(255,255,255,0.1); color: white; }
+        .nav-item.active { background: var(--accent); color: white; box-shadow: var(--agent-glow); }
+
+        /* --- MAIN AREA --- */
+        main { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+
+        /* --- HEADER & AGENT TICKER --- */
+        header { 
+            height: 60px; background: var(--surface); border-bottom: 1px solid var(--border); 
+            display: flex; justify-content: space-between; align-items: center; padding: 0 2rem; 
+        }
+        .agent-ticker { 
+            background: #EEF2FF; border: 1px solid #C7D2FE; color: #4338CA; 
+            padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; 
+            display: flex; align-items: center; gap: 8px; animation: pulse 3s infinite;
+        }
+        .agent-dot { width: 8px; height: 8px; background: var(--accent); border-radius: 50%; }
+
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); } 70% { box-shadow: 0 0 0 6px rgba(99, 102, 241, 0); } 100% { box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); } }
+
+        /* --- VIEWS --- */
+        .view { display: none; padding: 2rem; height: 100%; overflow-y: auto; }
+        .view.active { display: block; animation: fadeUp 0.3s ease; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- COMPONENTS --- */
+        .btn { padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: 600; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; transition: transform 0.1s; }
+        .btn:active { transform: scale(0.98); }
+        .btn-primary { background: var(--brand); color: white; }
+        .btn-accent { background: var(--accent); color: white; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
+        .btn-outline { background: white; border: 1px solid var(--border); color: var(--text-main); }
+        
+        .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+        
+        h1, h2, h3 { margin: 0 0 1rem 0; color: var(--brand); }
+        
+        /* --- 360 VIEW COMPONENTS --- */
+        .cockpit-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; height: calc(100% - 80px); }
+        .detail-panel { overflow-y: auto; padding-right: 0.5rem; }
+        
+        .status-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; background: #F1F5F9; padding: 1rem; border-radius: 8px; }
+        
+        .task-list { list-style: none; padding: 0; }
+        .task-item { 
+            display: flex; align-items: center; justify-content: space-between; 
+            padding: 1rem; background: white; border: 1px solid var(--border); 
+            border-radius: 8px; margin-bottom: 0.5rem; position: relative; overflow: hidden;
+        }
+        .task-item.slipped { border-left: 4px solid var(--danger); }
+        .task-item.linedup { border-left: 4px solid var(--accent); }
+        .task-item.done { border-left: 4px solid var(--success); opacity: 0.7; }
+        
+        /* --- AGENT OVERLAY --- */
+        .agent-badge { 
+            font-size: 0.65rem; background: #E0E7FF; color: var(--accent); 
+            padding: 2px 6px; border-radius: 4px; border: 1px solid #C7D2FE; 
+            display: inline-flex; align-items: center; gap: 4px;
+        }
+
+        /* --- BUYER MARKETPLACE --- */
+        .market-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+        .market-card { 
+            background: white; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; 
+            transition: all 0.3s; cursor: pointer; position: relative;
+        }
+        .market-card:hover { transform: translateY(-5px); border-color: var(--accent); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+        .market-img { height: 140px; background: #CBD5E1; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 1.5rem; }
+        .market-content { padding: 1.5rem; }
+        
+        /* --- TABS --- */
+        .tabs { display: flex; gap: 1rem; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem; }
+        .tab { padding: 0.5rem 1rem; cursor: pointer; color: var(--text-light); border-bottom: 2px solid transparent; }
+        .tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+
+    </style>
+</head>
+<body>
+
+    <aside>
+        <div class="logo"><span>⚡</span> ContractNest</div>
+        
+        <div class="nav-group">
+            <div class="nav-label">Seller Operations</div>
+            <div class="nav-item active" onclick="switchView('cockpit', this)">Operations 360 (View 4)</div>
+            <div class="nav-item" onclick="switchView('templates', this)">Template Library (View 3)</div>
+            <div class="nav-item" onclick="switchView('create', this)">+ Direct Create (View 2)</div>
+        </div>
+
+        <div class="nav-group">
+            <div class="nav-label">Buyer View</div>
+            <div class="nav-item" onclick="switchView('buyer-market', this)">Client Portal (View 5)</div>
+        </div>
+        
+        <div class="nav-group">
+            <div class="nav-label">Intelligence</div>
+            <div class="nav-item" style="color: var(--accent);">
+                <span class="agent-dot"></span> Agent Logs
+            </div>
+        </div>
+    </aside>
+
+    <main>
+        <header>
+            <div style="font-weight: 600; color: var(--text-main);">Contract #CN-9921: PCOD Wellness</div>
+            
+            <div class="agent-ticker">
+                <span class="agent-dot"></span>
+                Agent Active: Auto-reconciled Invoice #INV-004 (2 mins ago)
+            </div>
+
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn btn-outline">Generate Report</button>
+                <button class="btn btn-primary">Actions ▼</button>
+            </div>
+        </header>
+
+        <div id="cockpit" class="view active">
+            
+            <div class="status-header">
+                <div style="display: flex; gap: 2rem;">
+                    <div>
+                        <small style="color: var(--text-light);">Contract Status</small>
+                        <div style="color: var(--success); font-weight: 700;">● Active</div>
+                    </div>
+                    <div>
+                        <small style="color: var(--text-light);">Financial Health</small>
+                        <div style="color: var(--warning); font-weight: 700;">● Payment Pending</div>
+                    </div>
+                    <div>
+                        <small style="color: var(--text-light);">SLA Breach Risk</small>
+                        <div style="color: var(--danger); font-weight: 700;">● High Risk</div>
+                    </div>
+                </div>
+                <button class="btn btn-accent">⚡ Agent: Fix Breach</button>
+            </div>
+
+            <div class="cockpit-grid">
+                
+                <div class="detail-panel">
+                    <div class="tabs">
+                        <div class="tab active">Execution Tasks</div>
+                        <div class="tab">SLA Breaches (1)</div>
+                        <div class="tab">Agent History</div>
+                    </div>
+
+                    <h3>Planned Execution</h3>
+                    <ul class="task-list">
+                        <li class="task-item slipped">
+                            <div>
+                                <div style="font-weight: 600; color: var(--danger);">Nutrition Consult (Slipped)</div>
+                                <small>Due: Yesterday • Assigned: Mark (Vendor)</small>
+                            </div>
+                            <div style="text-align: right;">
+                                <div class="agent-badge">⚡ Agent: Nudged 3x</div>
+                                <button class="btn btn-outline" style="padding: 0.2rem 0.6rem; margin-top: 5px;">Re-assign</button>
+                            </div>
+                        </li>
+
+                        <li class="task-item linedup">
+                            <div>
+                                <div style="font-weight: 600; color: var(--text-main);">Yoga Session 02 (Lined Up)</div>
+                                <small>Due: Tomorrow • Assigned: Internal Team</small>
+                            </div>
+                            <span class="agent-badge">⚡ Auto-Reminder Sent</span>
+                        </li>
+
+                        <li class="task-item done">
+                            <div>
+                                <div style="font-weight: 600; text-decoration: line-through;">Yoga Session 01</div>
+                                <small>Completed: Sept 22 • Evidenced Uploaded</small>
+                            </div>
+                            <div style="color: var(--success);">✓ Verified</div>
+                        </li>
+                    </ul>
+
+                    <h3 style="margin-top: 2rem;">Generated Reports</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="card" style="padding: 1rem; display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                            📄 <strong>Progress Report.pdf</strong> <small>(Auto-gen)</small>
+                        </div>
+                        <div class="card" style="padding: 1rem; display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                            📊 <strong>SLA Analysis.pdf</strong> <small>(Auto-gen)</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-panel">
+                    <div class="card">
+                        <h3>Billing & AR</h3>
+                        <div style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;">$4,000 <span style="font-size: 1rem; color: var(--text-light); font-weight: 400;">/ $12,000</span></div>
+                        <div style="height: 6px; background: #E2E8F0; border-radius: 3px; margin-bottom: 1rem;">
+                            <div style="width: 33%; background: var(--success); height: 100%; border-radius: 3px;"></div>
+                        </div>
+                        
+                        <div style="margin-top: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span>Inv #001 (Paid)</span>
+                                <span style="color: var(--success);">$4,000</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                                <span>Inv #002 (Pending)</span>
+                                <span style="color: var(--warning);">$4,000</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; opacity: 0.5;">
+                                <span>Inv #003 (Locked)</span>
+                                <span>$4,000</span>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary" style="width: 100%; margin-top: 1.5rem;">Create Ad-hoc Invoice</button>
+                    </div>
+
+                    <div class="card" style="background: #F0F9FF; border-color: #BAE6FD;">
+                        <h4 style="color: #0369A1; margin-bottom: 0.5rem;">Agent Suggestion</h4>
+                        <p style="font-size: 0.85rem; color: #0C4A6E;">
+                            Task "Nutrition Consult" is slipping. Should I hold Invoice #002 until completion?
+                        </p>
+                        <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                            <button class="btn btn-primary" style="font-size: 0.8rem; padding: 0.4rem 0.8rem;">Yes, Hold</button>
+                            <button class="btn btn-outline" style="font-size: 0.8rem; padding: 0.4rem 0.8rem;">Ignore</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="templates" class="view">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h2>Template Library</h2>
+                <button class="btn btn-primary">+ Create New Template</button>
+            </div>
+            <div class="market-grid">
+                <div class="market-card">
+                    <div class="market-img" style="background: #E0E7FF; color: #4338CA;">AMC</div>
+                    <div class="market-content">
+                        <strong>Annual Maintenance (Gold)</strong>
+                        <p style="font-size: 0.9rem; color: var(--text-light);">Standard 4-visit preventive maintenance plan.</p>
+                        <div style="margin-top: 1rem; display: flex; gap: 10px;">
+                            <button class="btn btn-outline" style="flex: 1;">Edit</button>
+                            <button class="btn btn-primary" style="flex: 1;">Assign</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="market-card">
+                    <div class="market-img" style="background: #DCFCE7; color: #166534;">WELL</div>
+                    <div class="market-content">
+                        <strong>PCOD Wellness Package</strong>
+                        <p style="font-size: 0.9rem; color: var(--text-light);">3 Month program with Yoga & Consults.</p>
+                        <div style="margin-top: 1rem; display: flex; gap: 10px;">
+                            <button class="btn btn-outline" style="flex: 1;">Edit</button>
+                            <button class="btn btn-primary" style="flex: 1;">Assign</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="create" class="view">
+            <h2>Direct Contract Creation</h2>
+            <p>Skip the template. Build blocks directly for a client.</p>
+            
+            <div class="card" style="max-width: 800px;">
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">1. Select Buyer</label>
+                    <select style="width: 100%; padding: 0.8rem; border: 1px solid var(--border); border-radius: 6px;">
+                        <option>Rob Johnson</option>
+                        <option>Apollo Hospitals</option>
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">2. Drag & Drop Blocks</label>
+                    <div style="border: 2px dashed var(--border); padding: 2rem; text-align: center; border-radius: 8px; background: #F8FAFC;">
+                        Drag Service, Payment, or SLA blocks here...
+                    </div>
+                </div>
+
+                <div style="text-align: right;">
+                    <button class="btn btn-outline">Preview PDF</button>
+                    <button class="btn btn-primary">Send to Buyer</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="buyer-market" class="view">
+            <div style="text-align: center; margin-bottom: 3rem;">
+                <h1 style="font-size: 2.5rem;">Configure Your Service Plan</h1>
+                <p>Welcome, Rob. Select the modules you need, and we'll generate the contract instantly.</p>
+            </div>
+
+            <div class="market-grid">
+                <div class="market-card">
+                    <div class="market-img">🧘‍♀️</div>
+                    <div class="market-content">
+                        <div style="display: flex; justify-content: space-between;">
+                            <strong>Yoga Module</strong>
+                            <span style="color: var(--success); font-weight: 700;">$200/mo</span>
+                        </div>
+                        <p style="font-size: 0.9rem; color: var(--text-light);">4 Sessions per month. Includes mat rental.</p>
+                        <button class="btn btn-primary" style="width: 100%;">+ Add to Contract</button>
+                    </div>
+                </div>
+
+                <div class="market-card">
+                    <div class="market-img">🩺</div>
+                    <div class="market-content">
+                        <div style="display: flex; justify-content: space-between;">
+                            <strong>Medical Consult</strong>
+                            <span style="color: var(--success); font-weight: 700;">$150/ea</span>
+                        </div>
+                        <p style="font-size: 0.9rem; color: var(--text-light);">One-on-one with Senior Gynecologist.</p>
+                        <button class="btn btn-primary" style="width: 100%;">+ Add to Contract</button>
+                    </div>
+                </div>
+
+                <div class="card" style="border: 2px solid var(--brand);">
+                    <h3>Your Custom Plan</h3>
+                    <ul style="padding-left: 1rem; margin-bottom: 2rem;">
+                        <li>Yoga Module x 3 Months</li>
+                        <li>Medical Consult x 1</li>
+                    </ul>
+                    <div style="display: flex; justify-content: space-between; font-weight: 700; font-size: 1.2rem; margin-bottom: 1rem;">
+                        <span>Total</span>
+                        <span>$750</span>
+                    </div>
+                    <button class="btn btn-accent" style="width: 100%;">Generate & Sign Contract</button>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        function switchView(viewId, navEl) {
+            // Update Nav
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            if(navEl) navEl.classList.add('active');
+            
+            // Update View
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+        }
+    </script>
+</body>
+</html>

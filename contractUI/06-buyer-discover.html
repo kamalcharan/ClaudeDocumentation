@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ContractNest - Discover Services</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand: #0F172A;
+            --brand-light: #1E293B;
+            --accent: #6366F1;
+            --accent-light: #818CF8;
+            --accent-bg: #EEF2FF;
+            --buyer-brand: #0284C7;
+            --buyer-light: #0EA5E9;
+            --buyer-bg: #F0F9FF;
+            --buyer-border: #BAE6FD;
+            --success: #10B981;
+            --success-bg: #ECFDF5;
+            --success-border: #A7F3D0;
+            --warning: #F59E0B;
+            --warning-bg: #FFFBEB;
+            --warning-border: #FDE68A;
+            --danger: #EF4444;
+            --danger-bg: #FEF2F2;
+            --bg: #F8FAFC;
+            --surface: #FFFFFF;
+            --border: #E2E8F0;
+            --border-light: #F1F5F9;
+            --text: #334155;
+            --text-light: #64748B;
+            --text-muted: #94A3B8;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+            --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1);
+            --radius: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--brand);
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--buyer-brand);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .nav-tab {
+            padding: 0.6rem 1.25rem;
+            border-radius: 50px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            background: transparent;
+        }
+
+        .nav-tab:hover {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .nav-tab.active {
+            background: var(--buyer-brand);
+            color: white;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 50px;
+            width: 300px;
+        }
+
+        .search-box input {
+            border: none;
+            background: transparent;
+            outline: none;
+            font-size: 0.875rem;
+            width: 100%;
+            color: var(--text);
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--buyer-brand) 0%, var(--buyer-light) 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+
+        /* ===== MAIN CONTAINER ===== */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* ===== PAGE HEADER ===== */
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-header h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--brand);
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+            color: var(--text-light);
+            font-size: 1rem;
+        }
+
+        /* ===== VIEW SWITCHER ===== */
+        .view-switcher {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .view-card {
+            flex: 1;
+            background: var(--surface);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .view-card:hover {
+            border-color: var(--buyer-brand);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .view-card.active {
+            border-color: var(--buyer-brand);
+            background: var(--buyer-bg);
+        }
+
+        .view-card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .view-card h3 {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--brand);
+            margin-bottom: 0.5rem;
+        }
+
+        .view-card p {
+            font-size: 0.8rem;
+            color: var(--text-light);
+        }
+
+        /* ===== CONTENT SECTIONS ===== */
+        .content-section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===== BROWSE SECTION ===== */
+        .category-filter {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .category-pill {
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text-light);
+            transition: all 0.2s;
+        }
+
+        .category-pill:hover {
+            border-color: var(--buyer-brand);
+            color: var(--buyer-brand);
+        }
+
+        .category-pill.active {
+            background: var(--buyer-brand);
+            border-color: var(--buyer-brand);
+            color: white;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+
+        .service-card {
+            background: var(--surface);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .service-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .service-card-image {
+            height: 160px;
+            background: linear-gradient(135deg, var(--buyer-bg) 0%, #E0F2FE 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+        }
+
+        .service-card-body {
+            padding: 1.5rem;
+        }
+
+        .service-card-seller {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .seller-logo {
+            width: 24px;
+            height: 24px;
+            background: var(--accent);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+
+        .seller-name {
+            font-size: 0.75rem;
+            color: var(--text-light);
+            font-weight: 500;
+        }
+
+        .verified-badge {
+            color: var(--success);
+            font-size: 0.7rem;
+        }
+
+        .service-card h4 {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--brand);
+            margin-bottom: 0.5rem;
+        }
+
+        .service-card p {
+            font-size: 0.8rem;
+            color: var(--text-light);
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        .service-card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .service-price {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--brand);
+        }
+
+        .service-price span {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-light);
+        }
+
+        .service-cta {
+            padding: 0.5rem 1rem;
+            background: var(--buyer-brand);
+            color: white;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .service-cta:hover {
+            background: var(--buyer-light);
+        }
+
+        /* ===== CREATE REQUEST SECTION ===== */
+        .request-builder {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 2rem;
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--brand);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        /* Intent Blocks */
+        .intent-blocks {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .intent-block {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--buyer-bg);
+            border: 1px solid var(--buyer-border);
+            border-radius: var(--radius-lg);
+            position: relative;
+        }
+
+        .intent-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--surface);
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            box-shadow: var(--shadow-sm);
+            flex-shrink: 0;
+        }
+
+        .intent-content {
+            flex: 1;
+        }
+
+        .intent-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--buyer-brand);
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .intent-input {
+            width: 100%;
+            padding: 0.5rem 0;
+            border: none;
+            background: transparent;
+            font-size: 0.9rem;
+            color: var(--text);
+            outline: none;
+        }
+
+        .intent-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .intent-remove {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: none;
+            background: var(--surface);
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .intent-remove:hover {
+            background: var(--danger-bg);
+            color: var(--danger);
+        }
+
+        .add-intent-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 1rem;
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-lg);
+            background: transparent;
+            color: var(--text-light);
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            width: 100%;
+        }
+
+        .add-intent-btn:hover {
+            border-color: var(--buyer-brand);
+            color: var(--buyer-brand);
+            background: var(--buyer-bg);
+        }
+
+        .submit-request-btn {
+            width: 100%;
+            padding: 1rem;
+            background: var(--buyer-brand);
+            color: white;
+            border: none;
+            border-radius: var(--radius-lg);
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .submit-request-btn:hover {
+            background: var(--buyer-light);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(2, 132, 199, 0.3);
+        }
+
+        /* Request Preview */
+        .request-preview {
+            background: var(--bg);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+        }
+
+        .preview-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .preview-header h4 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--brand);
+        }
+
+        .preview-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .preview-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: var(--surface);
+            border-radius: var(--radius);
+        }
+
+        .preview-item-icon {
+            font-size: 1rem;
+        }
+
+        .preview-item-text {
+            flex: 1;
+            font-size: 0.85rem;
+            color: var(--text);
+        }
+
+        .preview-item-value {
+            font-weight: 600;
+            color: var(--buyer-brand);
+            font-size: 0.85rem;
+        }
+
+        /* ===== COMPARE SECTION ===== */
+        .compare-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .compare-header h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--brand);
+        }
+
+        .compare-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .proposal-card {
+            background: var(--surface);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .proposal-card:hover {
+            border-color: var(--buyer-border);
+        }
+
+        .proposal-card.recommended {
+            border-color: var(--success);
+        }
+
+        .proposal-card.recommended .proposal-header {
+            background: linear-gradient(135deg, var(--success-bg) 0%, #D1FAE5 100%);
+        }
+
+        .proposal-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: var(--success);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+
+        .proposal-header {
+            padding: 1.5rem;
+            background: var(--bg);
+            position: relative;
+        }
+
+        .proposal-seller {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .proposal-seller-logo {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--accent) 0%, #818CF8 100%);
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .proposal-seller-info h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--brand);
+            margin-bottom: 0.25rem;
+        }
+
+        .proposal-seller-info span {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .proposal-price {
+            text-align: center;
+            padding: 1rem 0;
+        }
+
+        .proposal-price-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--brand);
+        }
+
+        .proposal-price-label {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        .proposal-body {
+            padding: 1.5rem;
+        }
+
+        .proposal-features {
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 0;
+        }
+
+        .feature-check {
+            color: var(--success);
+            font-size: 1rem;
+        }
+
+        .feature-text {
+            font-size: 0.85rem;
+            color: var(--text);
+        }
+
+        .feature-value {
+            margin-left: auto;
+            font-weight: 600;
+            color: var(--text);
+            font-size: 0.85rem;
+        }
+
+        .proposal-cta {
+            width: 100%;
+            padding: 0.875rem;
+            border-radius: var(--radius);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .proposal-cta.primary {
+            background: var(--buyer-brand);
+            color: white;
+        }
+
+        .proposal-cta.primary:hover {
+            background: var(--buyer-light);
+        }
+
+        .proposal-cta.secondary {
+            background: var(--bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .proposal-cta.secondary:hover {
+            background: var(--surface);
+            border-color: var(--buyer-brand);
+            color: var(--buyer-brand);
+        }
+
+        /* Agent Insight */
+        .agent-insight {
+            background: var(--accent-bg);
+            border: 1px solid #C7D2FE;
+            border-radius: var(--radius-xl);
+            padding: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+
+        .agent-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .agent-content h4 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+
+        .agent-content p {
+            font-size: 0.85rem;
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .agent-content strong {
+            color: var(--brand);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1200px) {
+            .services-grid, .compare-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .services-grid, .compare-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .request-builder {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ===== SCROLLBAR ===== */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">
+                <div class="logo-icon">⚡</div>
+                ContractNest
+            </div>
+            
+            <div class="nav-tabs">
+                <button class="nav-tab active">Discover</button>
+                <button class="nav-tab">My Contracts</button>
+                <button class="nav-tab">Messages</button>
+            </div>
+        </div>
+        
+        <div class="header-right">
+            <div class="search-box">
+                <span>🔍</span>
+                <input type="text" placeholder="Search services, sellers...">
+            </div>
+            <div class="user-avatar">AS</div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <div class="main-container">
+        <!-- PAGE HEADER -->
+        <div class="page-header">
+            <h1>Find the Right Service</h1>
+            <p>Browse verified sellers, create custom requests, or compare proposals</p>
+        </div>
+
+        <!-- VIEW SWITCHER -->
+        <div class="view-switcher">
+            <div class="view-card active" onclick="switchView('browse')">
+                <div class="view-card-icon">🛒</div>
+                <h3>Browse Services</h3>
+                <p>Explore ready-made service packages from verified sellers</p>
+            </div>
+            <div class="view-card" onclick="switchView('create')">
+                <div class="view-card-icon">✏️</div>
+                <h3>Create Request</h3>
+                <p>Describe what you need and let sellers come to you</p>
+            </div>
+            <div class="view-card" onclick="switchView('compare')">
+                <div class="view-card-icon">⚖️</div>
+                <h3>Compare Proposals</h3>
+                <p>Review and compare offers side-by-side</p>
+            </div>
+        </div>
+
+        <!-- BROWSE SECTION -->
+        <div class="content-section active" id="browseSection">
+            <div class="category-filter">
+                <button class="category-pill active">All</button>
+                <button class="category-pill">🧘 Wellness</button>
+                <button class="category-pill">❄️ Maintenance</button>
+                <button class="category-pill">⚙️ Equipment</button>
+                <button class="category-pill">🖥️ IT Services</button>
+                <button class="category-pill">📊 Consulting</button>
+            </div>
+
+            <div class="services-grid">
+                <div class="service-card">
+                    <div class="service-card-image">🧘</div>
+                    <div class="service-card-body">
+                        <div class="service-card-seller">
+                            <div class="seller-logo">VW</div>
+                            <span class="seller-name">Vikuna Wellness</span>
+                            <span class="verified-badge">✓</span>
+                        </div>
+                        <h4>PCOD Balance Program</h4>
+                        <p>3-month holistic wellness journey with yoga, nutrition, and specialist consultations.</p>
+                        <div class="service-card-footer">
+                            <div class="service-price">₹12,000 <span>/ 3 months</span></div>
+                            <button class="service-cta">View Details</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="service-card">
+                    <div class="service-card-image">❄️</div>
+                    <div class="service-card-body">
+                        <div class="service-card-seller">
+                            <div class="seller-logo" style="background: var(--success);">RF</div>
+                            <span class="seller-name">RapidFix Services</span>
+                            <span class="verified-badge">✓</span>
+                        </div>
+                        <h4>AC Annual Maintenance</h4>
+                        <p>4 quarterly services including deep cleaning, gas check, and filter replacement.</p>
+                        <div class="service-card-footer">
+                            <div class="service-price">₹4,999 <span>/ year</span></div>
+                            <button class="service-cta">View Details</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="service-card">
+                    <div class="service-card-image">⚙️</div>
+                    <div class="service-card-body">
+                        <div class="service-card-seller">
+                            <div class="seller-logo" style="background: var(--warning);">MT</div>
+                            <span class="seller-name">MedTech Solutions</span>
+                            <span class="verified-badge">✓</span>
+                        </div>
+                        <h4>MRI Calibration AMC</h4>
+                        <p>Annual maintenance with quarterly calibrations and 24/7 emergency support.</p>
+                        <div class="service-card-footer">
+                            <div class="service-price">₹2,40,000 <span>/ year</span></div>
+                            <button class="service-cta">View Details</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="service-card">
+                    <div class="service-card-image">🖥️</div>
+                    <div class="service-card-body">
+                        <div class="service-card-seller">
+                            <div class="seller-logo" style="background: var(--brand);">TC</div>
+                            <span class="seller-name">TechCare IT</span>
+                            <span class="verified-badge">✓</span>
+                        </div>
+                        <h4>Server Support Contract</h4>
+                        <p>24/7 monitoring, monthly patching, quarterly reviews, and 4hr response SLA.</p>
+                        <div class="service-card-footer">
+                            <div class="service-price">₹36,000 <span>/ year</span></div>
+                            <button class="service-cta">View Details</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="service-card">
+                    <div class="service-card-image">🏋️</div>
+                    <div class="service-card-body">
+                        <div class="service-card-seller">
+                            <div class="seller-logo">VW</div>
+                            <span class="seller-name">Vikuna Wellness</span>
+                            <span class="verified-badge">✓</span>
+                        </div>
+                        <h4>Corporate Fitness Program</h4>
+                        <p>Weekly group sessions, health assessments, and wellness workshops for teams.</p>
+                        <div class="service-card-footer">
+                            <div class="service-price">₹50,000 <span>/ quarter</span></div>
+                            <button class="service-cta">View Details</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="service-card">
+                    <div class="service-card-image">🔧</div>
+                    <div class="service-card-body">
+                        <div class="service-card-seller">
+                            <div class="seller-logo" style="background: var(--success);">RF</div>
+                            <span class="seller-name">RapidFix Services</span>
+                            <span class="verified-badge">✓</span>
+                        </div>
+                        <h4>Plumbing Maintenance</h4>
+                        <p>Monthly inspection, emergency repairs, and priority scheduling.</p>
+                        <div class="service-card-footer">
+                            <div class="service-price">₹2,999 <span>/ year</span></div>
+                            <button class="service-cta">View Details</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CREATE REQUEST SECTION -->
+        <div class="content-section" id="createSection">
+            <div class="request-builder">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>✏️ Describe What You Need</h3>
+                    </div>
+                    <div class="card-body">
+                        <p style="font-size: 0.85rem; color: var(--text-light); margin-bottom: 1.5rem;">
+                            Add blocks to describe your requirements. Sellers will respond with customized proposals.
+                        </p>
+                        
+                        <div class="intent-blocks">
+                            <div class="intent-block">
+                                <div class="intent-icon">🎯</div>
+                                <div class="intent-content">
+                                    <div class="intent-label">Service Type</div>
+                                    <input type="text" class="intent-input" value="AC Maintenance for office space" placeholder="What service do you need?">
+                                </div>
+                                <button class="intent-remove">×</button>
+                            </div>
+                            
+                            <div class="intent-block">
+                                <div class="intent-icon">📍</div>
+                                <div class="intent-content">
+                                    <div class="intent-label">Location</div>
+                                    <input type="text" class="intent-input" value="Jubilee Hills, Hyderabad" placeholder="Where is the service needed?">
+                                </div>
+                                <button class="intent-remove">×</button>
+                            </div>
+                            
+                            <div class="intent-block">
+                                <div class="intent-icon">🔢</div>
+                                <div class="intent-content">
+                                    <div class="intent-label">Quantity</div>
+                                    <input type="text" class="intent-input" value="5 AC units (1.5 ton each)" placeholder="How many units/sessions?">
+                                </div>
+                                <button class="intent-remove">×</button>
+                            </div>
+                            
+                            <div class="intent-block">
+                                <div class="intent-icon">💰</div>
+                                <div class="intent-content">
+                                    <div class="intent-label">Budget Range</div>
+                                    <input type="text" class="intent-input" value="₹15,000 - ₹25,000 per year" placeholder="What's your budget?">
+                                </div>
+                                <button class="intent-remove">×</button>
+                            </div>
+                            
+                            <div class="intent-block">
+                                <div class="intent-icon">📅</div>
+                                <div class="intent-content">
+                                    <div class="intent-label">Preferred Schedule</div>
+                                    <input type="text" class="intent-input" value="Quarterly visits, weekends preferred" placeholder="When do you need this?">
+                                </div>
+                                <button class="intent-remove">×</button>
+                            </div>
+                        </div>
+                        
+                        <button class="add-intent-btn">
+                            <span>➕</span> Add Another Requirement
+                        </button>
+                        
+                        <div style="margin-top: 1.5rem;">
+                            <button class="submit-request-btn" onclick="submitRequest()">
+                                <span>📤</span> Send to Verified Sellers
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3>👁️ Request Preview</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="request-preview">
+                            <div class="preview-header">
+                                <span>📋</span>
+                                <h4>Your Request Summary</h4>
+                            </div>
+                            <div class="preview-list">
+                                <div class="preview-item">
+                                    <span class="preview-item-icon">🎯</span>
+                                    <span class="preview-item-text">Service</span>
+                                    <span class="preview-item-value">AC Maintenance</span>
+                                </div>
+                                <div class="preview-item">
+                                    <span class="preview-item-icon">📍</span>
+                                    <span class="preview-item-text">Location</span>
+                                    <span class="preview-item-value">Jubilee Hills</span>
+                                </div>
+                                <div class="preview-item">
+                                    <span class="preview-item-icon">🔢</span>
+                                    <span class="preview-item-text">Units</span>
+                                    <span class="preview-item-value">5 ACs</span>
+                                </div>
+                                <div class="preview-item">
+                                    <span class="preview-item-icon">💰</span>
+                                    <span class="preview-item-text">Budget</span>
+                                    <span class="preview-item-value">₹15K-25K/yr</span>
+                                </div>
+                                <div class="preview-item">
+                                    <span class="preview-item-icon">📅</span>
+                                    <span class="preview-item-text">Schedule</span>
+                                    <span class="preview-item-value">Quarterly</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-top: 1.5rem; padding: 1rem; background: var(--success-bg); border-radius: var(--radius); border: 1px solid var(--success-border);">
+                            <p style="font-size: 0.8rem; color: var(--success); display: flex; align-items: center; gap: 0.5rem;">
+                                <span>✓</span>
+                                <span>Your request will be sent to <strong>12 verified sellers</strong> in your area</span>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- COMPARE SECTION -->
+        <div class="content-section" id="compareSection">
+            <div class="compare-header">
+                <h2>Compare Proposals for "AC Maintenance"</h2>
+                <span style="font-size: 0.875rem; color: var(--text-light);">3 responses received</span>
+            </div>
+
+            <div class="compare-grid">
+                <!-- Proposal 1 - Recommended -->
+                <div class="proposal-card recommended">
+                    <div class="proposal-header">
+                        <span class="proposal-badge">⭐ Best Match</span>
+                        <div class="proposal-seller">
+                            <div class="proposal-seller-logo" style="background: var(--success);">RF</div>
+                            <div class="proposal-seller-info">
+                                <h4>RapidFix Services</h4>
+                                <span>⭐ 4.8 (234 reviews)</span>
+                            </div>
+                        </div>
+                        <div class="proposal-price">
+                            <div class="proposal-price-value">₹18,500</div>
+                            <div class="proposal-price-label">per year</div>
+                        </div>
+                    </div>
+                    <div class="proposal-body">
+                        <div class="proposal-features">
+                            <div class="feature-item">
+                                <span class="feature-check">✓</span>
+                                <span class="feature-text">Quarterly deep service</span>
+                                <span class="feature-value">4 visits</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-check">✓</span>
+                                <span class="feature-text">Response time SLA</span>
+                                <span class="feature-value">4 hours</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-check">✓</span>
+                                <span class="feature-text">Weekend availability</span>
+                                <span class="feature-value">Yes</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-check">✓</span>
+                                <span class="feature-text">Spare parts included</span>
+                                <span class="feature-value">Basic</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-check">✓</span>
+                                <span class="feature-text">Evidence documentation</span>
+                                <span class="feature-value">Photos + Report</span>
+                            </div>
+                        </div>
+                        <button class="proposal-cta primary">Select This Proposal</button>
+                    </div>
+                </div>
+
+                <!-- Proposal 2 -->
+                <div class="proposal-card">
+                    <div class="proposal-header">
+                        <div class="proposal-seller">
+                            <div class="proposal-seller-logo" style="background: var(--warning);">CS</div>
+                            <div class="proposal-seller-info">
+                                <h4>CoolServ Pro</h4>
+                                <span>⭐ 4.5 (89 reviews)</span>
+                            </div>
+                        </div>
+                        <div class="proposal-price">
+                            <div class="proposal-price-value">₹15,000</div>
+                            <div class="proposal-price-label">per year</div>
+                        </div>
+                    </div>
+                    <div class="proposal-body">
+                        <div class="proposal-features">
+                            <div class="feature-item">
+                                <span class="feature-check">✓</span>
+                                <span class="feature-text">Quarterly deep service</span>
+                                <span class="feature-value">4 visits</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-check">✓</span>
+                                <span class="feature-text">Response time SLA</span>
+                                <span class="feature-value">24 hours</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-check" style="color: var(--danger);">✗</span>
+                                <span class="feature-text">Weekend availability</span>
+                                <span class="feature-value" style="color: var(--danger);">No</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-check">✓</span>
+                                <span class="feature-text">Spare parts included</span>
+                                <span class="feature-value">Basic</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-check">✓</span>
+                                <span class="feature-text">Evidence documentation</span>
+                                <span class="feature-value">Photos only</span>
+                            </div>
+                        </div>
+                        <button class="proposal-cta secondary">View Details</button>
+                    </div>
+                </div>
+
+                <!-- Proposal 3 -->
+                <div class="proposal-card">
+                    <div class="proposal-header">
+                        <div class="proposal-seller">
+                            <div class="proposal-seller-logo" style="background: var(--brand);">AC</div>
+                            <div class="proposal-seller-info">
+                                <h4>AirCare Premium</h4>
+                                <span>⭐ 4.9 (156 reviews)</span>
+                            </div>
+                        </div>
+                        <div class="proposal-price">
+                            <div class="proposal-price-value">₹24,000</div>
+                            <div class="proposal-price-label">per year</div>
+                        </div>
+                    </div>
+                    <div class="proposal-body">
+                        <div class="proposal-features">
+                            <div class="feature-item">
+                                <span class="feature-check">✓</span>
+                                <span class="feature-text">Bi-monthly service</span>
+                                <span class="feature-value">6 visits</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-check">✓</span>
+                                <span class="feature-text">Response time SLA</span>
+                                <span class="feature-value">2 hours</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-check">✓</span>
+                                <span class="feature-text">Weekend availability</span>
+                                <span class="feature-value">Yes</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-check">✓</span>
+                                <span class="feature-text">Spare parts included</span>
+                                <span class="feature-value">All parts</span>
+                            </div>
+                            <div class="feature-item">
+                                <span class="feature-check">✓</span>
+                                <span class="feature-text">Evidence documentation</span>
+                                <span class="feature-value">Full report</span>
+                            </div>
+                        </div>
+                        <button class="proposal-cta secondary">View Details</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Agent Insight -->
+            <div class="agent-insight">
+                <div class="agent-icon">⚡</div>
+                <div class="agent-content">
+                    <h4>AI Comparison Insight</h4>
+                    <p>
+                        Based on your requirements, <strong>RapidFix Services</strong> offers the best value. 
+                        They meet your weekend availability requirement (which CoolServ doesn't), 
+                        have a 4-hour SLA, and are <strong>₹5,500 cheaper</strong> than AirCare Premium while 
+                        offering comparable service quality. Their 4.8 rating from 234 reviews shows consistent reliability.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== VIEW SWITCHING =====
+        function switchView(view) {
+            // Update view cards
+            document.querySelectorAll('.view-card').forEach(card => {
+                card.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+            
+            // Update content sections
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(`${view}Section`).classList.add('active');
+        }
+
+        // ===== CATEGORY FILTER =====
+        const categoryPills = document.querySelectorAll('.category-pill');
+        categoryPills.forEach(pill => {
+            pill.addEventListener('click', () => {
+                categoryPills.forEach(p => p.classList.remove('active'));
+                pill.classList.add('active');
+            });
+        });
+
+        // ===== SUBMIT REQUEST =====
+        function submitRequest() {
+            alert('📤 Your request has been sent to 12 verified sellers!\n\nYou\'ll receive proposals within 24-48 hours.');
+            switchView('compare');
+            document.querySelectorAll('.view-card')[2].classList.add('active');
+            document.querySelectorAll('.view-card')[1].classList.remove('active');
+        }
+
+        // ===== NAV TABS =====
+        const navTabs = document.querySelectorAll('.nav-tab');
+        navTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                navTabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

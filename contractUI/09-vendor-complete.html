@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ContractNest - Complete Task</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand: #0F172A;
+            --vendor-brand: #059669;
+            --vendor-light: #10B981;
+            --vendor-bg: #ECFDF5;
+            --vendor-border: #A7F3D0;
+            --vendor-dark: #047857;
+            --accent: #6366F1;
+            --accent-bg: #EEF2FF;
+            --success: #10B981;
+            --success-bg: #ECFDF5;
+            --warning: #F59E0B;
+            --warning-bg: #FFFBEB;
+            --danger: #EF4444;
+            --danger-bg: #FEF2F2;
+            --bg: #F8FAFC;
+            --surface: #FFFFFF;
+            --border: #E2E8F0;
+            --border-light: #F1F5F9;
+            --text: #334155;
+            --text-light: #64748B;
+            --text-muted: #94A3B8;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+            --radius: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            background: var(--vendor-brand);
+            color: white;
+            padding: 1rem 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .header-back {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            opacity: 0.9;
+        }
+
+        .header-back:hover {
+            opacity: 1;
+        }
+
+        .header-title {
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .header-step {
+            font-size: 0.75rem;
+            opacity: 0.8;
+        }
+
+        /* ===== PROGRESS BAR ===== */
+        .progress-bar-container {
+            background: var(--vendor-dark);
+            padding: 0.75rem 1.25rem;
+        }
+
+        .progress-steps {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .progress-step {
+            flex: 1;
+            height: 4px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-step.completed {
+            background: white;
+        }
+
+        .progress-step.active {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .progress-step.active .progress-fill {
+            width: 50%;
+            height: 100%;
+            background: white;
+            animation: progressPulse 1.5s infinite;
+        }
+
+        @keyframes progressPulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            padding: 1rem;
+        }
+
+        /* ===== STEP INDICATOR ===== */
+        .step-indicator {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .step-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: var(--vendor-brand);
+            color: white;
+            border-radius: 50%;
+            font-weight: 700;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .step-title {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--brand);
+            margin-bottom: 0.25rem;
+        }
+
+        .step-desc {
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        /* ===== CARD ===== */
+        .card {
+            background: var(--surface);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+
+        .card-body {
+            padding: 1.25rem;
+        }
+
+        /* ===== PHOTO UPLOAD ===== */
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
+        }
+
+        .photo-slot {
+            aspect-ratio: 1;
+            background: var(--bg);
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-lg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .photo-slot:hover {
+            border-color: var(--vendor-brand);
+            background: var(--vendor-bg);
+        }
+
+        .photo-slot.filled {
+            border-style: solid;
+            border-color: var(--vendor-border);
+        }
+
+        .photo-slot-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-muted);
+        }
+
+        .photo-slot:hover .photo-slot-icon {
+            color: var(--vendor-brand);
+        }
+
+        .photo-slot-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-light);
+            text-align: center;
+            padding: 0 0.5rem;
+        }
+
+        .photo-slot.required::after {
+            content: 'Required';
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            font-size: 0.6rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            background: var(--danger-bg);
+            color: var(--danger);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+        }
+
+        .photo-slot.filled::after {
+            content: '✓';
+            background: var(--vendor-brand);
+            color: white;
+        }
+
+        .photo-preview {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .photo-remove {
+            position: absolute;
+            top: 0.5rem;
+            left: 0.5rem;
+            width: 28px;
+            height: 28px;
+            background: var(--danger);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 1rem;
+            cursor: pointer;
+            display: none;
+        }
+
+        .photo-slot.filled .photo-remove {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Camera Options */
+        .camera-options {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .camera-btn {
+            flex: 1;
+            padding: 0.875rem;
+            border-radius: var(--radius);
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            color: var(--text);
+        }
+
+        .camera-btn:hover {
+            background: var(--vendor-bg);
+            border-color: var(--vendor-brand);
+            color: var(--vendor-brand);
+        }
+
+        .camera-btn.primary {
+            background: var(--vendor-brand);
+            border-color: var(--vendor-brand);
+            color: white;
+        }
+
+        .camera-btn.primary:hover {
+            background: var(--vendor-dark);
+        }
+
+        /* ===== SIGNATURE PAD ===== */
+        .signature-container {
+            background: var(--bg);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .signature-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .signature-label span {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-light);
+        }
+
+        .signature-clear {
+            font-size: 0.75rem;
+            color: var(--danger);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .signature-pad {
+            width: 100%;
+            height: 150px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            cursor: crosshair;
+        }
+
+        .signature-hint {
+            text-align: center;
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        /* Client Info for Signature */
+        .client-signing {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 1rem;
+            background: var(--accent-bg);
+            border-radius: var(--radius);
+            margin-bottom: 1rem;
+        }
+
+        .client-avatar {
+            width: 44px;
+            height: 44px;
+            background: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+        }
+
+        .client-info h4 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--brand);
+            margin-bottom: 0.15rem;
+        }
+
+        .client-info p {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        /* ===== NOTES SUMMARY ===== */
+        .notes-textarea {
+            width: 100%;
+            padding: 1rem;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 0.875rem;
+            font-family: inherit;
+            resize: none;
+            min-height: 120px;
+            color: var(--text);
+        }
+
+        .notes-textarea:focus {
+            outline: none;
+            border-color: var(--vendor-brand);
+            box-shadow: 0 0 0 3px var(--vendor-bg);
+        }
+
+        .quick-notes {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+        }
+
+        .quick-note {
+            padding: 0.4rem 0.75rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-note:hover {
+            background: var(--vendor-bg);
+            border-color: var(--vendor-brand);
+            color: var(--vendor-brand);
+        }
+
+        /* ===== SUMMARY REVIEW ===== */
+        .summary-section {
+            margin-bottom: 1.25rem;
+        }
+
+        .summary-header {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+        }
+
+        .summary-photos {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .summary-photo {
+            width: 60px;
+            height: 60px;
+            background: var(--vendor-bg);
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .summary-signature {
+            height: 80px;
+            background: var(--bg);
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-style: italic;
+            color: var(--text-light);
+            border: 1px solid var(--border);
+        }
+
+        .summary-notes {
+            background: var(--bg);
+            padding: 1rem;
+            border-radius: var(--radius);
+            font-size: 0.85rem;
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        .summary-task {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: var(--vendor-bg);
+            border-radius: var(--radius);
+            border: 1px solid var(--vendor-border);
+        }
+
+        .summary-task-icon {
+            width: 48px;
+            height: 48px;
+            background: var(--vendor-brand);
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .summary-task-info h4 {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--brand);
+        }
+
+        .summary-task-info p {
+            font-size: 0.75rem;
+            color: var(--text-light);
+        }
+
+        /* ===== BOTTOM CTA ===== */
+        .bottom-cta {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--surface);
+            padding: 1rem;
+            border-top: 1px solid var(--border);
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .cta-button {
+            width: 100%;
+            padding: 1rem;
+            border-radius: var(--radius-lg);
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .cta-button.primary {
+            background: var(--vendor-brand);
+            color: white;
+        }
+
+        .cta-button.primary:hover {
+            background: var(--vendor-dark);
+        }
+
+        .cta-button.secondary {
+            background: var(--bg);
+            color: var(--text);
+            border: 1px solid var(--border);
+            margin-top: 0.5rem;
+        }
+
+        /* ===== SUCCESS STATE ===== */
+        .success-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--vendor-brand);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 2rem;
+            text-align: center;
+            color: white;
+        }
+
+        .success-overlay.show {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .success-icon {
+            width: 100px;
+            height: 100px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            animation: successPop 0.5s ease;
+        }
+
+        @keyframes successPop {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .success-title {
+            font-size: 1.75rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .success-subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+
+        .success-card {
+            background: rgba(255,255,255,0.15);
+            border-radius: var(--radius-xl);
+            padding: 1.5rem;
+            width: 100%;
+            margin-bottom: 1.5rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .success-card h4 {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            opacity: 0.8;
+            margin-bottom: 0.75rem;
+        }
+
+        .success-stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .success-stat:last-child {
+            border-bottom: none;
+        }
+
+        .success-stat span:first-child {
+            opacity: 0.8;
+        }
+
+        .success-stat span:last-child {
+            font-weight: 700;
+        }
+
+        .success-btn {
+            width: 100%;
+            padding: 1rem;
+            border-radius: var(--radius-lg);
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            margin-bottom: 0.75rem;
+        }
+
+        .success-btn.primary {
+            background: white;
+            color: var(--vendor-brand);
+        }
+
+        .success-btn.secondary {
+            background: rgba(255,255,255,0.15);
+            color: white;
+        }
+
+        /* ===== BOTTOM SPACER ===== */
+        .bottom-spacer {
+            height: 100px;
+        }
+
+        /* ===== STEP VIEWS ===== */
+        .step-view {
+            display: none;
+        }
+
+        .step-view.active {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <header class="header">
+        <div class="header-back" onclick="goBack()">
+            ← Back
+        </div>
+        <div class="header-title">Complete Task</div>
+        <div class="header-step" id="headerStep">Step 1 of 3</div>
+    </header>
+
+    <!-- PROGRESS BAR -->
+    <div class="progress-bar-container">
+        <div class="progress-steps">
+            <div class="progress-step active" id="step1Progress">
+                <div class="progress-fill"></div>
+            </div>
+            <div class="progress-step" id="step2Progress"></div>
+            <div class="progress-step" id="step3Progress"></div>
+        </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        <!-- STEP 1: PHOTOS -->
+        <div class="step-view active" id="step1">
+            <div class="step-indicator">
+                <div class="step-number">1</div>
+                <h2 class="step-title">Upload Photos</h2>
+                <p class="step-desc">Capture evidence of completed work</p>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <div class="photo-grid">
+                        <div class="photo-slot required" id="photo1" onclick="uploadPhoto(1)">
+                            <div class="photo-slot-icon">📷</div>
+                            <div class="photo-slot-label">Start of Session</div>
+                            <button class="photo-remove" onclick="removePhoto(event, 1)">×</button>
+                        </div>
+                        
+                        <div class="photo-slot required" id="photo2" onclick="uploadPhoto(2)">
+                            <div class="photo-slot-icon">📷</div>
+                            <div class="photo-slot-label">During Session</div>
+                            <button class="photo-remove" onclick="removePhoto(event, 2)">×</button>
+                        </div>
+                        
+                        <div class="photo-slot" id="photo3" onclick="uploadPhoto(3)">
+                            <div class="photo-slot-icon">📷</div>
+                            <div class="photo-slot-label">End of Session</div>
+                            <button class="photo-remove" onclick="removePhoto(event, 3)">×</button>
+                        </div>
+                        
+                        <div class="photo-slot" id="photo4" onclick="uploadPhoto(4)">
+                            <div class="photo-slot-icon">➕</div>
+                            <div class="photo-slot-label">Add More</div>
+                            <button class="photo-remove" onclick="removePhoto(event, 4)">×</button>
+                        </div>
+                    </div>
+
+                    <div class="camera-options">
+                        <button class="camera-btn primary" onclick="openCamera()">
+                            <span>📸</span> Open Camera
+                        </button>
+                        <button class="camera-btn" onclick="openGallery()">
+                            <span>🖼️</span> Gallery
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 2: SIGNATURE -->
+        <div class="step-view" id="step2">
+            <div class="step-indicator">
+                <div class="step-number">2</div>
+                <h2 class="step-title">Client Signature</h2>
+                <p class="step-desc">Get client approval for completed work</p>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <div class="client-signing">
+                        <div class="client-avatar">AS</div>
+                        <div class="client-info">
+                            <h4>Anita Sharma</h4>
+                            <p>Please sign below to confirm service completion</p>
+                        </div>
+                    </div>
+
+                    <div class="signature-container">
+                        <div class="signature-label">
+                            <span>Draw signature below</span>
+                            <span class="signature-clear" onclick="clearSignature()">Clear</span>
+                        </div>
+                        <canvas class="signature-pad" id="signaturePad"></canvas>
+                        <p class="signature-hint">Use finger or stylus to sign</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STEP 3: NOTES & REVIEW -->
+        <div class="step-view" id="step3">
+            <div class="step-indicator">
+                <div class="step-number">3</div>
+                <h2 class="step-title">Review & Submit</h2>
+                <p class="step-desc">Add notes and confirm submission</p>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <!-- Task Summary -->
+                    <div class="summary-section">
+                        <div class="summary-header">Task</div>
+                        <div class="summary-task">
+                            <div class="summary-task-icon">🧘</div>
+                            <div class="summary-task-info">
+                                <h4>Yoga Session #3</h4>
+                                <p>PCOD Balance Program • Anita Sharma</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Photos Summary -->
+                    <div class="summary-section">
+                        <div class="summary-header">Photos (2)</div>
+                        <div class="summary-photos">
+                            <div class="summary-photo">📷</div>
+                            <div class="summary-photo">📷</div>
+                        </div>
+                    </div>
+
+                    <!-- Signature Summary -->
+                    <div class="summary-section">
+                        <div class="summary-header">Client Signature</div>
+                        <div class="summary-signature">
+                            Signed by Anita Sharma ✓
+                        </div>
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="summary-section">
+                        <div class="summary-header">Session Notes</div>
+                        <textarea class="notes-textarea" placeholder="Describe the session, any observations, recommendations for next time..."></textarea>
+                        <div class="quick-notes">
+                            <span class="quick-note" onclick="addQuickNote('Good progress today')">Good progress</span>
+                            <span class="quick-note" onclick="addQuickNote('Client comfortable with exercises')">Client comfortable</span>
+                            <span class="quick-note" onclick="addQuickNote('Recommend continuing current routine')">Continue routine</span>
+                            <span class="quick-note" onclick="addQuickNote('Need to focus on flexibility')">Focus flexibility</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-spacer"></div>
+    </div>
+
+    <!-- BOTTOM CTA -->
+    <div class="bottom-cta">
+        <button class="cta-button primary" id="nextBtn" onclick="nextStep()">
+            Continue →
+        </button>
+        <button class="cta-button secondary" id="backBtn" onclick="prevStep()" style="display: none;">
+            ← Go Back
+        </button>
+    </div>
+
+    <!-- SUCCESS OVERLAY -->
+    <div class="success-overlay" id="successOverlay">
+        <div class="success-icon">✓</div>
+        <h1 class="success-title">Task Completed!</h1>
+        <p class="success-subtitle">Great work! Evidence has been submitted.</p>
+        
+        <div class="success-card">
+            <h4>Summary</h4>
+            <div class="success-stat">
+                <span>Task</span>
+                <span>Yoga Session #3</span>
+            </div>
+            <div class="success-stat">
+                <span>Client</span>
+                <span>Anita Sharma</span>
+            </div>
+            <div class="success-stat">
+                <span>Photos</span>
+                <span>2 uploaded</span>
+            </div>
+            <div class="success-stat">
+                <span>Signature</span>
+                <span>Collected ✓</span>
+            </div>
+            <div class="success-stat">
+                <span>Completed</span>
+                <span>On Time ✓</span>
+            </div>
+        </div>
+
+        <button class="success-btn primary" onclick="viewNextTask()">
+            View Next Task (2 pending)
+        </button>
+        <button class="success-btn secondary" onclick="closeSuccess()">
+            Done for Today
+        </button>
+    </div>
+
+    <script>
+        // ===== STEP NAVIGATION =====
+        let currentStep = 1;
+        const totalSteps = 3;
+        let photosUploaded = [false, false, false, false];
+        let signatureDrawn = false;
+
+        function updateStepUI() {
+            // Update header
+            document.getElementById('headerStep').textContent = `Step ${currentStep} of ${totalSteps}`;
+            
+            // Update progress steps
+            for (let i = 1; i <= totalSteps; i++) {
+                const stepEl = document.getElementById(`step${i}Progress`);
+                stepEl.classList.remove('completed', 'active');
+                if (i < currentStep) {
+                    stepEl.classList.add('completed');
+                } else if (i === currentStep) {
+                    stepEl.classList.add('active');
+                    stepEl.innerHTML = '<div class="progress-fill"></div>';
+                }
+            }
+            
+            // Update step views
+            document.querySelectorAll('.step-view').forEach((view, index) => {
+                view.classList.remove('active');
+                if (index + 1 === currentStep) {
+                    view.classList.add('active');
+                }
+            });
+            
+            // Update buttons
+            const nextBtn = document.getElementById('nextBtn');
+            const backBtn = document.getElementById('backBtn');
+            
+            backBtn.style.display = currentStep > 1 ? 'flex' : 'none';
+            
+            if (currentStep === totalSteps) {
+                nextBtn.innerHTML = '<span>✓</span> Submit & Complete';
+            } else {
+                nextBtn.innerHTML = 'Continue →';
+            }
+        }
+
+        function nextStep() {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateStepUI();
+            } else {
+                // Submit
+                submitTask();
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                updateStepUI();
+            }
+        }
+
+        function goBack() {
+            if (currentStep > 1) {
+                prevStep();
+            } else {
+                // Go back to task view
+                alert('Going back to task details...');
+            }
+        }
+
+        // ===== PHOTO UPLOAD =====
+        function uploadPhoto(index) {
+            const slot = document.getElementById(`photo${index}`);
+            if (!slot.classList.contains('filled')) {
+                // Simulate photo upload
+                slot.classList.add('filled');
+                slot.querySelector('.photo-slot-icon').textContent = '✓';
+                slot.querySelector('.photo-slot-label').textContent = 'Photo added';
+                photosUploaded[index - 1] = true;
+            }
+        }
+
+        function removePhoto(event, index) {
+            event.stopPropagation();
+            const slot = document.getElementById(`photo${index}`);
+            slot.classList.remove('filled');
+            slot.querySelector('.photo-slot-icon').textContent = '📷';
+            
+            const labels = ['Start of Session', 'During Session', 'End of Session', 'Add More'];
+            slot.querySelector('.photo-slot-label').textContent = labels[index - 1];
+            photosUploaded[index - 1] = false;
+        }
+
+        function openCamera() {
+            alert('Opening camera...\n\nThis would trigger the device camera.');
+        }
+
+        function openGallery() {
+            alert('Opening photo gallery...\n\nThis would open the device photo picker.');
+        }
+
+        // ===== SIGNATURE PAD =====
+        const canvas = document.getElementById('signaturePad');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+
+        function initSignaturePad() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            ctx.strokeStyle = '#334155';
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+        }
+
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+
+        canvas.addEventListener('touchstart', handleTouchStart);
+        canvas.addEventListener('touchmove', handleTouchMove);
+        canvas.addEventListener('touchend', stopDrawing);
+
+        function startDrawing(e) {
+            isDrawing = true;
+            signatureDrawn = true;
+            ctx.beginPath();
+            ctx.moveTo(e.offsetX, e.offsetY);
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            ctx.lineTo(e.offsetX, e.offsetY);
+            ctx.stroke();
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+        }
+
+        function handleTouchStart(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            isDrawing = true;
+            signatureDrawn = true;
+            ctx.beginPath();
+            ctx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
+        }
+
+        function handleTouchMove(e) {
+            e.preventDefault();
+            if (!isDrawing) return;
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            ctx.lineTo(touch.clientX - rect.left, touch.clientY - rect.top);
+            ctx.stroke();
+        }
+
+        function clearSignature() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            signatureDrawn = false;
+        }
+
+        // Initialize on load
+        window.addEventListener('load', initSignaturePad);
+        window.addEventListener('resize', initSignaturePad);
+
+        // ===== NOTES =====
+        function addQuickNote(note) {
+            const textarea = document.querySelector('.notes-textarea');
+            if (textarea.value) {
+                textarea.value += '. ' + note;
+            } else {
+                textarea.value = note;
+            }
+        }
+
+        // ===== SUBMIT =====
+        function submitTask() {
+            document.getElementById('successOverlay').classList.add('show');
+        }
+
+        function viewNextTask() {
+            alert('Loading next task...');
+            document.getElementById('successOverlay').classList.remove('show');
+        }
+
+        function closeSuccess() {
+            alert('Returning to task list...');
+            document.getElementById('successOverlay').classList.remove('show');
+        }
+    </script>
+</body>
+</html>

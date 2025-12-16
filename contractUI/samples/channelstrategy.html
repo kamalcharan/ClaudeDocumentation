@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yoga Studio (Powered by ContractNest)</title>
+    <style>
+        /* THIS SIMULATES THE SELLER'S OWN WEBSITE (NOT YOUR APP) */
+        body { margin: 0; font-family: 'Helvetica Neue', sans-serif; background: #FFF7ED; color: #431407; }
+        
+        /* Seller's Nav */
+        nav { padding: 1.5rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-weight: 700; font-size: 1.5rem; }
+        .hero { text-align: center; padding: 4rem 1rem; }
+        .hero h1 { font-size: 3rem; margin-bottom: 1rem; }
+        .hero p { font-size: 1.2rem; margin-bottom: 2rem; opacity: 0.8; }
+        
+        /* THE SELLER'S NATIVE BUTTON */
+        .native-btn { background: #EA580C; color: white; padding: 1rem 2rem; border: none; border-radius: 50px; font-size: 1.1rem; cursor: pointer; font-weight: 600; box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3); transition: transform 0.2s; }
+        .native-btn:hover { transform: scale(1.05); }
+
+        /* ============================================================ */
+        /* CONTRACTNEST EMBEDDED WIDGET STYLES (INJECTED CODE) */
+        /* ============================================================ */
+        
+        /* The Floating Launcher */
+        #cn-launcher {
+            position: fixed; bottom: 30px; right: 30px;
+            width: 60px; height: 60px;
+            background: #0F172A; /* ContractNest Brand Color */
+            border-radius: 50%;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.8rem; color: white;
+            z-index: 9999;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        #cn-launcher:hover { transform: scale(1.1) rotate(5deg); }
+        
+        /* The Notification Bubble */
+        .cn-badge {
+            position: absolute; top: -5px; right: -5px;
+            background: #EF4444; width: 20px; height: 20px;
+            border-radius: 50%; border: 2px solid white;
+        }
+
+        /* The Overlay Modal (The "App within App") */
+        #cn-overlay {
+            position: fixed; bottom: 100px; right: 30px;
+            width: 400px; height: 600px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 50px -10px rgba(0,0,0,0.3);
+            z-index: 9998;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            border: 1px solid #E2E8F0;
+        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Widget Header */
+        .cn-header { background: #0F172A; padding: 1.5rem; color: white; }
+        .cn-title { font-weight: 700; display: flex; align-items: center; gap: 8px; }
+        .cn-subtitle { font-size: 0.8rem; opacity: 0.7; margin-top: 5px; }
+
+        /* Widget Body (Chat & Catalog) */
+        .cn-body { flex: 1; background: #F8FAFC; padding: 1rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1rem; }
+        
+        /* Chat Bubbles */
+        .msg { max-width: 80%; padding: 0.8rem; border-radius: 12px; font-size: 0.9rem; line-height: 1.4; }
+        .msg.bot { background: white; border-bottom-left-radius: 2px; border: 1px solid #E2E8F0; color: #334155; }
+        .msg.user { background: #0F172A; color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
+
+        /* Embedded Catalog Card */
+        .mini-card { background: white; border: 1px solid #E2E8F0; border-radius: 8px; padding: 1rem; cursor: pointer; transition: all 0.2s; }
+        .mini-card:hover { border-color: #6366F1; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1); }
+        .mini-price { font-weight: 700; color: #0F172A; float: right; }
+        
+        /* Widget Footer */
+        .cn-footer { padding: 1rem; background: white; border-top: 1px solid #E2E8F0; display: flex; gap: 10px; }
+        .cn-input { flex: 1; border: 1px solid #E2E8F0; padding: 0.6rem; border-radius: 20px; outline: none; }
+        
+        /* WhatsApp Mode Visualizer */
+        .wa-preview {
+            background: #DCF8C6; padding: 1rem; border-radius: 8px; margin-top: 1rem; 
+            border: 1px dashed #25D366; font-size: 0.85rem; color: #075E54; display: none;
+        }
+
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div class="logo">Vikuna Wellness</div>
+        <div style="font-weight: 600;">Login</div>
+    </nav>
+
+    <div class="hero">
+        <h1>Find Your Balance.</h1>
+        <p>Premium Yoga & Nutrition services for the modern soul.</p>
+        
+        <button class="native-btn" onclick="toggleWidget()">Start Your Membership</button>
+    </div>
+
+    <div id="cn-launcher" onclick="toggleWidget()">
+        ⚡
+        <div class="cn-badge"></div>
+    </div>
+
+    <div id="cn-overlay">
+        <div class="cn-header">
+            <div class="cn-title">⚡ ContractNest Agent</div>
+            <div class="cn-subtitle">Vikuna's Official Service Partner</div>
+        </div>
+
+        <div class="cn-body" id="chat-body">
+            <div class="msg bot">
+                Hi there! 👋 I'm the automated agent for Vikuna Wellness.
+            </div>
+            <div class="msg bot">
+                Are you looking to sign up for a specific plan, or do you need a custom contract?
+            </div>
+
+            <div class="msg user" id="user-msg-1" style="display:none;">
+                I'm looking for the PCOD plan.
+            </div>
+
+            <div id="catalog-results" style="display:none;">
+                <div class="msg bot">Here is the standard PCOD contract. Click to configure:</div>
+                
+                <div class="mini-card" onclick="showWhatsAppFlow()">
+                    <span class="mini-price">$200/mo</span>
+                    <div style="font-weight: 700; margin-bottom: 5px;">PCOD Balance Program</div>
+                    <div style="font-size: 0.8rem; color: #64748B;">Includes 4 Yoga Sessions + Nutritionist.</div>
+                    <div style="margin-top: 8px; font-size: 0.75rem; color: #6366F1; font-weight: 600;">⚡ View Terms & Sign</div>
+                </div>
+            </div>
+
+            <div id="wa-flow" class="wa-preview">
+                <strong>📲 Transitioning to WhatsApp...</strong><br>
+                To keep a permanent record on your phone, we are sending this contract to your WhatsApp. <br><br>
+                <em>Check your phone for message from "Vikuna Contracts".</em>
+            </div>
+
+        </div>
+
+        <div class="cn-footer">
+            <input type="text" class="cn-input" placeholder="Type a message..." onclick="simulateFlow()">
+            <button style="background: none; border: none; font-size: 1.2rem; cursor: pointer;">➤</button>
+        </div>
+    </div>
+
+    <script>
+        function toggleWidget() {
+            const overlay = document.getElementById('cn-overlay');
+            if (overlay.style.display === 'flex') {
+                overlay.style.display = 'none';
+            } else {
+                overlay.style.display = 'flex';
+            }
+        }
+
+        function simulateFlow() {
+            // Simulate user typing and bot responding
+            setTimeout(() => {
+                document.getElementById('user-msg-1').style.display = 'block';
+                // Scroll to bottom
+                const body = document.getElementById('chat-body');
+                body.scrollTop = body.scrollHeight;
+            }, 500);
+
+            setTimeout(() => {
+                document.getElementById('catalog-results').style.display = 'block';
+                const body = document.getElementById('chat-body');
+                body.scrollTop = body.scrollHeight;
+            }, 1500);
+        }
+
+        function showWhatsAppFlow() {
+            document.getElementById('wa-flow').style.display = 'block';
+            const body = document.getElementById('chat-body');
+            body.scrollTop = body.scrollHeight;
+        }
+    </script>
+</body>
+</html>
