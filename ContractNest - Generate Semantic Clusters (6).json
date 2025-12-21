@@ -1,0 +1,2482 @@
+{
+  "name": "ContractNest - Generate Semantic Clusters",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "process-profile",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -3216,
+        272
+      ],
+      "id": "e666a5c4-a4a6-4da6-a62d-077bc886e26f",
+      "webhookId": "d1dc9ba9-db57-4f84-aeef-79586fb18e3a"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.body.type }}",
+              "value2": "manual"
+            }
+          ]
+        }
+      },
+      "name": "IF Manual",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -3008,
+        272
+      ],
+      "id": "10d93abb-9004-4287-9cfe-0075d02f184c"
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "rawContent",
+              "value": "={{ $json.body.content }}"
+            },
+            {
+              "name": "userId",
+              "value": "={{ $json.body.userId }}"
+            },
+            {
+              "name": "groupId",
+              "value": "={{ $json.body.groupId }}"
+            },
+            {
+              "name": "sourceUrl"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Set Manual Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -2816,
+        128
+      ],
+      "id": "7d58a596-7a17-44c0-855b-1f8c5f0144ca"
+    },
+    {
+      "parameters": {
+        "url": "=https://r.jina.ai/{{ $json.body.websiteUrl }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "Jina Reader",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        -2816,
+        416
+      ],
+      "id": "e08e3989-518f-4d9c-9ca3-6e1ad288a72c",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.error !== undefined || !$json.data || $json.data.length < 100 }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "Jina Failed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -2608,
+        416
+      ],
+      "id": "749aece2-ddb5-4450-8289-a97868ade983"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Webhook').item.json.body.websiteUrl }}",
+        "options": {
+          "redirect": {
+            "redirect": {
+              "followRedirects": true,
+              "maxRedirects": 5
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "name": "Fallback Direct Fetch",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        -2416,
+        576
+      ],
+      "id": "c1d526da-ecb8-4fba-a375-39c79ddcbad6",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.error !== undefined }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "Fallback Failed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -2208,
+        576
+      ],
+      "id": "624e3c93-3da2-44b4-b8aa-4b45d5637780"
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "status",
+              "value": "error"
+            },
+            {
+              "name": "errorCode",
+              "value": "WEBSITE_FETCH_FAILED"
+            },
+            {
+              "name": "message",
+              "value": "Unable to fetch website content"
+            },
+            {
+              "name": "details",
+              "value": "={{ $json.error?.message || 'Website could not be reached or content could not be extracted' }}"
+            },
+            {
+              "name": "suggestion",
+              "value": "Please paste your business description manually instead"
+            }
+          ],
+          "boolean": [
+            {
+              "name": "recoverable",
+              "value": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Website Error Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -2016,
+        720
+      ],
+      "id": "9ce3b501-058f-4536-97e3-ed8a14c23fca"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"gpt-4o-mini\",\n  \"max_tokens\": 1500,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Extract business information from this HTML. Return a clean text summary with: company name, services/products, key differentiators, contact info if available. No HTML tags in output.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": {{ JSON.stringify(($json.data || $json.body || \"\").substring(0, 15000)) }}\n    }\n  ]\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "name": "AI Extract Fallback",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        -2016,
+        416
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "id": "da67c5c3-576d-4b9d-9fea-539ddf18f476",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "4g02dgZvOYwRtT8x",
+          "name": "Header Auth account"
+        },
+        "openAiApi": {
+          "id": "D7quOivJEzyKnfHS",
+          "name": "BBBwhatsapp"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.error !== undefined || $json.choices === undefined }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "AI Extract Failed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -1808,
+        416
+      ],
+      "id": "fb4dcac2-a9b0-465e-871d-962d90994868"
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "status",
+              "value": "error"
+            },
+            {
+              "name": "errorCode",
+              "value": "AI_EXTRACT_FAILED"
+            },
+            {
+              "name": "message",
+              "value": "Failed to extract content from website"
+            },
+            {
+              "name": "details",
+              "value": "={{ $json.error?.message || 'AI service temporarily unavailable' }}"
+            },
+            {
+              "name": "suggestion",
+              "value": "Please try again in a few moments or paste your content manually"
+            }
+          ],
+          "boolean": [
+            {
+              "name": "recoverable",
+              "value": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Extract Error Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -1616,
+        576
+      ],
+      "id": "01a45693-5be2-4696-a99f-d17df0460eb0"
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "rawContent",
+              "value": "={{ $json.choices[0].message.content }}"
+            },
+            {
+              "name": "userId",
+              "value": "={{ $('Webhook').item.json.body.userId }}"
+            },
+            {
+              "name": "groupId",
+              "value": "={{ $('Webhook').item.json.body.groupId }}"
+            },
+            {
+              "name": "sourceUrl",
+              "value": "={{ $('Webhook').item.json.body.websiteUrl }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Set Fallback Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -1616,
+        320
+      ],
+      "id": "2fe45ed5-51f1-4c95-a8cd-831ba065888b"
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "rawContent",
+              "value": "={{ $json.data }}"
+            },
+            {
+              "name": "userId",
+              "value": "={{ $('Webhook').item.json.body.userId }}"
+            },
+            {
+              "name": "groupId",
+              "value": "={{ $('Webhook').item.json.body.groupId }}"
+            },
+            {
+              "name": "sourceUrl",
+              "value": "={{ $('Webhook').item.json.body.websiteUrl }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Set Jina Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -2416,
+        272
+      ],
+      "id": "5e4ea7ac-edc0-47b1-95ae-9fd92d589ea0"
+    },
+    {
+      "parameters": {},
+      "name": "Merge Website Paths",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        -1408,
+        224
+      ],
+      "id": "d40e4550-88c4-46a2-a155-33bacb4d9d4f"
+    },
+    {
+      "parameters": {},
+      "name": "Merge All Paths",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        -1216,
+        176
+      ],
+      "id": "cec85714-852a-4e92-adf0-6773b39a404b"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"gpt-4o\",\n  \"max_tokens\": 2000,\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"Rewrite this business description professionally for a networking directory. Guidelines: Keep facts accurate, use engaging language, 150-300 words, include a tagline at start, use We or I appropriately. Output only the enhanced description.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": {{ JSON.stringify($json.rawContent) }}\n    }\n  ]\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "name": "Enhance Profile",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        -1008,
+        176
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "id": "76a72f3e-f713-42a2-b2db-6a5e00154a83",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "4g02dgZvOYwRtT8x",
+          "name": "Header Auth account"
+        },
+        "openAiApi": {
+          "id": "D7quOivJEzyKnfHS",
+          "name": "BBBwhatsapp"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.error !== undefined || $json.choices === undefined }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "Enhance Failed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -816,
+        176
+      ],
+      "id": "b950baf8-32b3-4f00-a0eb-e32c87259041"
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "status",
+              "value": "error"
+            },
+            {
+              "name": "errorCode",
+              "value": "AI_ENHANCE_FAILED"
+            },
+            {
+              "name": "message",
+              "value": "Failed to enhance profile content"
+            },
+            {
+              "name": "details",
+              "value": "={{ $json.error?.message || 'AI service temporarily unavailable' }}"
+            },
+            {
+              "name": "suggestion",
+              "value": "Please try again in a few moments"
+            },
+            {
+              "name": "originalContent",
+              "value": "={{ $('Merge All Paths').item.json.rawContent }}"
+            }
+          ],
+          "boolean": [
+            {
+              "name": "recoverable",
+              "value": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Enhance Error Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -608,
+        320
+      ],
+      "id": "02450f68-f16c-49b0-80eb-83e3db857c79"
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "status",
+              "value": "success"
+            },
+            {
+              "name": "enhancedContent",
+              "value": "={{ $json.choices[0].message.content }}"
+            },
+            {
+              "name": "originalContent",
+              "value": "={{ $('Merge All Paths').item.json.rawContent }}"
+            },
+            {
+              "name": "userId",
+              "value": "={{ $('Merge All Paths').item.json.userId }}"
+            },
+            {
+              "name": "groupId",
+              "value": "={{ $('Merge All Paths').item.json.groupId }}"
+            },
+            {
+              "name": "sourceUrl",
+              "value": "={{ $('Merge All Paths').item.json.sourceUrl || '' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Success Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -608,
+        64
+      ],
+      "id": "aaecef01-da19-49e2-ac2a-d3949a2b5503"
+    },
+    {
+      "parameters": {},
+      "name": "Merge Errors",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        -416,
+        528
+      ],
+      "id": "ee66fc89-f3ea-4371-ab3f-c88f475ab9f2"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -416,
+        64
+      ],
+      "id": "534e1aee-0b02-4776-8c5a-5a9604b07f18"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "name": "Respond Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        528
+      ],
+      "id": "ffecac21-f5b0-41bc-876e-62aadb251ca3"
+    },
+    {
+      "parameters": {
+        "content": "Vani-COntractNest-Profile Creation",
+        "height": 928,
+        "width": 3728
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -3568,
+        -32
+      ],
+      "typeVersion": 1,
+      "id": "c5fafed8-1c60-42e1-90d8-e969b5fc24f9",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.body.textToEmbed !== undefined && $json.body.textToEmbed.length > 0 }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "Validate Input",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -3040,
+        1264
+      ],
+      "id": "6859c81e-ec7f-4599-9875-676a17389691"
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "status",
+              "value": "error"
+            },
+            {
+              "name": "errorCode",
+              "value": "INVALID_INPUT"
+            },
+            {
+              "name": "message",
+              "value": "Missing or empty textToEmbed field"
+            },
+            {
+              "name": "suggestion",
+              "value": "Provide textToEmbed in request body"
+            }
+          ],
+          "boolean": [
+            {
+              "name": "recoverable"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Invalid Input Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -2832,
+        1408
+      ],
+      "id": "d4bd6cbb-dc2a-4b9b-8bb4-c11b081e814f"
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "textToEmbed",
+              "value": "={{ $json.body.textToEmbed.substring(0, 8000) }}"
+            },
+            {
+              "name": "membershipId",
+              "value": "={{ $json.body.membershipId }}"
+            },
+            {
+              "name": "chapter",
+              "value": "={{ $json.body.chapter || '' }}"
+            },
+            {
+              "name": "businessName",
+              "value": "={{ $json.body.businessName || '' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Prepare Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -2832,
+        1168
+      ],
+      "id": "a193ae80-a8ac-4165-87e7-0f718de31d0b"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/embeddings",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"text-embedding-3-small\",\n  \"input\": {{ JSON.stringify($json.textToEmbed) }}\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "OpenAI Embeddings",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        -2640,
+        1168
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "id": "33b778cd-a9aa-4bef-81fb-14c5ef5b4325",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "4g02dgZvOYwRtT8x",
+          "name": "Header Auth account"
+        },
+        "openAiApi": {
+          "id": "D7quOivJEzyKnfHS",
+          "name": "BBBwhatsapp"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.error !== undefined || $json.data === undefined }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "Embedding Failed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -2432,
+        1168
+      ],
+      "id": "f9261223-6831-4352-93a6-0af3a0a3bbf8"
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "status",
+              "value": "error"
+            },
+            {
+              "name": "errorCode",
+              "value": "EMBEDDING_FAILED"
+            },
+            {
+              "name": "message",
+              "value": "Failed to generate embedding"
+            },
+            {
+              "name": "details",
+              "value": "={{ $json.error?.message || 'OpenAI API temporarily unavailable' }}"
+            },
+            {
+              "name": "suggestion",
+              "value": "Please try again in a few moments"
+            },
+            {
+              "name": "membershipId",
+              "value": "={{ $('Prepare Data').item.json.membershipId }}"
+            }
+          ],
+          "boolean": [
+            {
+              "name": "recoverable",
+              "value": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Embedding Error Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -2240,
+        1312
+      ],
+      "id": "318e0304-cbb8-40c3-89aa-167a016a67f2"
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "status",
+              "value": "success"
+            },
+            {
+              "name": "membershipId",
+              "value": "={{ $('Prepare Data').item.json.membershipId }}"
+            },
+            {
+              "name": "chapter",
+              "value": "={{ $('Prepare Data').item.json.chapter }}"
+            },
+            {
+              "name": "businessName",
+              "value": "={{ $('Prepare Data').item.json.businessName }}"
+            },
+            {
+              "name": "model",
+              "value": "text-embedding-ada-002"
+            }
+          ],
+          "number": [
+            {
+              "name": "dimensions",
+              "value": 1536
+            },
+            {
+              "name": "tokensUsed",
+              "value": "={{ $json.usage?.total_tokens || 0 }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Prepare Success",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -2240,
+        1056
+      ],
+      "id": "6a5ac725-0eb6-49b5-a820-940e97e784e6"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the embedding array and other data\nconst embedding = $('OpenAI Embeddings').item.json.data[0].embedding;\nconst prevData = $('Prepare Success').item.json;\n\nreturn {\n  status: prevData.status,\n  membershipId: prevData.membershipId,\n  chapter: prevData.chapter,\n  businessName: prevData.businessName,\n  embedding: embedding,\n  dimensions: prevData.dimensions,\n  tokensUsed: prevData.tokensUsed,\n  model: prevData.model\n};"
+      },
+      "name": "Build Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2032,
+        1056
+      ],
+      "id": "8092edc0-5635-43f4-9fb8-d21d8ccf3afc"
+    },
+    {
+      "parameters": {},
+      "name": "Merge Errors1",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        -2032,
+        1360
+      ],
+      "id": "ddfc1e2f-f924-4b0a-8d60-9b95d3aa6171"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "name": "Respond Success1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -1824,
+        1056
+      ],
+      "id": "7c3aeb51-09fa-4044-bede-c0d87bf00320"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "name": "Respond Error1",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -1824,
+        1360
+      ],
+      "id": "8ead5455-c556-43df-83e1-38c613d029f4"
+    },
+    {
+      "parameters": {
+        "content": "Profile Ingest with embeddings",
+        "height": 672,
+        "width": 2064,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -3296,
+        992
+      ],
+      "typeVersion": 1,
+      "id": "e2283e58-1609-4c7e-adc1-e57bd9734728",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "generate-embedding",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "profile embed",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -3232,
+        1264
+      ],
+      "id": "7c900763-0e75-4050-bbea-e2177b1a9b22",
+      "webhookId": "6eadc11c-df4a-4f20-b2a5-9571f2cea928"
+    },
+    {
+      "parameters": {
+        "content": "Generate Clusters",
+        "height": 944,
+        "width": 2112
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -3296,
+        1792
+      ],
+      "typeVersion": 1,
+      "id": "d4c6fe1a-dc4b-4c03-bbb1-f5d7b18fe741",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"gpt-4o-mini\",\n  \"temperature\": 0.3,\n  \"max_tokens\": 2000,\n  \"response_format\": { \"type\": \"json_object\" },\n  \"messages\": [\n    {\n      \"role\": \"system\",\n      \"content\": \"You are a semantic analysis expert specializing in business profile optimization for search. Generate semantic clusters to match customer searches with relevant businesses.\\n\\nContext:\\n- Used by WhatsApp bot to identify relevant businesses\\n- Target audience: Indian businesses and customers\\n- Consider: industry terms, common misspellings, regional terms (Indian English/Hindi transliterations), product/service alternatives\\n\\nReturn ONLY valid JSON.\"\n    },\n    {\n      \"role\": \"user\",\n      \"content\": {{ JSON.stringify(\"Analyze this business profile and generate semantic clusters.\\n\\nProfile: \" + $json.profile_text + \"\\n\\nExisting Keywords: \" + $json.keywords + \"\\n\\nGenerate 3-5 semantic clusters. For each include:\\n1. primary_term: Main keyword (lowercase)\\n2. related_terms: Array of 10-15 related search terms (lowercase) - synonyms, misspellings, Hindi transliterations, customer phrases, industry jargon\\n3. category: One of [Technology, Healthcare, Services, Manufacturing, Trading, Education, Finance, Real Estate, Retail, Hospitality, Consulting, Other]\\n4. confidence_score: 0.0 to 1.0\\n\\nReturn JSON: { \\\"clusters\\\": [{ \\\"primary_term\\\": \\\"term\\\", \\\"related_terms\\\": [...], \\\"category\\\": \\\"Category\\\", \\\"confidence_score\\\": 0.95 }] }\") }}\n    }\n  ]\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "name": "OpenAI Generate Clusters",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        -2528,
+        2064
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "id": "475ed2ec-3b92-4c99-8386-2a154b6c02f4",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "4g02dgZvOYwRtT8x",
+          "name": "Header Auth account"
+        },
+        "openAiApi": {
+          "id": "D7quOivJEzyKnfHS",
+          "name": "BBBwhatsapp"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.error !== undefined || $json.choices === undefined }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "OpenAI Failed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -2336,
+        2064
+      ],
+      "id": "82b384f9-f1ef-4d17-95bd-c08bc751d062"
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "status",
+              "value": "error"
+            },
+            {
+              "name": "errorCode",
+              "value": "CLUSTER_GENERATION_FAILED"
+            },
+            {
+              "name": "message",
+              "value": "Failed to generate semantic clusters"
+            },
+            {
+              "name": "details",
+              "value": "={{ $json.error?.message || 'OpenAI API temporarily unavailable' }}"
+            },
+            {
+              "name": "suggestion",
+              "value": "Please try again in a few moments"
+            },
+            {
+              "name": "membership_id",
+              "value": "={{ $('Prepare Data1').item.json.membership_id }}"
+            }
+          ],
+          "boolean": [
+            {
+              "name": "recoverable",
+              "value": true
+            }
+          ],
+          "number": [
+            {
+              "name": "clusters_generated"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "OpenAI Error Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -2128,
+        2208
+      ],
+      "id": "839945eb-4d1a-4c1f-964f-585affc835d2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse GPT response and format output\nconst input = $input.first().json;\nconst membershipId = $('Prepare Data1').first().json.membership_id;\nconst chapter = $('Prepare Data1').first().json.chapter;\n\ntry {\n  // Get the message content from OpenAI response\n  const responseText = input.choices[0].message.content;\n  \n  // Parse the JSON response\n  const parsed = JSON.parse(responseText);\n  const clusters = parsed.clusters || [];\n  \n  // Validate and clean up clusters\n  const validatedClusters = clusters.map((cluster) => ({\n    primary_term: (cluster.primary_term || '').toLowerCase().trim(),\n    related_terms: (cluster.related_terms || [])\n      .map(t => t.toLowerCase().trim())\n      .filter(t => t.length > 0),\n    category: cluster.category || 'Services',\n    confidence_score: Math.min(1, Math.max(0, parseFloat(cluster.confidence_score) || 0.8))\n  })).filter(c => c.primary_term.length > 0);\n  \n  return {\n    status: 'success',\n    membership_id: membershipId,\n    chapter: chapter,\n    clusters_generated: validatedClusters.length,\n    clusters: validatedClusters,\n    tokens_used: input.usage?.total_tokens || 0\n  };\n  \n} catch (error) {\n  return {\n    status: 'error',\n    errorCode: 'PARSE_ERROR',\n    membership_id: membershipId,\n    message: 'Failed to parse cluster response',\n    details: error.message,\n    clusters_generated: 0,\n    clusters: [],\n    recoverable: true\n  };\n}"
+      },
+      "name": "Parse Clusters",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2128,
+        1952
+      ],
+      "id": "94f4d034-442f-400a-9660-119689171a77"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.status }}",
+              "value2": "success"
+            }
+          ]
+        }
+      },
+      "name": "Parse Success?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -1936,
+        1952
+      ],
+      "id": "994ee05b-c722-4fa6-b0ad-b096843f7cfa"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "generate-semantic-clusters",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook1",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -3136,
+        2160
+      ],
+      "id": "422f2c19-4a62-48b8-8326-0364da4bb650",
+      "webhookId": "468d8440-9c64-44a5-b935-5d6003559795"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.body.membership_id !== undefined && $json.body.profile_text !== undefined && $json.body.profile_text.length > 0 }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "Validate Input1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -2928,
+        2160
+      ],
+      "id": "665ffd52-0922-4787-aa93-659a922922ad"
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "status",
+              "value": "error"
+            },
+            {
+              "name": "errorCode",
+              "value": "INVALID_INPUT"
+            },
+            {
+              "name": "message",
+              "value": "Missing required fields: membership_id and profile_text are required"
+            },
+            {
+              "name": "suggestion",
+              "value": "Provide membership_id and profile_text in request body"
+            }
+          ],
+          "boolean": [
+            {
+              "name": "recoverable"
+            }
+          ],
+          "number": [
+            {
+              "name": "clusters_generated"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Invalid Input Response1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -2736,
+        2304
+      ],
+      "id": "8bb50b6c-20aa-4cf5-be24-3e4c7478a79d"
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "membership_id",
+              "value": "={{ $json.body.membership_id }}"
+            },
+            {
+              "name": "profile_text",
+              "value": "={{ $json.body.profile_text.substring(0, 6000) }}"
+            },
+            {
+              "name": "keywords",
+              "value": "={{ ($json.body.keywords || []).join(', ') }}"
+            },
+            {
+              "name": "chapter",
+              "value": "={{ $json.body.chapter || '' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Prepare Data1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -2736,
+        2064
+      ],
+      "id": "ceb76d06-1680-4ffd-9ca2-09973cced774"
+    },
+    {
+      "parameters": {},
+      "name": "Merge Errors2",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        -1728,
+        2256
+      ],
+      "id": "181b0438-fc4a-4a8e-9959-49b3aceb3b5b"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "name": "Respond Success2",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -1728,
+        1952
+      ],
+      "id": "df46cee2-cce1-4aab-8863-743e31105582"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "name": "Respond Error2",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -1536,
+        2256
+      ],
+      "id": "2f53ad7c-505f-423e-b90f-46d645fb9ecb"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ai-search",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "AI Search Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        -3200,
+        3216
+      ],
+      "id": "124b468e-9593-4d05-a68b-2d0a81a0cb7a",
+      "webhookId": "ai-search-webhook-001"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.body.query !== undefined && $json.body.query.length > 0 && ($json.body.group_id !== undefined || $json.body.scope === 'product') }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "Validate Search Input",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -2992,
+        3216
+      ],
+      "id": "2b1d8b82-868a-4606-9cbc-eac96bf88fba"
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "status",
+              "value": "error"
+            },
+            {
+              "name": "errorCode",
+              "value": "INVALID_INPUT"
+            },
+            {
+              "name": "message",
+              "value": "Missing required fields"
+            },
+            {
+              "name": "details",
+              "value": "query and group_id are required"
+            },
+            {
+              "name": "suggestion",
+              "value": "Provide query and group_id in request body"
+            }
+          ],
+          "boolean": [
+            {
+              "name": "recoverable",
+              "value": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Invalid Search Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -2848,
+        3408
+      ],
+      "id": "185b036a-bcf2-4b62-b150-45cf947bfe9e"
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "query",
+              "value": "={{ $json.body.query }}"
+            },
+            {
+              "name": "query_normalized",
+              "value": "={{ $json.body.query.toLowerCase().trim() }}"
+            },
+            {
+              "name": "group_id",
+              "value": "={{ $json.body.group_id || '' }}"
+            },
+            {
+              "name": "scope",
+              "value": "={{ $json.body.scope || 'group' }}"
+            },
+            {
+              "name": "intent_code",
+              "value": "={{ $json.body.intent_code || 'search_offering' }}"
+            },
+            {
+              "name": "user_role",
+              "value": "={{ $json.body.user_role || 'member' }}"
+            },
+            {
+              "name": "channel",
+              "value": "={{ $json.body.channel || 'web' }}"
+            }
+          ],
+          "number": [
+            {
+              "name": "limit",
+              "value": "={{ $json.body.limit || 10 }}"
+            }
+          ],
+          "boolean": [
+            {
+              "name": "use_cache",
+              "value": "={{ $json.body.use_cache !== false }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Prepare Search Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -2784,
+        3104
+      ],
+      "id": "8664ec09-5362-4bb2-9fa9-6ff48b2870a8"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://uwyqhzotluikawcboldr.supabase.co/rest/v1/rpc/get_cached_search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_group_id\": \"{{ $json.group_id }}\",\n  \"p_query_normalized\": \"{{ $json.query_normalized }}\"\n}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "Check Search Cache",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        -2576,
+        3104
+      ],
+      "id": "9de1df5a-8bf3-4683-a16f-6d9fe44075d5",
+      "credentials": {
+        "supabaseApi": {
+          "id": "2fZymtq9mYEwMwaS",
+          "name": "BaseProduct"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.is_cached === true }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "Cache Hit?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -2368,
+        3104
+      ],
+      "id": "198c5b85-efd6-4b62-b529-4f49d5adfd2d"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Return cached results\nconst cacheData = $input.first().json;\nconst searchData = $('Prepare Search Data').first().json;\n\nreturn {\n  status: 'success',\n  from_cache: true,\n  cache_hit_count: cacheData.hit_count || 1,\n  results_count: cacheData.results_count || 0,\n  results: cacheData.results || [],\n  query: searchData.query,\n  search_scope: searchData.scope\n};"
+      },
+      "name": "Format Cached Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2160,
+        2992
+      ],
+      "id": "4981953f-b73f-42ec-a042-0e2faa8f3ff5"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/embeddings",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"text-embedding-3-small\",\n  \"input\": {{ JSON.stringify($('Prepare Search Data').item.json.query) }}\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "Generate Search Embedding",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        -2160,
+        3216
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "id": "3eef7119-ab0e-408f-aecc-136606ecaa96",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "4g02dgZvOYwRtT8x",
+          "name": "Header Auth account"
+        },
+        "openAiApi": {
+          "id": "D7quOivJEzyKnfHS",
+          "name": "BBBwhatsapp"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.error !== undefined || $json.data === undefined }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "Search Embedding Failed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -1952,
+        3216
+      ],
+      "id": "7716ab41-3af7-48f7-b12b-1dc6d0befad0"
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "status",
+              "value": "error"
+            },
+            {
+              "name": "errorCode",
+              "value": "EMBEDDING_FAILED"
+            },
+            {
+              "name": "message",
+              "value": "Failed to generate search embedding"
+            },
+            {
+              "name": "details",
+              "value": "={{ $json.error?.message || 'OpenAI API temporarily unavailable' }}"
+            },
+            {
+              "name": "suggestion",
+              "value": "Please try again in a few moments"
+            },
+            {
+              "name": "query",
+              "value": "={{ $('Prepare Search Data').item.json.query }}"
+            }
+          ],
+          "boolean": [
+            {
+              "name": "recoverable",
+              "value": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Search Embedding Error",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -1744,
+        3104
+      ],
+      "id": "5ef8e424-72df-40dc-b7ad-e0e9939be4c9"
+    },
+    {
+      "parameters": {
+        "jsCode": "const embedding = $input.first().json.data[0].embedding;\nconst searchData = $('Prepare Search Data').first().json;\n\n// Convert embedding array to PostgreSQL vector string format\nconst embeddingString = '[' + embedding.join(',') + ']';\n\n// Return as object (not stringified)\nreturn {\n  p_group_id: searchData.group_id,\n  p_query_text: searchData.query,\n  p_query_embedding: embeddingString,\n  p_intent_code: searchData.intent_code,\n  p_user_role: searchData.user_role,\n  p_channel: searchData.channel,\n  p_scope: searchData.scope,\n  p_limit: searchData.limit,\n  p_use_cache: searchData.use_cache\n};"
+      },
+      "name": "Format Search Embedding",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1872,
+        3552
+      ],
+      "id": "61d58a85-75a3-414f-a506-c417c1508878"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://uwyqhzotluikawcboldr.supabase.co/rest/v1/rpc/unified_search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_group_id\": \"{{ $json.p_group_id }}\",\n  \"p_query_text\": \"{{ $json.p_query_text }}\",\n  \"p_query_embedding\": \"{{ $json.p_query_embedding }}\",\n  \"p_intent_code\": \"{{ $json.p_intent_code }}\",\n  \"p_user_role\": \"{{ $json.p_user_role }}\",\n  \"p_channel\": \"{{ $json.p_channel }}\",\n  \"p_scope\": \"{{ $json.p_scope }}\",\n  \"p_limit\": {{ $json.p_limit }},\n  \"p_use_cache\": {{ $json.p_use_cache }}\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "Execute Unified Search",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        -1632,
+        3472
+      ],
+      "id": "e886f470-6b4f-43c7-8b7a-3e2ab748fe5e",
+      "credentials": {
+        "supabaseApi": {
+          "id": "2fZymtq9mYEwMwaS",
+          "name": "BaseProduct"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "boolean": [
+            {
+              "value1": "={{ $json.error !== undefined }}",
+              "value2": true
+            }
+          ]
+        }
+      },
+      "name": "Search Failed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -1280,
+        3504
+      ],
+      "id": "fc0b9c4a-19e5-42b6-b5dc-2c1068719ca6"
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "status",
+              "value": "error"
+            },
+            {
+              "name": "errorCode",
+              "value": "SEARCH_FAILED"
+            },
+            {
+              "name": "message",
+              "value": "Search execution failed"
+            },
+            {
+              "name": "details",
+              "value": "={{ $json.error?.message || $json.message || 'Database search service temporarily unavailable' }}"
+            },
+            {
+              "name": "suggestion",
+              "value": "Please try again in a few moments"
+            }
+          ],
+          "boolean": [
+            {
+              "name": "recoverable",
+              "value": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Search Error Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        -1408,
+        2880
+      ],
+      "id": "7278ba5b-33a9-41d9-bdfb-d6c27c436438"
+    },
+    {
+      "parameters": {
+        "jsCode": "const rpcResult = $input.first().json;\nconst searchData = $('Prepare Search Data').first().json;\n\n// Handle RPC-level errors (permission denied, etc.)\nif (rpcResult.success === false) {\n  return {\n    status: 'error',\n    errorCode: 'SEARCH_FAILED',\n    message: rpcResult.error || 'Search failed',\n    details: rpcResult.denial_reason || 'Unknown error',\n    query: searchData.query,\n    recoverable: true\n  };\n}\n\n// Transform results to output spec\nconst results = (rpcResult.results || []).map(r => ({\n  membership_id: r.membership_id,\n  tenant_id: r.tenant_id,\n  group_id: r.group_id,\n  group_name: r.group_name || '',\n  business_name: r.business_name || '',\n  business_email: r.business_email || '',\n  city: r.city || '',\n  industry: r.industry || '',\n  profile_snippet: r.profile_snippet || '',\n  ai_enhanced_description: r.ai_enhanced_description || '',\n  approved_keywords: r.approved_keywords || [],\n  similarity: r.similarity,\n  similarity_original: r.similarity_original,\n  boost_applied: r.boost_applied,\n  match_type: r.match_type\n}));\n\nreturn {\n  status: 'success',\n  query: searchData.query,\n  from_cache: rpcResult.from_cache || false,\n  results_count: rpcResult.results_count || results.length,\n  cluster_enhancement: results.some(r => r.boost_applied === 'cluster_match'),\n  intent_code: rpcResult.intent_code || searchData.intent_code,\n  results: results\n};"
+      },
+      "name": "Format Search Results",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1024,
+        3392
+      ],
+      "id": "d28bdf71-ce7e-4b60-a185-bc79123a19b2"
+    },
+    {
+      "parameters": {},
+      "name": "Merge Search Errors",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        -928,
+        3216
+      ],
+      "id": "6434df86-bf6d-47e0-b8a7-9b494d1af93d"
+    },
+    {
+      "parameters": {},
+      "name": "Merge Search Success",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        -800,
+        3504
+      ],
+      "id": "7ec64cc8-3475-4672-8929-377a31a65dc8"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "name": "Respond Search Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -528,
+        3536
+      ],
+      "id": "44cce4ab-6da6-4f6b-afbe-55b7d69bf43b"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 400
+        }
+      },
+      "name": "Respond Search Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        3040
+      ],
+      "id": "8ad9b512-02a6-44af-9a62-14858618f47c"
+    },
+    {
+      "parameters": {
+        "content": "ContractNest AI Search",
+        "height": 928,
+        "width": 3056,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -3280,
+        2816
+      ],
+      "typeVersion": 1,
+      "id": "5782e2a5-a87f-4d81-a00c-d5a706aee62a",
+      "name": "Sticky Note3"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "IF Manual",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Manual": {
+      "main": [
+        [
+          {
+            "node": "Set Manual Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Jina Reader",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Manual Data": {
+      "main": [
+        [
+          {
+            "node": "Merge All Paths",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Jina Reader": {
+      "main": [
+        [
+          {
+            "node": "Jina Failed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Jina Failed?": {
+      "main": [
+        [
+          {
+            "node": "Fallback Direct Fetch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set Jina Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Jina Data": {
+      "main": [
+        [
+          {
+            "node": "Merge Website Paths",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fallback Direct Fetch": {
+      "main": [
+        [
+          {
+            "node": "Fallback Failed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fallback Failed?": {
+      "main": [
+        [
+          {
+            "node": "Website Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Extract Fallback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Website Error Response": {
+      "main": [
+        [
+          {
+            "node": "Merge Errors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Extract Fallback": {
+      "main": [
+        [
+          {
+            "node": "AI Extract Failed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Extract Failed?": {
+      "main": [
+        [
+          {
+            "node": "Extract Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set Fallback Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Error Response": {
+      "main": [
+        [
+          {
+            "node": "Merge Errors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Fallback Data": {
+      "main": [
+        [
+          {
+            "node": "Merge Website Paths",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Website Paths": {
+      "main": [
+        [
+          {
+            "node": "Merge All Paths",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge All Paths": {
+      "main": [
+        [
+          {
+            "node": "Enhance Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enhance Profile": {
+      "main": [
+        [
+          {
+            "node": "Enhance Failed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enhance Failed?": {
+      "main": [
+        [
+          {
+            "node": "Enhance Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Success Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enhance Error Response": {
+      "main": [
+        [
+          {
+            "node": "Merge Errors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Success Response": {
+      "main": [
+        [
+          {
+            "node": "Respond Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Errors": {
+      "main": [
+        [
+          {
+            "node": "Respond Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Input": {
+      "main": [
+        [
+          {
+            "node": "Prepare Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Invalid Input Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Invalid Input Response": {
+      "main": [
+        [
+          {
+            "node": "Merge Errors1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Data": {
+      "main": [
+        [
+          {
+            "node": "OpenAI Embeddings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Embeddings": {
+      "main": [
+        [
+          {
+            "node": "Embedding Failed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embedding Failed?": {
+      "main": [
+        [
+          {
+            "node": "Embedding Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embedding Error Response": {
+      "main": [
+        [
+          {
+            "node": "Merge Errors1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Success": {
+      "main": [
+        [
+          {
+            "node": "Build Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Response": {
+      "main": [
+        [
+          {
+            "node": "Respond Success1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Errors1": {
+      "main": [
+        [
+          {
+            "node": "Respond Error1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "profile embed": {
+      "main": [
+        [
+          {
+            "node": "Validate Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Generate Clusters": {
+      "main": [
+        [
+          {
+            "node": "OpenAI Failed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Failed?": {
+      "main": [
+        [
+          {
+            "node": "OpenAI Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Parse Clusters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Error Response": {
+      "main": [
+        [
+          {
+            "node": "Merge Errors2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Clusters": {
+      "main": [
+        [
+          {
+            "node": "Parse Success?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Success?": {
+      "main": [
+        [
+          {
+            "node": "Respond Success2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge Errors2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Validate Input1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Input1": {
+      "main": [
+        [
+          {
+            "node": "Prepare Data1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Invalid Input Response1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Invalid Input Response1": {
+      "main": [
+        [
+          {
+            "node": "Merge Errors2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Data1": {
+      "main": [
+        [
+          {
+            "node": "OpenAI Generate Clusters",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Errors2": {
+      "main": [
+        [
+          {
+            "node": "Respond Error2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Search Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate Search Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Search Input": {
+      "main": [
+        [
+          {
+            "node": "Prepare Search Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Invalid Search Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Invalid Search Input": {
+      "main": [
+        [
+          {
+            "node": "Merge Search Errors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Search Data": {
+      "main": [
+        [
+          {
+            "node": "Check Search Cache",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Search Cache": {
+      "main": [
+        [
+          {
+            "node": "Cache Hit?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cache Hit?": {
+      "main": [
+        [
+          {
+            "node": "Format Cached Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Generate Search Embedding",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Cached Response": {
+      "main": [
+        [
+          {
+            "node": "Merge Search Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Search Embedding": {
+      "main": [
+        [
+          {
+            "node": "Search Embedding Failed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Embedding Failed?": {
+      "main": [
+        [
+          {
+            "node": "Search Embedding Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Format Search Embedding",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Embedding Error": {
+      "main": [
+        [
+          {
+            "node": "Merge Search Errors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Search Embedding": {
+      "main": [
+        [
+          {
+            "node": "Execute Unified Search",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Unified Search": {
+      "main": [
+        [
+          {
+            "node": "Search Failed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Failed?": {
+      "main": [
+        [
+          {
+            "node": "Search Error Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Format Search Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Error Response": {
+      "main": [
+        [
+          {
+            "node": "Merge Search Errors",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Search Results": {
+      "main": [
+        [
+          {
+            "node": "Merge Search Success",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Search Errors": {
+      "main": [
+        [
+          {
+            "node": "Respond Search Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Search Success": {
+      "main": [
+        [
+          {
+            "node": "Respond Search Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "acc9a71e-98be-4377-9801-2313f620b7d8",
+  "meta": {
+    "instanceId": "d02f26ce494e21831d4758181cd36d8b37e601d67ddcbdd7a37eac55bb4e4287"
+  },
+  "id": "eaaqKnn26j8vfHDD",
+  "tags": []
+}

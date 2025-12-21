@@ -1,0 +1,3117 @@
+{
+  "name": "GroupDiscovery-Agent-Clean",
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "valid-check",
+              "leftValue": "={{ $json.is_valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "If Valid",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -4368,
+        1136
+      ],
+      "id": "f5b53f6b-1cb6-491a-b399-4cacc0278a21"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://n8n.srv1096269.hstgr.cloud/webhook/generate-embedding",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"textToEmbed\": {{ JSON.stringify($json.query) }},\n  \"membershipId\": \"search-query\",\n  \"chapter\": \"search\",\n  \"businessName\": \"search\"\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "Embedding Attempt 1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -4144,
+        1280
+      ],
+      "id": "0a724227-762a-45b9-907d-f7c01e5ab6f5",
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst inputData = $('Validate Input1').first().json;\nconst hasData = response.embedding && response.status === 'success';\n\nif (hasData) {\n  return {\n    ...inputData,\n    embedding: response.embedding,\n    embedding_success: true,\n    embedding_attempt: 1\n  };\n}\n\nreturn {\n  ...inputData,\n  embedding_success: false,\n  embedding_attempt: 1,\n  last_error: response.message || 'Embedding failed'\n};"
+      },
+      "name": "Check Embedding 1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3920,
+        1232
+      ],
+      "id": "ba82d02f-fd83-4523-a0ce-4be1abd7e2c6"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "emb-1-ok",
+              "leftValue": "={{ $json.embedding_success }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "If Embedding 1 OK",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -3696,
+        1232
+      ],
+      "id": "7d649408-03da-4c3e-a7f6-df1e0cb6f342"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/embeddings",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"text-embedding-3-small\",\n  \"input\": {{ JSON.stringify($json.query) }}\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "Embedding Attempt 2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -3632,
+        1088
+      ],
+      "id": "59d63d46-a6b6-4d79-a517-61066ccdc917",
+      "credentials": {
+        "openAiApi": {
+          "id": "D7quOivJEzyKnfHS",
+          "name": "BBBwhatsapp"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst inputData = $('Validate Input1').first().json;\nconst hasData = response.data && response.data[0] && response.data[0].embedding;\nif (hasData) {\n  const embeddingArray = response.data[0].embedding;\n  // Format as PostgreSQL vector string literal\n  const embeddingString = '[' + embeddingArray.join(',') + ']';\n  return {\n    ...inputData,\n    embedding: embeddingString,\n    embedding_success: true,\n    embedding_attempt: 1\n  };\n}\nreturn {\n  ...inputData,\n  embedding_success: false,\n  embedding_attempt: 1,\n  last_error: response.error?.message || 'Embedding failed'\n};"
+      },
+      "name": "Check Embedding 2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3264,
+        1136
+      ],
+      "id": "aca0b6b2-2159-44fb-9f7a-02bb4307c41a"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "emb-2-ok",
+              "leftValue": "={{ $json.embedding_success }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "If Embedding 2 OK",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -3040,
+        1136
+      ],
+      "id": "b3f488db-59b8-4d76-9e2d-fd6a978b8cad"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/embeddings",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"text-embedding-3-small\",\n  \"input\": {{ JSON.stringify($json.query) }}\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "Embedding Attempt 3",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2816,
+        1040
+      ],
+      "id": "26a72078-9f52-4e1e-bebd-094de3cfd784",
+      "credentials": {
+        "openAiApi": {
+          "id": "D7quOivJEzyKnfHS",
+          "name": "BBBwhatsapp"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst inputData = $('Validate Input1').first().json;\nconst hasData = response.data && response.data[0] && response.data[0].embedding;\nif (hasData) {\n  const embeddingArray = response.data[0].embedding;\n  // Format as PostgreSQL vector string literal\n  const embeddingString = '[' + embeddingArray.join(',') + ']';\n  return {\n    ...inputData,\n    embedding: embeddingString,\n    embedding_success: true,\n    embedding_attempt: 1\n  };\n}\nreturn {\n  ...inputData,\n  embedding_success: false,\n  embedding_attempt: 1,\n  last_error: response.error?.message || 'Embedding failed'\n};"
+      },
+      "name": "Check Embedding 3",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2608,
+        1040
+      ],
+      "id": "f265f4a4-538f-4d40-803e-af73588ed50c"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "emb-3-ok",
+              "leftValue": "={{ $json.embedding_success }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "If Embedding 3 OK",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -2384,
+        1040
+      ],
+      "id": "0bc84bc5-0a23-4cdf-b992-6bb368016712"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge all successful embedding paths\nconst input = $input.first().json;\nreturn input;"
+      },
+      "name": "Merge Embedding Success",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3456,
+        1360
+      ],
+      "id": "c116897d-103e-4f6e-bfb3-637b4daee0bb"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://uwyqhzotluikawcboldr.supabase.co/rest/v1/rpc/search_businesses_v2",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_query_text\": \"{{ $json.query }}\",\n  \"p_embedding\": {{ JSON.stringify($json.embedding) }},\n  \"p_group_id\": \"{{ $json.group_id }}\",\n  \"p_limit\": {{ $json.limit }},\n  \"p_threshold\": 0.5\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "Search Attempt 1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -3264,
+        1488
+      ],
+      "id": "cf472e17-2820-4fa2-99af-7a9dde1977cf",
+      "credentials": {
+        "supabaseApi": {
+          "id": "2fZymtq9mYEwMwaS",
+          "name": "BaseProduct"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst inputData = $('Merge Embedding Success').first().json;\n\n// Check for success\nif (response.success === true || (response.results && !response.error)) {\n  return {\n    ...inputData,\n    search_response: response,\n    search_success: true,\n    search_attempt: 1\n  };\n}\n\n// Check for permission error (don't retry)\nif (response.success === false && response.denial_reason) {\n  return {\n    ...inputData,\n    search_success: false,\n    search_denied: true,\n    denial_reason: response.denial_reason\n  };\n}\n\n// Failed - can retry\nreturn {\n  ...inputData,\n  search_success: false,\n  search_attempt: 1,\n  last_search_error: response.error || response.message || 'Search failed'\n};"
+      },
+      "name": "Check Search 1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3040,
+        1328
+      ],
+      "id": "f0c4ea97-5bd8-4ba7-9c33-6bb4d9a684eb"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "search-1-ok",
+              "leftValue": "={{ $json.search_success }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "If Search 1 OK",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -2816,
+        1328
+      ],
+      "id": "44e643a4-713b-4ee5-8b36-21cda4f60581"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "denied-check",
+              "leftValue": "={{ $json.search_denied }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "If Access Denied",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -2608,
+        1232
+      ],
+      "id": "d9da127f-9b71-47b1-9a1d-94b8aaf01e0f"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nreturn {\n  success: false,\n  error_code: 'ACCESS_DENIED',\n  error_message: input.denial_reason || 'You do not have permission to search in this group.',\n  query: input.query,\n  results: [],\n  duration_ms: Date.now() - input.start_time\n};"
+      },
+      "name": "Access Denied Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2384,
+        1136
+      ],
+      "id": "ea6a8a4a-2579-488c-8a9f-eaeb868d0856"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://uwyqhzotluikawcboldr.supabase.co/rest/v1/rpc/debug_embedding_input",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"p_query_text\": \"{{ $('Merge Embedding Success').first().json.query }}\",\n  \"p_embedding\": \"{{ $('Merge Embedding Success').first().json.embedding }}\",\n  \"p_group_id\": \"{{ $('Merge Embedding Success').first().json.group_id }}\"\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "Search Attempt 2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2384,
+        1328
+      ],
+      "id": "219018b1-6a5e-4004-90c9-c47ee19e57df",
+      "credentials": {
+        "supabaseApi": {
+          "id": "2fZymtq9mYEwMwaS",
+          "name": "BaseProduct"
+        }
+      },
+      "disabled": true,
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst inputData = $('Check Search 1').first().json;\n\nif (response.success === true || (response.results && !response.error)) {\n  return {\n    ...inputData,\n    search_response: response,\n    search_success: true,\n    search_attempt: 2\n  };\n}\n\nreturn {\n  ...inputData,\n  search_success: false,\n  search_attempt: 2,\n  search_error: response.error || response.message || 'Search failed after 2 attempts'\n};"
+      },
+      "name": "Check Search 2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2160,
+        1328
+      ],
+      "id": "0e9037a8-0f5f-4fd7-97b2-c7b07aaedcb9"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "search-2-ok",
+              "leftValue": "={{ $json.search_success }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "If Search 2 OK",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -1936,
+        1328
+      ],
+      "id": "f12f7c23-43bf-4462-b261-97ed1b4d62f5"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nreturn {\n  success: false,\n  error_code: 'SEARCH_FAILED',\n  error_message: 'Search could not be completed. Please try again.',\n  query: input.query,\n  results: [],\n  duration_ms: Date.now() - input.start_time,\n  _debug: { attempts: 2, last_error: input.search_error }\n};"
+      },
+      "name": "Search Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1728,
+        1232
+      ],
+      "id": "65081b86-48bb-43cb-b9ad-a565b3609eb7"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge successful search paths\nconst input = $input.first().json;\nreturn input;"
+      },
+      "name": "Merge Search Success",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2608,
+        1440
+      ],
+      "id": "2b9c64f3-b7dc-47c9-b91e-f74b043159f8"
+    },
+    {
+      "parameters": {
+        "jsCode": "// FORMAT SUCCESS RESPONSE\nconst input = $input.first().json;\nconst searchData = input.search_response || {};\nconst results = searchData.results || [];\nconst resultsCount = searchData.results_count || results.length;\nconst fromCache = searchData.from_cache || false;\nconst duration = Date.now() - input.start_time;\n\nif (resultsCount === 0) {\n  return {\n    success: true,\n    query: input.query,\n    message: 'No businesses found matching \"' + input.query + '\". Try different keywords.',\n    results: [],\n    total_found: 0,\n    from_cache: fromCache,\n    duration_ms: duration\n  };\n}\n\nconst formattedResults = results.map((r, idx) => ({\n  rank: idx + 1,\n  membership_id: r.membership_id,\n  business_name: r.business_name || 'Unknown Business',\n  short_description: (r.profile_snippet || r.ai_enhanced_description || '').substring(0, 200),\n  industry: r.industry || 'General',\n  city: r.city || '',\n  similarity: Math.round((r.similarity || 0) * 100),\n  match_type: r.match_type || 'vector',\n  boost_applied: r.boost_applied || null\n}));\n\nlet summary = 'Found ' + resultsCount + ' business' + (resultsCount > 1 ? 'es' : '') + ' matching \"' + input.query + '\":\\n\\n';\n\nformattedResults.slice(0, 5).forEach((r, idx) => {\n  summary += (idx + 1) + '. **' + r.business_name + '**\\n';\n  if (r.short_description) {\n    summary += '   ' + r.short_description.substring(0, 100) + (r.short_description.length > 100 ? '...' : '') + '\\n';\n  }\n  summary += '   Location: ' + (r.city || 'N/A') + ' | Industry: ' + r.industry + ' | Match: ' + r.similarity + '%\\n\\n';\n});\n\nif (resultsCount > 5) {\n  summary += '...and ' + (resultsCount - 5) + ' more results.\\n';\n}\n\nreturn {\n  success: true,\n  query: input.query,\n  summary: summary,\n  results: formattedResults,\n  total_found: resultsCount,\n  from_cache: fromCache,\n  duration_ms: duration,\n  _meta: {\n    embedding_attempts: input.embedding_attempt,\n    search_attempts: input.search_attempt\n  }\n};"
+      },
+      "name": "Format Success",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2384,
+        1536
+      ],
+      "id": "07e449f2-95b6-4545-9562-e63a2b965809"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Final output passthrough\nreturn $input.first().json;"
+      },
+      "name": "Final Output",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1504,
+        1328
+      ],
+      "id": "7045e48f-fd20-4e88-a071-85bcf42f9e29"
+    },
+    {
+      "parameters": {
+        "jsCode": "// INPUT VALIDATION & SANITIZATION\nconst startTime = Date.now();\nconst input = $input.first().json.body || $input.first().json;\n\nlet query = (input.query || '').toString().trim().replace(/[<>\"'`;\\\\]/g, '').substring(0, 500);\nconst groupId = (input.group_id || '').toString().trim();\nconst limit = Math.min(Math.max(parseInt(input.limit) || 5, 1), 20);\nconst channel = (input.channel || 'chat').toString().trim();\nconst userRole = (input.user_role || 'member').toString().trim();\n\nconst errors = [];\nif (!query || query.length < 2) errors.push('Search query too short (min 2 chars)');\nif (!groupId) errors.push('Group ID required');\n\nconst uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;\nif (groupId && !uuidRegex.test(groupId)) errors.push('Invalid Group ID format');\n\nreturn {\n  query,\n  group_id: groupId,\n  limit,\n  channel,\n  user_role: userRole,\n  is_valid: errors.length === 0,\n  validation_error: errors.join('; '),\n  start_time: startTime\n};"
+      },
+      "name": "Validate Input1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4576,
+        1136
+      ],
+      "id": "4e815989-3e1a-4199-b5bf-a64c0140c91f"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nreturn {\n  success: false,\n  error_code: 'VALIDATION_ERROR',\n  error_message: input.validation_error,\n  query: input.query,\n  results: [],\n  duration_ms: Date.now() - input.start_time\n};"
+      },
+      "name": "Validation Error1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4144,
+        1008
+      ],
+      "id": "7f82ea03-d7c9-4eeb-bee4-a7e611f1a35b"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst duration = Date.now() - input.start_time;\n\nlet userMessage = 'Could not process your search. ';\nif (input.embedding_error?.includes('rate') || input.embedding_error?.includes('limit')) {\n  userMessage += 'Service is busy. Please try again in a moment.';\n} else {\n  userMessage += 'Please try again or use different search terms.';\n}\n\nreturn {\n  success: false,\n  error_code: 'EMBEDDING_FAILED',\n  error_message: userMessage,\n  query: input.query,\n  results: [],\n  duration_ms: duration,\n  _debug: { attempts: 3, last_error: input.embedding_error }\n};"
+      },
+      "name": "Embedding Error1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2128,
+        1024
+      ],
+      "id": "802cae1b-3c39-4df5-ae8a-7ed48d2b7c82"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "tool-search-businesses",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "name": "SearchBusiness",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -4800,
+        1136
+      ],
+      "id": "7fdf4d18-f8f0-4989-a764-d4f980bdcd31",
+      "webhookId": "tool-search-businesses"
+    },
+    {
+      "parameters": {
+        "content": "SearchBusinesss",
+        "height": 832,
+        "width": 3920
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -4960,
+        976
+      ],
+      "typeVersion": 1,
+      "id": "01110897-f7db-46eb-8430-dacf380357ab",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "tool-list-members",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "name": "List Members Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -4032,
+        2512
+      ],
+      "id": "f08c45b4-ce2c-4657-8baf-01846d8d0bcb",
+      "webhookId": "tool-list-members"
+    },
+    {
+      "parameters": {
+        "jsCode": "// INPUT VALIDATION\nconst startTime = Date.now();\nconst input = $input.first().json.body || $input.first().json;\n\nconst groupId = (input.group_id || '').toString().trim();\nconst segment = (input.segment || input.industry || '').toString().trim();\nconst city = (input.city || '').toString().trim();\nconst limit = Math.min(Math.max(parseInt(input.limit) || 10, 1), 50);\nconst offset = Math.max(parseInt(input.offset) || 0, 0);\n\nconst errors = [];\nif (!groupId) errors.push('Group ID required');\n\nconst uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;\nif (groupId && !uuidRegex.test(groupId)) errors.push('Invalid Group ID format');\n\nreturn {\n  group_id: groupId,\n  segment: segment,\n  city: city,\n  limit: limit,\n  offset: offset,\n  is_valid: errors.length === 0,\n  validation_error: errors.join('; '),\n  start_time: startTime\n};"
+      },
+      "name": "Validate Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3824,
+        2512
+      ],
+      "id": "f053efab-8261-4fa8-a400-25b3ffd957fd"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nreturn {\n  success: false,\n  error_code: 'VALIDATION_ERROR',\n  error_message: input.validation_error,\n  results: [],\n  duration_ms: Date.now() - input.start_time\n};"
+      },
+      "name": "Validation Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3376,
+        2384
+      ],
+      "id": "c5baecc5-7e88-4b98-813d-dfcb3931642d"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://uwyqhzotluikawcboldr.supabase.co/rest/v1/rpc/get_members_by_scope",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_scope\": \"group\",\n  \"p_group_id\": \"{{ $json.group_id }}\",\n  \"p_industry_filter\": \"{{ $json.segment }}\",\n  \"p_search_text\": \"{{ $json.city }}\",\n  \"p_limit\": {{ $json.limit }},\n  \"p_offset\": {{ $json.offset }}\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "Get Members Attempt 1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -3376,
+        2608
+      ],
+      "id": "850b68ad-76d7-44df-abb5-09f36b309421",
+      "credentials": {
+        "supabaseApi": {
+          "id": "2fZymtq9mYEwMwaS",
+          "name": "BaseProduct"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst inputData = $('Validate Input').first().json;\n\n// Check for error\nif (response.error || response.message) {\n  return {\n    ...inputData,\n    api_success: false,\n    api_attempt: 1,\n    last_error: response.error || response.message\n  };\n}\n\n// Success\nreturn {\n  ...inputData,\n  api_response: response,\n  api_success: true,\n  api_attempt: 1\n};"
+      },
+      "name": "Check Response 1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3152,
+        2608
+      ],
+      "id": "6e756ae4-86f0-48dd-9680-6ae7f58c88a0"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "api-1-ok",
+              "leftValue": "={{ $json.api_success }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "If API 1 OK",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -2944,
+        2608
+      ],
+      "id": "e89a332c-0346-425e-86c4-738bf263fbd9"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://uwyqhzotluikawcboldr.supabase.co/rest/v1/rpc/get_members_by_scope",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_scope\": \"group\",\n  \"p_group_id\": \"{{ $json.group_id }}\",\n  \"p_industry_filter\": \"{{ $json.segment }}\",\n  \"p_chapter_filter\": \"\",\n  \"p_search_text\": \"{{ $json.city }}\",\n  \"p_limit\": {{ $json.limit }},\n  \"p_offset\": {{ $json.offset }}\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "Get Members Attempt 2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2720,
+        2512
+      ],
+      "id": "1baac60f-e14e-4d4a-becb-3932d6253129",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "2fZymtq9mYEwMwaS",
+          "name": "BaseProduct"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst inputData = $('Check Response 1').first().json;\n\nif (response.error || response.message) {\n  return {\n    ...inputData,\n    api_success: false,\n    api_attempt: 2,\n    api_error: response.error || response.message\n  };\n}\n\nreturn {\n  ...inputData,\n  api_response: response,\n  api_success: true,\n  api_attempt: 2\n};"
+      },
+      "name": "Check Response 2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2496,
+        2512
+      ],
+      "id": "edcad059-e1f2-4641-8f4e-24b05c52aa3b"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "api-2-ok",
+              "leftValue": "={{ $json.api_success }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "If API 2 OK",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -2272,
+        2512
+      ],
+      "id": "a1bb9180-5bbb-4641-9e84-269ade1d5c3b"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nreturn {\n  success: false,\n  error_code: 'API_FAILED',\n  error_message: 'Could not retrieve members. Please try again.',\n  results: [],\n  duration_ms: Date.now() - input.start_time,\n  _debug: { attempts: 2, last_error: input.api_error }\n};"
+      },
+      "name": "API Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2064,
+        2416
+      ],
+      "id": "a17b4db4-b5a0-4e8b-ac26-e154a0baf815"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Merge successful API paths\nconst input = $input.first().json;\nreturn input;"
+      },
+      "name": "Merge Success",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2720,
+        2704
+      ],
+      "id": "c3a5c132-8aa9-4b21-b91e-838f422eecb3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "valid-check",
+              "leftValue": "={{ $json.is_valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "If Valid1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -3600,
+        2512
+      ],
+      "id": "e7f5c893-973b-4988-861a-bb1141c82751"
+    },
+    {
+      "parameters": {
+        "jsCode": "// FORMAT SUCCESS RESPONSE\nconst input = $input.first().json;\nconst response = input.api_response;\nconst duration = Date.now() - input.start_time;\n\n// Handle different response formats\nlet members = [];\nlet totalCount = 0;\n\nif (Array.isArray(response)) {\n  members = response;\n  totalCount = response.length;\n} else if (response.members) {\n  members = response.members;\n  totalCount = response.total_count || members.length;\n} else if (response.results) {\n  members = response.results;\n  totalCount = response.total_count || members.length;\n}\n\nif (members.length === 0) {\n  let message = 'No members found';\n  if (input.segment) message += ' in segment \"' + input.segment + '\"';\n  if (input.city) message += ' in city \"' + input.city + '\"';\n  message += '.';\n  \n  return {\n    success: true,\n    message: message,\n    results: [],\n    total_found: 0,\n    filters_applied: {\n      segment: input.segment || null,\n      city: input.city || null\n    },\n    duration_ms: duration\n  };\n}\n\nconst formattedResults = members.map((m, idx) => ({\n  rank: input.offset + idx + 1,\n  membership_id: m.membership_id || m.id,\n  business_name: m.business_name || m.name || 'Unknown',\n  industry: m.industry || m.segment || 'General',\n  city: m.city || '',\n  short_description: (m.profile_snippet || m.description || '').substring(0, 150)\n}));\n\nlet summary = 'Found ' + totalCount + ' member' + (totalCount > 1 ? 's' : '');\nif (input.segment) summary += ' in \"' + input.segment + '\"';\nif (input.city) summary += ' located in ' + input.city;\nsummary += ':\\n\\n';\n\nformattedResults.slice(0, 10).forEach((m, idx) => {\n  summary += (input.offset + idx + 1) + '. **' + m.business_name + '**';\n  if (m.industry) summary += ' (' + m.industry + ')';\n  if (m.city) summary += ' - ' + m.city;\n  summary += '\\n';\n});\n\nif (totalCount > 10) {\n  summary += '\\n...and ' + (totalCount - 10) + ' more.';\n}\n\nreturn {\n  success: true,\n  summary: summary,\n  results: formattedResults,\n  total_found: totalCount,\n  showing: formattedResults.length,\n  offset: input.offset,\n  filters_applied: {\n    segment: input.segment || null,\n    city: input.city || null\n  },\n  duration_ms: duration,\n  _meta: {\n    api_attempts: input.api_attempt\n  }\n};"
+      },
+      "name": "Format Success1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2496,
+        2704
+      ],
+      "id": "b54f3c00-01b4-4c2c-8266-3d9f4f7046c8"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Final output passthrough\nreturn $input.first().json;"
+      },
+      "name": "Final Output1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2064,
+        2608
+      ],
+      "id": "c142a5e5-f01e-468b-a9eb-d706e8ea18ed"
+    },
+    {
+      "parameters": {
+        "content": "list members",
+        "height": 544,
+        "width": 2368,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -4096,
+        2320
+      ],
+      "typeVersion": 1,
+      "id": "8486940c-94be-41e4-aa9d-de4e32444147",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "tool-list-segments",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "name": "List Segments Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -4080,
+        3488
+      ],
+      "id": "10435bcc-a595-4577-b383-0e24482c617e",
+      "webhookId": "tool-list-segments"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://uwyqhzotluikawcboldr.supabase.co/rest/v1/rpc/get_segments_by_scope",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_scope\": \"group\",\n  \"p_group_id\": \"{{ $json.group_id }}\"\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "Get Segments Attempt 1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -3424,
+        3584
+      ],
+      "id": "8503ee13-e26a-48ef-ac18-ced43741bf5e",
+      "credentials": {
+        "supabaseApi": {
+          "id": "2fZymtq9mYEwMwaS",
+          "name": "BaseProduct"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://uwyqhzotluikawcboldr.supabase.co/rest/v1/rpc/get_segments_by_scope",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_scope\": \"group\",\n  \"p_group_id\": \"{{ $json.group_id }}\"\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "Get Segments Attempt 2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2768,
+        3488
+      ],
+      "id": "98932389-bdf3-483b-87ab-31d0408d2042",
+      "credentials": {
+        "supabaseApi": {
+          "id": "2fZymtq9mYEwMwaS",
+          "name": "BaseProduct"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// INPUT VALIDATION\nconst startTime = Date.now();\nconst input = $input.first().json.body || $input.first().json;\n\nconst groupId = (input.group_id || '').toString().trim();\n\nconst errors = [];\nif (!groupId) errors.push('Group ID required');\n\nconst uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;\nif (groupId && !uuidRegex.test(groupId)) errors.push('Invalid Group ID format');\n\nreturn {\n  group_id: groupId,\n  is_valid: errors.length === 0,\n  validation_error: errors.join('; '),\n  start_time: startTime\n};"
+      },
+      "name": "Validate Input2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3872,
+        3488
+      ],
+      "id": "ae0293fd-c7e0-4687-bbcf-9125c6d08991"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "valid-check",
+              "leftValue": "={{ $json.is_valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "If Valid2",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -3648,
+        3488
+      ],
+      "id": "87818da9-2897-45bd-b230-fc35efee6fcd"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nreturn {\n  success: false,\n  error_code: 'VALIDATION_ERROR',\n  error_message: input.validation_error,\n  segments: [],\n  duration_ms: Date.now() - input.start_time\n};"
+      },
+      "name": "Validation Error2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3424,
+        3360
+      ],
+      "id": "0bd6c3ad-fce0-48c6-b6a9-6758f06dcde4"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "api-1-ok",
+              "leftValue": "={{ $json.api_success }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "If API 1 OK1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -2992,
+        3584
+      ],
+      "id": "19365ab7-62a9-4bcd-860d-952b718fac13"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "api-2-ok",
+              "leftValue": "={{ $json.api_success }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "If API 2 OK1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -2320,
+        3488
+      ],
+      "id": "2913bee3-2f04-4297-8bf6-f400e0ca4dcf"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nreturn {\n  success: false,\n  error_code: 'API_FAILED',\n  error_message: 'Could not retrieve segments. Please try again.',\n  segments: [],\n  duration_ms: Date.now() - input.start_time,\n  _debug: { attempts: 2, last_error: input.api_error }\n};"
+      },
+      "name": "API Error1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2112,
+        3392
+      ],
+      "id": "45c6b972-0120-4df1-a954-b28d236177f9"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nreturn input;"
+      },
+      "name": "Merge Success1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2768,
+        3680
+      ],
+      "id": "097d5ec9-a3f0-4d78-a36f-2c8c4df40a1e"
+    },
+    {
+      "parameters": {
+        "jsCode": "// FORMAT SUCCESS RESPONSE\nconst input = $input.first().json;\nconst response = input.api_response;\nconst duration = Date.now() - input.start_time;\n\nlet segments = [];\nif (Array.isArray(response)) {\n  segments = response;\n} else if (response.segments) {\n  segments = response.segments;\n}\n\nif (segments.length === 0) {\n  return {\n    success: true,\n    message: 'No segments/industries found in this group.',\n    segments: [],\n    total_count: 0,\n    duration_ms: duration\n  };\n}\n\nconst formattedSegments = segments.map(s => ({\n name: s.segment_name || s.industry || s.segment || s.name || 'Unknown',\n  member_count: s.member_count || s.count || 0\n}));\n\n// Sort by member count descending\nformattedSegments.sort((a, b) => b.member_count - a.member_count);\n\nlet summary = 'Available industries/segments:\\n\\n';\nformattedSegments.forEach((s, idx) => {\n  summary += (idx + 1) + '. **' + s.name + '** (' + s.member_count + ' member' + (s.member_count !== 1 ? 's' : '') + ')\\n';\n});\n\nreturn {\n  success: true,\n  summary: summary,\n  segments: formattedSegments,\n  total_count: formattedSegments.length,\n  duration_ms: duration,\n  _meta: { api_attempts: input.api_attempt }\n};"
+      },
+      "name": "Format Success2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2544,
+        3680
+      ],
+      "id": "5cb9fe73-c08b-4bb0-8683-8c848df43b2c"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.first().json;"
+      },
+      "name": "Final Output2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2112,
+        3584
+      ],
+      "id": "f4596883-346d-4a48-b508-649e5a3e3c5b"
+    },
+    {
+      "parameters": {
+        "content": "List Segments",
+        "height": 576,
+        "width": 2704
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -4224,
+        3296
+      ],
+      "typeVersion": 1,
+      "id": "78122986-7075-4cfc-93c0-19b314b97a60",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "tool-get-contact",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "name": "Get Contact Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -4144,
+        4320
+      ],
+      "id": "64e69c86-3fea-4f8a-8972-49e98896b893",
+      "webhookId": "tool-get-contact"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://uwyqhzotluikawcboldr.supabase.co/rest/v1/rpc/get_member_contact",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_membership_id\": \"{{ $json.membership_id }}\",\n  \"p_scope\": \"group\",\n  \"p_group_id\": \"{{ $json.group_id }}\"\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "Get Contact Attempt 1",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -3488,
+        4416
+      ],
+      "id": "2068588a-9e3f-4a16-885c-b69ea63bbcec",
+      "credentials": {
+        "supabaseApi": {
+          "id": "2fZymtq9mYEwMwaS",
+          "name": "BaseProduct"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://uwyqhzotluikawcboldr.supabase.co/rest/v1/rpc/get_member_contact",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_membership_id\": \"{{ $json.membership_id }}\",\n  \"p_scope\": \"group\",\n  \"p_group_id\": \"{{ $json.group_id }}\"\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "name": "Get Contact Attempt 2",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2832,
+        4320
+      ],
+      "id": "bd010d7c-0e88-4862-9189-1c82479924af",
+      "credentials": {
+        "supabaseApi": {
+          "id": "2fZymtq9mYEwMwaS",
+          "name": "BaseProduct"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// INPUT VALIDATION\nconst startTime = Date.now();\nconst input = $input.first().json.body || $input.first().json;\n\nconst membershipId = (input.membership_id || '').toString().trim();\nconst groupId = (input.group_id || '').toString().trim();\n\nconst errors = [];\nif (!membershipId) errors.push('Membership ID required');\n\nconst uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;\nif (membershipId && !uuidRegex.test(membershipId)) errors.push('Invalid Membership ID format');\nif (groupId && !uuidRegex.test(groupId)) errors.push('Invalid Group ID format');\n\nreturn {\n  membership_id: membershipId,\n  group_id: groupId,\n  is_valid: errors.length === 0,\n  validation_error: errors.join('; '),\n  start_time: startTime\n};"
+      },
+      "name": "Validate Input3",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3936,
+        4320
+      ],
+      "id": "ff3802fb-a0e2-4d6e-a4dc-30540b5fab60"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "valid-check",
+              "leftValue": "={{ $json.is_valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "If Valid3",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -3712,
+        4320
+      ],
+      "id": "3f60c6dc-1f66-43ce-ac65-4a3804b61247"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nreturn {\n  success: false,\n  error_code: 'VALIDATION_ERROR',\n  error_message: input.validation_error,\n  contact: null,\n  duration_ms: Date.now() - input.start_time\n};"
+      },
+      "name": "Validation Error3",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3488,
+        4192
+      ],
+      "id": "64ee36f2-583b-4e40-b88b-9901f6a3c255"
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst inputData = $('Validate Input3').first().json;\n\nif (response.error || response.message) {\n  return {\n    ...inputData,\n    api_success: false,\n    api_attempt: 1,\n    last_error: response.error || response.message\n  };\n}\n\nreturn {\n  ...inputData,\n  api_response: response,\n  api_success: true,\n  api_attempt: 1\n};"
+      },
+      "name": "Check Response 4",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3264,
+        4416
+      ],
+      "id": "48bd7323-aedc-4470-80c3-ede72b625cdd"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "api-1-ok",
+              "leftValue": "={{ $json.api_success }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "If API 1 OK2",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -3056,
+        4416
+      ],
+      "id": "e5ad5170-10dd-4826-bc68-597fba9701d6"
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst inputData = $('Check Response 4').first().json;\n\nif (response.error || response.message) {\n  return {\n    ...inputData,\n    api_success: false,\n    api_attempt: 2,\n    api_error: response.error || response.message\n  };\n}\n\nreturn {\n  ...inputData,\n  api_response: response,\n  api_success: true,\n  api_attempt: 2\n};"
+      },
+      "name": "Check Response 5",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2608,
+        4320
+      ],
+      "id": "7474a36d-027b-4f1e-9a43-968c299c39af"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "api-2-ok",
+              "leftValue": "={{ $json.api_success }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "name": "If API 2 OK2",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -2384,
+        4320
+      ],
+      "id": "5b6c7302-5187-4912-bd2a-71a62856ab7f"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nreturn {\n  success: false,\n  error_code: 'API_FAILED',\n  error_message: 'Could not retrieve contact details. Please try again.',\n  contact: null,\n  duration_ms: Date.now() - input.start_time,\n  _debug: { attempts: 2, last_error: input.api_error }\n};"
+      },
+      "name": "API Error2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2176,
+        4224
+      ],
+      "id": "0064d91c-dfd8-46ca-872a-8d8ac9e9fda6"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nreturn input;"
+      },
+      "name": "Merge Success2",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2832,
+        4512
+      ],
+      "id": "846d4d24-9fca-4025-9025-c5c07daef588"
+    },
+    {
+      "parameters": {
+        "jsCode": "// FORMAT SUCCESS RESPONSE\nconst input = $input.first().json;\nconst response = input.api_response;\nconst duration = Date.now() - input.start_time;\n\nlet contact = null;\nif (Array.isArray(response) && response.length > 0) {\n  contact = response[0];\n} else if (response && !Array.isArray(response)) {\n  contact = response;\n}\n\nif (!contact || Object.keys(contact).length === 0) {\n  return {\n    success: false,\n    error_code: 'NOT_FOUND',\n    error_message: 'Contact not found for the given membership ID.',\n    contact: null,\n    duration_ms: duration\n  };\n}\n\nconst formattedContact = {\n  membership_id: contact.membership_id || input.membership_id,\n  business_name: contact.business_name || 'Unknown',\n  contact_person: contact.contact_person || contact.owner_name || '',\n  phone: contact.contact_phone || contact.phone || contact.mobile || '',\n  email: contact.contact_email || contact.email || '',\n  website: contact.website_url || contact.website || '',\n  address: contact.address || '',\n  city: contact.city || '',\n  industry: contact.industry || ''\n};\n\nlet summary = '**' + formattedContact.business_name + '**\\n\\n';\nif (formattedContact.contact_person) summary += 'Contact: ' + formattedContact.contact_person + '\\n';\nif (formattedContact.phone) summary += 'Phone: ' + formattedContact.phone + '\\n';\nif (formattedContact.email) summary += 'Email: ' + formattedContact.email + '\\n';\nif (formattedContact.website) summary += 'Website: ' + formattedContact.website + '\\n';\nif (formattedContact.city) summary += 'Location: ' + formattedContact.city + '\\n';\n\nreturn {\n  success: true,\n  summary: summary,\n  contact: formattedContact,\n  duration_ms: duration,\n  _meta: { api_attempts: input.api_attempt }\n};"
+      },
+      "name": "Format Success3",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2608,
+        4512
+      ],
+      "id": "c4430ba1-948b-43ff-abf2-df1ef6ba1a25"
+    },
+    {
+      "parameters": {
+        "jsCode": "return $input.first().json;"
+      },
+      "name": "Final Output3",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2176,
+        4416
+      ],
+      "id": "2ec73a07-c97b-4015-ba60-91714a3d88f5"
+    },
+    {
+      "parameters": {
+        "content": "Get Contacts",
+        "height": 624,
+        "width": 2416,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -4224,
+        4064
+      ],
+      "typeVersion": 1,
+      "id": "d2a84610-3e04-40bb-8a77-6f794208e2fa",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.all().map(item => item.json);\n\n// Check for error\nif (response[0]?.error || response[0]?.message) {\n  return {\n    api_response: null,\n    api_success: false,\n    api_attempt: 1,\n    last_error: response[0].error || response[0].message\n  };\n}\n\n// Success - pass full array\nreturn {\n  api_response: response,\n  api_success: true,\n  api_attempt: 1\n};"
+      },
+      "name": "Check Response 6",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3200,
+        3584
+      ],
+      "id": "17092009-f8fa-4a41-bd44-bef87f46890d"
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.all().map(item => item.json);\n\nif (response[0]?.error || response[0]?.message) {\n  return {\n    api_response: null,\n    api_success: false,\n    api_attempt: 2,\n    api_error: response[0].error || response[0].message\n  };\n}\n\nreturn {\n  api_response: response,\n  api_success: true,\n  api_attempt: 2\n};"
+      },
+      "name": "Check Response ",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2544,
+        3488
+      ],
+      "id": "30963465-e8e3-45ae-858d-7afeb287bfa0"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "group-discovery-agent",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -5024,
+        -768
+      ],
+      "id": "48b33f07-5c1e-42ee-99c7-68ade6c085f5",
+      "webhookId": "group-discovery-agent"
+    },
+    {
+      "parameters": {
+        "jsCode": "// STEP 1: Normalize Input\nconst input = $input.first().json.body || $input.first().json;\n\nconst phone = (input.phone || input.from || '').toString().trim();\nconst userId = (input.user_id || input.userId || '').toString().trim();\nconst message = (input.message || input.text || input.body || '').toString().trim();\nconst channel = (input.channel || (phone ? 'whatsapp' : 'chat')).toLowerCase();\n\nif (!phone && !userId) {\n  return {\n    action: 'error',\n    response: 'Please provide phone or user_id'\n  };\n}\n\nif (!message) {\n  return {\n    action: 'error', \n    response: 'No message provided'\n  };\n}\n\n// Check exit commands\nconst exitCommands = ['bye', 'exit', 'quit', 'end', 'stop', 'goodbye'];\nconst messageLower = message.toLowerCase().trim();\nconst isExit = exitCommands.includes(messageLower);\n\nreturn {\n  phone: phone || null,\n  phone_normalized: phone ? phone.replace(/[^0-9]/g, '') : null,\n  user_id: userId || null,\n  message: message,\n  message_lower: messageLower,\n  channel: channel,\n  is_exit: isExit,\n  start_time: Date.now()\n};"
+      },
+      "name": "Normalize Input",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4800,
+        -768
+      ],
+      "id": "851fd0cf-6c3e-4569-b337-b014fdc511f3"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://uwyqhzotluikawcboldr.supabase.co/rest/v1/rpc/detect_group_activation",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"p_message\": {{ JSON.stringify($json.message) }} }",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "Detect Activation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -4576,
+        -768
+      ],
+      "id": "1182c410-c4c2-42a1-a6ba-b198dad38a53",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "2fZymtq9mYEwMwaS",
+          "name": "BaseProduct"
+        }
+      },
+      "continueOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// STEP 2: Parse activation result\nconst inputData = $('Normalize Input').first().json;\nconst rawDetection = $input.first().json;\nconst detection = Array.isArray(rawDetection) ? rawDetection[0] : rawDetection;\n\nreturn {\n  ...inputData,\n  is_activation: detection?.is_activation === true,\n  detected_group_id: detection?.group_id || null,\n  detected_group_name: detection?.group_name || detection?.group_code || null\n};"
+      },
+      "name": "Parse Activation",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4352,
+        -768
+      ],
+      "id": "acfa5919-d299-4e0c-b454-e25526890ed1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://uwyqhzotluikawcboldr.supabase.co/rest/v1/rpc/get_ai_session",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_phone\": {{ $json.phone ? JSON.stringify($json.phone) : 'null' }},\n  \"p_user_id\": {{ $json.user_id ? JSON.stringify($json.user_id) : 'null' }}\n}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "Get Session",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -4144,
+        -768
+      ],
+      "id": "f115c6b8-2d34-4893-9da5-6eb6e87eb47d",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "2fZymtq9mYEwMwaS",
+          "name": "BaseProduct"
+        }
+      },
+      "continueOnFail": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// STEP 3: MASTER DECISION - Determine what action to take\nconst inputData = $('Parse Activation').first().json;\nconst rawSession = $input.first().json;\nconst session = Array.isArray(rawSession) ? rawSession[0] : rawSession;\nconst hasSession = session && session.session_id;\n\n// Prepare base data\nconst baseData = {\n  ...inputData,\n  session_id: session?.session_id || null,\n  session_group_id: session?.group_id || null,\n  session_group_name: session?.group_name || null,\n  conversation_history: session?.conversation_history || []\n};\n\n// DECISION LOGIC\n\n// 1. EXIT command\nif (inputData.is_exit) {\n  if (hasSession) {\n    return { ...baseData, action: 'end_session' };\n  } else {\n    return { ...baseData, action: 'direct_response', response: '👋 No active session to end.' };\n  }\n}\n\n// 2. ACTIVATION (Hi BBB) - no active session\nif (inputData.is_activation && !hasSession) {\n  return { ...baseData, action: 'create_session' };\n}\n\n// 3. ACTIVATION but already has session - just greet\nif (inputData.is_activation && hasSession) {\n  return { \n    ...baseData, \n    action: 'direct_response', \n    response: `👋 Welcome back! You're already connected to **${session.group_name}**. How can I help you?` \n  };\n}\n\n// 4. Normal message WITH session - go to AI Agent\nif (hasSession) {\n  return { ...baseData, action: 'ai_agent' };\n}\n\n// 5. Normal message WITHOUT session - ask to activate\nreturn { \n  ...baseData, \n  action: 'direct_response', \n  response: '👋 No active session. Say **\"Hi BBB\"** to start a conversation.' \n};"
+      },
+      "name": "Decision Logic",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3920,
+        -768
+      ],
+      "id": "410a1213-04a0-414c-8597-80eed04ae84f"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Route: Check if this is CREATE_SESSION action\nconst input = $input.first().json;\n\nif (input.action !== 'create_session') {\n  // Skip this path - output nothing\n  return [];\n}\n\n// Continue with create session\nreturn input;"
+      },
+      "name": "Filter Create Session",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3696,
+        -976
+      ],
+      "id": "d59000ee-9e4c-4545-bb82-2133b699f9bb"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://uwyqhzotluikawcboldr.supabase.co/rest/v1/rpc/check_user_group_access",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_phone\": {{ $json.phone ? JSON.stringify($json.phone) : 'null' }},\n  \"p_user_id\": {{ $json.user_id ? JSON.stringify($json.user_id) : 'null' }},\n  \"p_group_id\": {{ $json.detected_group_id ? JSON.stringify($json.detected_group_id) : 'null' }}\n}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "Check Access",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -3472,
+        -976
+      ],
+      "id": "eb4af250-1f57-4cf0-84e1-2df64bab8bfd",
+      "credentials": {
+        "supabaseApi": {
+          "id": "2fZymtq9mYEwMwaS",
+          "name": "BaseProduct"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process access check\nconst inputData = $('Filter Create Session').first().json;\nconst rawAccess = $input.first().json;\nconst access = Array.isArray(rawAccess) ? rawAccess[0] : rawAccess;\n\nconst hasAccess = access && (access.has_access === true || access.is_member === true);\n\nif (!hasAccess) {\n  return {\n    action: 'direct_response',\n    response: `Sorry, you don't have access to ${inputData.detected_group_name || 'this group'}.`,\n    ...inputData\n  };\n}\n\nreturn {\n  ...inputData,\n  resolved_user_id: access.user_id || inputData.user_id,\n  user_name: access.user_name || access.business_name || 'there'\n};"
+      },
+      "name": "Process Access",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3248,
+        -976
+      ],
+      "id": "54013d19-5960-4f6a-8491-42bac4482fb8"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://uwyqhzotluikawcboldr.supabase.co/rest/v1/rpc/create_ai_session",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_user_id\": {{ JSON.stringify($json.resolved_user_id || $json.user_id) }},\n  \"p_group_id\": {{ JSON.stringify($json.detected_group_id) }},\n  \"p_phone\": {{ $json.phone ? JSON.stringify($json.phone) : 'null' }},\n  \"p_channel\": {{ JSON.stringify($json.channel) }},\n  \"p_language\": \"en\"\n}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          },
+          "timeout": 10000
+        }
+      },
+      "name": "Create Session",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -3024,
+        -976
+      ],
+      "id": "a7d407cf-afcf-4b32-b83e-4aad28ae562e",
+      "credentials": {
+        "supabaseApi": {
+          "id": "2fZymtq9mYEwMwaS",
+          "name": "BaseProduct"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Format welcome message\nconst inputData = $('Process Access').first().json;\nconst sessionResult = $input.first().json;\n\n// Handle text response (raw UUID) or JSON response\nlet sessionId;\nif (typeof sessionResult === 'string') {\n  sessionId = sessionResult.trim().replace(/\"/g, '');  // Remove quotes if any\n} else if (sessionResult.data) {\n  sessionId = sessionResult.data;\n} else {\n  sessionId = sessionResult;\n}\n\nconst groupName = inputData.detected_group_name || 'the group';\nconst userName = inputData.user_name || 'there';\n\nreturn {\n  action: 'direct_response',\n  response: `👋 Hello ${userName}! Welcome to **${groupName}** Discovery.\\n\\nI can help you:\\n- 🔍 **Search** for businesses (\"find IT companies\")\\n- 📋 **List** members by industry\\n- 📞 **Get contact** details\\n- 🏷️ **Browse** industries\\n\\nHow can I help you today?`,\n  session_id: sessionId,\n  group_id: inputData.detected_group_id,\n  channel: inputData.channel,\n  start_time: inputData.start_time\n};"
+      },
+      "name": "Welcome Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2816,
+        -976
+      ],
+      "id": "f99a9bdd-1807-44c1-b99e-9c2d39f8b5fb"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Route: Check if this is END_SESSION action\nconst input = $input.first().json;\n\nif (input.action !== 'end_session') {\n  return [];\n}\n\nreturn input;"
+      },
+      "name": "Filter End Session",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3696,
+        -768
+      ],
+      "id": "71cf1a1c-bce1-4833-b371-3b72375fbff2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://uwyqhzotluikawcboldr.supabase.co/rest/v1/rpc/end_ai_session",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_phone\": {{ $json.phone ? JSON.stringify($json.phone) : 'null' }},\n  \"p_user_id\": {{ $json.user_id ? JSON.stringify($json.user_id) : 'null' }},\n  \"p_session_id\": {{ $json.session_id ? JSON.stringify($json.session_id) : 'null' }}\n}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          },
+          "timeout": 10000
+        }
+      },
+      "name": "End Session",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -3472,
+        -768
+      ],
+      "id": "dc25e5ef-9c90-4849-b88f-b3a9493217f8",
+      "credentials": {
+        "supabaseApi": {
+          "id": "2fZymtq9mYEwMwaS",
+          "name": "BaseProduct"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Goodbye message\nconst inputData = $('Filter End Session').first().json;\nconst endResult = $input.first().json;\n\n// Handle text response from end_ai_session RPC\nlet endSuccess = true;\nif (typeof endResult === 'object' && endResult.error) {\n  endSuccess = false;\n}\n\nreturn {\n  action: 'direct_response',\n  response: '👋 Goodbye! Your session has ended. Say **\"Hi BBB\"** anytime to start again.',\n  session_id: null,\n  channel: inputData.channel,\n  start_time: inputData.start_time\n};"
+      },
+      "name": "Goodbye Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3248,
+        -768
+      ],
+      "id": "cc752b30-9f93-48e6-b556-f25bbe3010ee"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Route: Check if this is AI_AGENT action\nconst input = $input.first().json;\n\nif (input.action !== 'ai_agent') {\n  return [];\n}\n\n// Add sessionId for Memory node\nreturn {\n  ...input,\n  sessionId: input.session_id\n};"
+      },
+      "name": "Filter AI Agent",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3696,
+        -576
+      ],
+      "id": "4c8cb336-f5fe-4054-8165-f2aee535fce0"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message }}",
+        "options": {
+          "systemMessage": "=You are a helpful business discovery assistant for the {{$json.session_group_name}} group.\n\n## Your Capabilities:\n1. **Search** - Find businesses by keyword, service, or industry\n2. **Get Contact** - Get phone, email, website for a specific business\n3. **List Members** - Show all members in an industry/segment\n4. **List Segments** - Show available industries in the group\n\n## Response Guidelines:\n\n### When showing search results:\n- Show each business separately with clear formatting\n- Include: Name, brief description (1-2 sentences), industry, city\n- After listing, always ask: \"Would you like contact details for any of these businesses?\"\n\n### When user asks for contact/details:\n- Use the get_contact tool with the membership_id\n- Show: Phone, Email, Website, Full address if available\n\n### When no results found:\n- Suggest alternative search terms\n- Offer to list available industries\n\n### Formatting:\n- Use **bold** for business names\n- Keep descriptions short (1-2 sentences max)\n- Use bullet points for contact details\n- Be conversational and helpful\n\n### Follow-up suggestions:\nAfter every response, suggest relevant next actions like:\n- \"Would you like me to find similar businesses?\"\n- \"I can get you their contact details\"\n- \"Want to see other businesses in this industry?\""
+        }
+      },
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        -3472,
+        -576
+      ],
+      "id": "1e13b7ce-d6c7-49d3-b729-8e398fb8118e"
+    },
+    {
+      "parameters": {
+        "options": {
+          "maxTokens": 1000,
+          "temperature": 0.7
+        }
+      },
+      "name": "OpenAI Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        -3888,
+        -368
+      ],
+      "id": "aada4291-9add-4ab6-a52f-8bbfecbdf648",
+      "credentials": {
+        "openAiApi": {
+          "id": "D7quOivJEzyKnfHS",
+          "name": "BBBwhatsapp"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://n8n.srv1096269.hstgr.cloud/webhook/tool-search-businesses",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"query\": \"{query}\",\n  \"group_id\": \"{{ $('Filter AI Agent').first().json.session_group_id }}\",\n  \"limit\": 5,\n  \"channel\": \"{{ $('Filter AI Agent').first().json.channel }}\"\n}",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "query",
+              "description": "Search keywords"
+            }
+          ]
+        }
+      },
+      "name": "Tool Search",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        -3360,
+        -256
+      ],
+      "id": "bda674c9-bee8-4318-b3ab-939bcfceb66d"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://n8n.srv1096269.hstgr.cloud/webhook/tool-list-members",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"group_id\": \"{{ $('Filter AI Agent').first().json.session_group_id }}\",\n  \"segment\": \"{industry}\",\n  \"limit\": 10\n}",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "industry",
+              "description": "Optional industry filter"
+            }
+          ]
+        }
+      },
+      "name": "Tool List Members",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        -3184,
+        -256
+      ],
+      "id": "4a9f9b79-89b8-4603-adf0-81bf5a2bd7d4"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://n8n.srv1096269.hstgr.cloud/webhook/tool-get-contact",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"membership_id\": \"{membership_id}\",\n  \"group_id\": \"{{ $('Filter AI Agent').first().json.session_group_id }}\"\n}",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "membership_id",
+              "description": "Member UUID"
+            }
+          ]
+        }
+      },
+      "name": "Tool Get Contact",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        -3040,
+        -256
+      ],
+      "id": "fa02bb5c-b3e7-46f1-afda-82393607221a"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://n8n.srv1096269.hstgr.cloud/webhook/tool-list-segments",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"group_id\": \"{{ $('Filter AI Agent').first().json.session_group_id }}\"\n}",
+        "placeholderDefinitions": {
+          "values": []
+        }
+      },
+      "name": "Tool List Segments",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        -2864,
+        -320
+      ],
+      "id": "f345a11a-8627-4eab-9f4c-b25919b5ddb6"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Process AI response\nconst inputData = $('Filter AI Agent').first().json;\nconst agentResponse = $input.first().json;\n\nlet responseText = '';\nif (typeof agentResponse === 'string') {\n  responseText = agentResponse;\n} else if (agentResponse.output) {\n  responseText = agentResponse.output;\n} else if (agentResponse.text) {\n  responseText = agentResponse.text;\n} else {\n  responseText = JSON.stringify(agentResponse);\n}\n\nreturn {\n  action: 'ai_response',\n  response: responseText,\n  session_id: inputData.session_id,\n  group_id: inputData.session_group_id,\n  channel: inputData.channel,\n  user_message: inputData.message,\n  start_time: inputData.start_time\n};"
+      },
+      "name": "Process AI Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3152,
+        -624
+      ],
+      "id": "734bbed4-2c31-4a68-9929-c327ecbac079"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://uwyqhzotluikawcboldr.supabase.co/rest/v1/rpc/update_ai_session",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"p_session_id\": {{ JSON.stringify($json.session_id) }},\n  \"p_context\": null,\n  \"p_language\": null,\n  \"p_add_message\": {\n    \"user\": {{ JSON.stringify($json.user_message) }},\n    \"assistant\": {{ JSON.stringify($json.response.substring(0, 500)) }},\n    \"timestamp\": {{ JSON.stringify(new Date().toISOString()) }}\n  }\n}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "name": "Update Session",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2848,
+        -528
+      ],
+      "id": "5fd09539-3d7b-4118-a3c1-f7242961288a",
+      "credentials": {
+        "supabaseApi": {
+          "id": "2fZymtq9mYEwMwaS",
+          "name": "BaseProduct"
+        }
+      },
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Route: Check if this is DIRECT_RESPONSE action\nconst input = $input.first().json;\n\nif (input.action !== 'direct_response') {\n  return [];\n}\n\nreturn input;"
+      },
+      "name": "Filter Direct Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3696,
+        -368
+      ],
+      "id": "57fa6009-16e6-4d74-ae0d-767aa369dd1c"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get data from various sources\nlet aiResponse = {};\nlet searchResults = [];\n\ntry {\n  aiResponse = $('Process AI Response').first().json;\n} catch (e) {}\n\n// Get search results directly from Format Success\ntry {\n  const formatSuccess = $('Format Success').first().json;\n  if (formatSuccess && formatSuccess.results) {\n    searchResults = formatSuccess.results;\n  }\n} catch (e) {}\n\n// Also try from Search Attempt 1 output\ntry {\n  const searchAttempt = $('Search Attempt 1').first().json;\n  if (searchAttempt && searchAttempt.results && searchAttempt.results.length > 0) {\n    searchResults = searchAttempt.results;\n  }\n} catch (e) {}\n\nconst input = $input.first().json;\n\nreturn {\n  success: true,\n  message: aiResponse.response || input.response || 'Here are the results',\n  results: searchResults,\n  results_count: searchResults.length,\n  session_id: input.session_id || null,\n  group_id: input.group_id || input.session_group_id || null,\n  group_name: input.group_name || null,\n  channel: input.channel || 'unknown',\n  duration_ms: input.start_time ? Date.now() - input.start_time : 0\n};"
+      },
+      "name": "Final Output4",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2592,
+        -672
+      ],
+      "id": "fb9a43f9-38a0-4ab8-9eff-e53f27ee4162",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        -3504,
+        -224
+      ],
+      "id": "a58ffa3e-0644-4bcc-860e-eb15f5cf4e19",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        -2400,
+        -656
+      ],
+      "id": "940ee432-9122-44cc-961a-71b187b6d808",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "If Valid": {
+      "main": [
+        [
+          {
+            "node": "Embedding Attempt 1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Validation Error1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embedding Attempt 1": {
+      "main": [
+        [
+          {
+            "node": "Check Embedding 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Embedding 1": {
+      "main": [
+        [
+          {
+            "node": "If Embedding 1 OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Embedding 1 OK": {
+      "main": [
+        [
+          {
+            "node": "Merge Embedding Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Embedding Attempt 2": {
+      "main": [
+        [
+          {
+            "node": "Check Embedding 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Embedding 2": {
+      "main": [
+        [
+          {
+            "node": "If Embedding 2 OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Embedding 2 OK": {
+      "main": [
+        [
+          {
+            "node": "Merge Embedding Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Embedding Attempt 3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embedding Attempt 3": {
+      "main": [
+        [
+          {
+            "node": "Check Embedding 3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Embedding 3": {
+      "main": [
+        [
+          {
+            "node": "If Embedding 3 OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Embedding 3 OK": {
+      "main": [
+        [
+          {
+            "node": "Merge Embedding Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Embedding Error1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Embedding Success": {
+      "main": [
+        [
+          {
+            "node": "Search Attempt 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Attempt 1": {
+      "main": [
+        [
+          {
+            "node": "Check Search 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Search 1": {
+      "main": [
+        [
+          {
+            "node": "If Search 1 OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Search 1 OK": {
+      "main": [
+        [
+          {
+            "node": "Merge Search Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If Access Denied",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Access Denied": {
+      "main": [
+        [
+          {
+            "node": "Access Denied Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Search Attempt 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Access Denied Error": {
+      "main": [
+        [
+          {
+            "node": "Final Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Attempt 2": {
+      "main": [
+        [
+          {
+            "node": "Check Search 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Search 2": {
+      "main": [
+        [
+          {
+            "node": "If Search 2 OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Search 2 OK": {
+      "main": [
+        [
+          {
+            "node": "Merge Search Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Search Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Error": {
+      "main": [
+        [
+          {
+            "node": "Final Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Search Success": {
+      "main": [
+        [
+          {
+            "node": "Format Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Success": {
+      "main": [
+        [
+          {
+            "node": "Final Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Input1": {
+      "main": [
+        [
+          {
+            "node": "If Valid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validation Error1": {
+      "main": [
+        [
+          {
+            "node": "Final Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embedding Error1": {
+      "main": [
+        [
+          {
+            "node": "Final Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SearchBusiness": {
+      "main": [
+        [
+          {
+            "node": "Validate Input1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Members Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Input": {
+      "main": [
+        [
+          {
+            "node": "If Valid1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validation Error": {
+      "main": [
+        [
+          {
+            "node": "Final Output1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Members Attempt 1": {
+      "main": [
+        [
+          {
+            "node": "Check Response 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Response 1": {
+      "main": [
+        [
+          {
+            "node": "If API 1 OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If API 1 OK": {
+      "main": [
+        [
+          {
+            "node": "Merge Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Members Attempt 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Members Attempt 2": {
+      "main": [
+        [
+          {
+            "node": "Check Response 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Response 2": {
+      "main": [
+        [
+          {
+            "node": "If API 2 OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If API 2 OK": {
+      "main": [
+        [
+          {
+            "node": "Merge Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "API Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API Error": {
+      "main": [
+        [
+          {
+            "node": "Final Output1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Success": {
+      "main": [
+        [
+          {
+            "node": "Format Success1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Valid1": {
+      "main": [
+        [
+          {
+            "node": "Get Members Attempt 1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Validation Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Success1": {
+      "main": [
+        [
+          {
+            "node": "Final Output1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Segments Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate Input2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Segments Attempt 1": {
+      "main": [
+        [
+          {
+            "node": "Check Response 6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Segments Attempt 2": {
+      "main": [
+        [
+          {
+            "node": "Check Response ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Input2": {
+      "main": [
+        [
+          {
+            "node": "If Valid2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Valid2": {
+      "main": [
+        [
+          {
+            "node": "Get Segments Attempt 1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Validation Error2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validation Error2": {
+      "main": [
+        [
+          {
+            "node": "Final Output2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If API 1 OK1": {
+      "main": [
+        [
+          {
+            "node": "Merge Success1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Segments Attempt 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If API 2 OK1": {
+      "main": [
+        [
+          {
+            "node": "Merge Success1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "API Error1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API Error1": {
+      "main": [
+        [
+          {
+            "node": "Final Output2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Success1": {
+      "main": [
+        [
+          {
+            "node": "Format Success2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Success2": {
+      "main": [
+        [
+          {
+            "node": "Final Output2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contact Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate Input3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contact Attempt 1": {
+      "main": [
+        [
+          {
+            "node": "Check Response 4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contact Attempt 2": {
+      "main": [
+        [
+          {
+            "node": "Check Response 5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Input3": {
+      "main": [
+        [
+          {
+            "node": "If Valid3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Valid3": {
+      "main": [
+        [
+          {
+            "node": "Get Contact Attempt 1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Validation Error3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validation Error3": {
+      "main": [
+        [
+          {
+            "node": "Final Output3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Response 4": {
+      "main": [
+        [
+          {
+            "node": "If API 1 OK2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If API 1 OK2": {
+      "main": [
+        [
+          {
+            "node": "Merge Success2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Contact Attempt 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Response 5": {
+      "main": [
+        [
+          {
+            "node": "If API 2 OK2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If API 2 OK2": {
+      "main": [
+        [
+          {
+            "node": "Merge Success2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "API Error2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "API Error2": {
+      "main": [
+        [
+          {
+            "node": "Final Output3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Success2": {
+      "main": [
+        [
+          {
+            "node": "Format Success3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Success3": {
+      "main": [
+        [
+          {
+            "node": "Final Output3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Response 6": {
+      "main": [
+        [
+          {
+            "node": "If API 1 OK1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Response ": {
+      "main": [
+        [
+          {
+            "node": "If API 2 OK1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Input": {
+      "main": [
+        [
+          {
+            "node": "Detect Activation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detect Activation": {
+      "main": [
+        [
+          {
+            "node": "Parse Activation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Activation": {
+      "main": [
+        [
+          {
+            "node": "Get Session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Session": {
+      "main": [
+        [
+          {
+            "node": "Decision Logic",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decision Logic": {
+      "main": [
+        [
+          {
+            "node": "Filter Create Session",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Filter End Session",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Filter AI Agent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Filter Direct Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Create Session": {
+      "main": [
+        [
+          {
+            "node": "Check Access",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Access": {
+      "main": [
+        [
+          {
+            "node": "Process Access",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Access": {
+      "main": [
+        [
+          {
+            "node": "Create Session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Session": {
+      "main": [
+        [
+          {
+            "node": "Welcome Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Welcome Message": {
+      "main": [
+        [
+          {
+            "node": "Final Output4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter End Session": {
+      "main": [
+        [
+          {
+            "node": "End Session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "End Session": {
+      "main": [
+        [
+          {
+            "node": "Goodbye Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Goodbye Message": {
+      "main": [
+        [
+          {
+            "node": "Final Output4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter AI Agent": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tool Search": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tool List Members": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tool Get Contact": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tool List Segments": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Process AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process AI Response": {
+      "main": [
+        [
+          {
+            "node": "Update Session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Session": {
+      "main": [
+        [
+          {
+            "node": "Final Output4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Direct Response": {
+      "main": [
+        [
+          {
+            "node": "Final Output4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Final Output4": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "44b5522f-f359-448c-b91c-ebe0751131a3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d02f26ce494e21831d4758181cd36d8b37e601d67ddcbdd7a37eac55bb4e4287"
+  },
+  "id": "UJuB3Em9keHNIZYx",
+  "tags": []
+}
