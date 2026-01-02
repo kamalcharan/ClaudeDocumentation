@@ -143,16 +143,16 @@
 
 ```sql
 -- Block Types
-    type IN ('service', 'spare', 'billing', 'text', 'video', 'image', 'checklist', 'document')
+type IN ('service', 'spare', 'billing', 'text', 'video', 'image', 'checklist', 'document')
 
-    -- Pricing Modes
-    pricing_mode IN ('independent', 'resource_based', 'variant_based', 'multi_resource')
+-- Pricing Modes
+pricing_mode IN ('independent', 'resource_based', 'variant_based', 'multi_resource')
 
-    -- Price Types
-    price_type IN ('per_session', 'per_hour', 'per_day', 'per_unit', 'fixed')
+-- Price Types
+price_type IN ('per_session', 'per_hour', 'per_day', 'per_unit', 'fixed')
 
-    -- Status
-    status IN ('active', 'draft', 'archived')
+-- Status
+status IN ('active', 'draft', 'archived')
 ```
 
 **Indexes:**
