@@ -1,0 +1,299 @@
+# CLAUDE_CODE_GUIDELINES.md
+# ContractNest Development Standards for AI Code Generation
+
+## Overview
+This document contains critical patterns and requirements that MUST be followed when generating code for ContractNest. These patterns have been validated through extensive debugging and production testing.
+
+---
+
+## 1. EDGE FUNCTION SIGNATURE PATTERN (CRITICAL)
+
+All backend services that call Supabase Edge Functions MUST use this signature pattern:
+
+### Signature Generation
+```typescript
+private generateSignature(body: string, timestamp: string): string {
+  if (!this.internalSecret) return '';
+  try {
+    const payload = `${timestamp}.${body}`;  // FORMAT: timestamp.body
+    return crypto
+      .createHmac('sha256', this.internalSecret)
+      .update(payload)
+      .digest('base64');  // ENCODING: base64, NOT hex
+  } catch (error) {
+    return '';
+  }
+}
+```
+
+### Required Headers
+```typescript
+const timestamp = Date.now().toString();  // Milliseconds as string
+const headers = {
+  'Content-Type': 'application/json',
+  'Authorization': `Bearer ${context.accessToken}`,
+  'x-tenant-id': context.tenantId,
+  'x-is-admin': String(context.isAdmin),
+  'x-timestamp': timestamp,  // REQUIRED
+  'x-internal-signature': this.generateSignature(requestBody, timestamp),  // REQUIRED
+};
+```
+
+### URL Pattern for CRUD
+- GET single: `?id=${id}`
+- GET list: `?param1=value1&param2=value2`
+- POST: `` (empty path)
+- PATCH: `?id=${id}`
+- DELETE: `?id=${id}`
+
+### Reference Implementation
+See: `backend/src/services/catBlocksService.ts`
+
+---
+
+## 2. TANSTACK QUERY HOOKS PATTERN (CRITICAL)
+
+### Query Hooks - NEVER throw in queryFn
+```typescript
+// ❌ WRONG - Will crash the page
+queryFn: async () => {
+  if (!currentTenant?.id) {
+    throw new Error('No tenant');  // DON'T DO THIS
+  }
+  const response = await api.get('/api/endpoint');
+  return response.data;
+}
+
+// ✅ CORRECT - Return empty data
+queryFn: async () => {
+  try {
+    const response = await api.get('/api/endpoint');
+    return response.data;
+  } catch (error) {
+    console.error('API error:', error);
+    return { success: true, data: { items: [], total: 0 } };  // Return empty, don't throw
+  }
+}
+```
+
+### Enabled Flag
+```typescript
+// ✅ CORRECT
+enabled: !!currentTenant  // Check truthiness of object
+
+// ❌ WRONG - Can cause issues
+enabled: !!currentTenant?.id  // Don't check nested property
+```
+
+### Reference Implementation
+See: `src/hooks/queries/useResources.ts`
+
+---
+
+## 3. CORS HEADERS (CRITICAL)
+
+When adding new custom headers to API requests, the header MUST be added to backend CORS config:
+
+### Backend CORS Config Location
+`backend/src/index.ts` → `allowedHeaders` array
+
+### Currently Allowed Headers
+```typescript
+allowedHeaders: [
+  'Content-Type',
+  'Authorization',
+  'x-tenant-id',
+  'x-request-id',
+  'x-session-id',
+  'x-environment',
+  'x-product',
+  'x-user-id',
+  'x-user-role',
+  'x-client-version',
+  'x-hmac-signature',
+  'x-timestamp',
+  'idempotency-key',
+  'x-idempotency-key',
+  'x-internal-signature'
+]
+```
+
+### IMPORTANT
+- Do NOT add `x-is-admin` header from frontend - it will cause CORS errors
+- Admin status should come from session storage or JWT token
+- The `api.ts` interceptor handles standard headers automatically
+
+---
+
+## 4. BACKEND SERVICE CLASS PATTERN
+
+### Class Property Declaration
+```typescript
+// ✅ CORRECT - Works with ts-node
+export class MyService {
+  private readonly edgeFunctionUrl: string;
+  private readonly internalSecret: string;
+
+  constructor() {
+    this.edgeFunctionUrl = process.env.SUPABASE_URL 
+      ? `${process.env.SUPABASE_URL}/functions/v1/my-function`
+      : '';
+    this.internalSecret = process.env.INTERNAL_SIGNING_SECRET || '';
+  }
+}
+
+// ❌ WRONG - May cause "Unexpected identifier" errors
+export class MyService {
+  private readonly edgeFunctionUrl: string | null = null;  // Inline assignment can cause issues
+}
+```
+
+### Singleton Export
+```typescript
+// Always export both class and singleton instance
+export class MyService { ... }
+export const myService = new MyService();
+```
+
+### Mock Mode Fallback
+```typescript
+async listItems(context: RequestContext): Promise<ApiResponse<ItemList>> {
+  // Always check for mock mode first
+  if (!this.edgeFunctionUrl) {
+    return { success: true, data: { items: [], total: 0 } };
+  }
+  // ... actual API call
+}
+```
+
+---
+
+## 5. FRONTEND API CALLS
+
+### Use api.ts Interceptor
+```typescript
+// ✅ CORRECT - Uses interceptor which adds auth headers
+import api from '@/services/api';
+const response = await api.get('/api/endpoint');
+
+// ❌ WRONG - Bypasses interceptor
+const response = await fetch('/api/endpoint');
+```
+
+### No Custom Headers in Hooks
+```typescript
+// ✅ CORRECT - No custom headers
+const response = await api.get('/api/catalog-studio/blocks');
+
+// ❌ WRONG - Will cause CORS errors
+const response = await api.get('/api/catalog-studio/blocks', {
+  headers: { 'x-is-admin': 'true' }
+});
+```
+
+---
+
+## 6. CONTROLLER PATTERN
+
+### Use Singleton Services
+```typescript
+// ✅ CORRECT - Import singleton
+import { catBlocksService } from '../services/catBlocksService';
+
+class Controller {
+  getBlocks = async (req, res) => {
+    const result = await catBlocksService.listBlocks(context);
+  };
+}
+
+// ❌ WRONG - Creates duplicate instances
+import { CatBlocksService } from '../services/catBlocksService';
+
+class Controller {
+  private service = new CatBlocksService();  // Don't do this
+}
+```
+
+---
+
+## 7. TYPE DEFINITIONS
+
+### Location
+- Backend types: `backend/src/types/`
+- Frontend types: `src/types/`
+
+### API Response Pattern
+```typescript
+interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: {
+    code: string;
+    message: string;
+    details?: any;
+  };
+  meta?: {
+    request_id?: string;
+    duration_ms?: number;
+    timestamp?: string;
+  };
+}
+```
+
+---
+
+## 8. ENVIRONMENT VARIABLES
+
+### Required for Edge Function Communication
+```env
+SUPABASE_URL=https://your-project.supabase.co
+INTERNAL_SIGNING_SECRET=your-secret-key
+```
+
+### Mock Mode
+If `SUPABASE_URL` is not set, services should gracefully fallback to mock data.
+
+---
+
+## 9. FILE STRUCTURE
+```
+backend/
+├── src/
+│   ├── controllers/     # Route handlers
+│   ├── routes/          # Express routes
+│   ├── services/        # Business logic & Edge Function calls
+│   └── types/           # TypeScript types
+
+src/
+├── hooks/
+│   ├── queries/         # TanStack Query hooks (read)
+│   └── mutations/       # TanStack Mutation hooks (write)
+├── services/
+│   └── api.ts           # Axios instance with interceptors
+└── types/               # Frontend types
+```
+
+---
+
+## 10. DEBUGGING CHECKLIST
+
+When a new API feature doesn't work, check in order:
+
+1. **Backend routes loaded?** Check console for `✅ ... routes loaded`
+2. **CORS error?** Add missing header to `allowedHeaders`
+3. **403 Forbidden from Edge?** Check signature format (timestamp.body, base64)
+4. **Query hook crashes page?** Check for `throw` in queryFn
+5. **Service initialized twice?** Use singleton import, not `new Service()`
+
+---
+
+## Reference Files
+
+| Pattern | Reference File |
+|---------|---------------|
+| Edge Function Service | `backend/src/services/catBlocksService.ts` |
+| Query Hook | `src/hooks/queries/useCatBlocks.ts` |
+| Mutation Hook | `src/hooks/mutations/useCatBlocksMutations.ts` |
+| Controller | `backend/src/controllers/catalogStudioController.ts` |
+| API Interceptor | `src/services/api.ts` |
+| CORS Config | `backend/src/index.ts` (line ~290) |
