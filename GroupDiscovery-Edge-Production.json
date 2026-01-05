@@ -1,0 +1,954 @@
+{
+  "name": "GroupDiscovery-Edge-Production",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "group-discovery-agent",
+        "options": {}
+      },
+      "id": "8773447d-4422-4eed-819c-d41a3d4a1bf1",
+      "name": "Main Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "position": [
+        -704,
+        -384
+      ],
+      "typeVersion": 1,
+      "webhookId": "0b0ad018-d241-4518-add7-76687031b67d"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $json.body || $json;\n\nlet message = '';\nlet phone = '';\nlet channel = 'chat';\nlet listSelectionId = null;\n\n// Detect channel from payload structure\nif (input.customerNumber || input.integratedNumber || input.contentType) {\n  channel = 'whatsapp';\n} else if (input.channel) {\n  channel = input.channel;\n}\n\n// 1. Check for button response (JSON string) - WhatsApp\nif (input.button && typeof input.button === 'string' && input.button.startsWith('{')) {\n  try {\n    const buttonData = JSON.parse(input.button);\n    message = buttonData.text || buttonData.payload || '';\n  } catch (e) {\n    message = input.button;\n  }\n} \n// 2. Check for button object\nelse if (input.button?.text) {\n  message = input.button.text;\n}\n// 3. Check for interactive response in 'messages' field (MSG91 format)\nelse if (input.messages && typeof input.messages === 'string' && input.messages.startsWith('[')) {\n  try {\n    const messagesData = JSON.parse(input.messages);\n    if (messagesData[0]?.interactive?.list_reply) {\n      message = messagesData[0].interactive.list_reply.title || '';\n      listSelectionId = messagesData[0].interactive.list_reply.id || null;\n    } else if (messagesData[0]?.interactive?.button_reply) {\n      message = messagesData[0].interactive.button_reply.title || '';\n      listSelectionId = messagesData[0].interactive.button_reply.id || null;\n    } else {\n      // Not an interactive reply - use text field\n      message = input.text || '';\n    }\n  } catch (e) {\n    message = input.text || '';\n  }\n}\n// 3.1. Check for interactive response in 'interactive' field (fallback)\nelse if (input.interactive && typeof input.interactive === 'string' && input.interactive.startsWith('{')) {\n  try {\n    const interactiveData = JSON.parse(input.interactive);\n    if (interactiveData.list_reply) {\n      message = interactiveData.list_reply.title || '';\n      listSelectionId = interactiveData.list_reply.id || null;\n    } else if (interactiveData.button_reply) {\n      message = interactiveData.button_reply.title || '';\n      listSelectionId = interactiveData.button_reply.id || null;\n    }\n  } catch (e) {\n    message = '';\n  }\n}\n// 4. Check text field\nelse if (input.text) {\n  message = input.text;\n}\n// 5. Check message field\nelse if (input.message) {\n  message = input.message;\n}\n\n// Extract phone\nphone = input.customerNumber || input.from || input.sender || input.phone || '';\nphone = phone.replace('+', '');\n\n// Validate\nconst isValid = message.trim().length > 0 && (phone.length > 0 || channel === 'chat');\n\n// ============================================\n// INTENT DETECTION\n// ============================================\nconst msg = message.toLowerCase().trim();\nlet intent = 'search';\nlet needsEmbedding = false;\nlet isBypass = false;\nlet params = { query: message.trim() };\n\n// === LIST SELECTION HANDLING ===\nif (listSelectionId) {\n  if (listSelectionId.startsWith('member_')) {\n    // User selected a business from search results\n    intent = 'get_contact';\n    needsEmbedding = false;\n    params = { membership_id: listSelectionId.replace('member_', '') };\n  } else if (listSelectionId.startsWith('segment_')) {\n    // User selected an industry from segments list\n    intent = 'list_members';\n    needsEmbedding = false;\n    params = { industry_id: listSelectionId.replace('segment_', ''), segment: message };\n  } else if (listSelectionId.startsWith('card_')) {\n    // User wants to view business card - bypass to send URL directly\n    intent = 'card_link';\n    needsEmbedding = false;\n    isBypass = true;\n    params = { membership_id: listSelectionId.replace('card_', '') };\n  } else if (listSelectionId.startsWith('vcard_')) {\n    // User wants to save contact - bypass to send URL directly\n    intent = 'vcard_link';\n    needsEmbedding = false;\n    isBypass = true;\n    params = { membership_id: listSelectionId.replace('vcard_', '') };\n  } else if (listSelectionId === 'search_again') {\n    intent = 'search_prompt';\n    needsEmbedding = false;\n    isBypass = (channel === 'whatsapp');\n  } else if (listSelectionId === 'main_menu') {\n    intent = 'welcome';\n    needsEmbedding = false;\n  }\n}\n// === VANI MENU OPTIONS ===\nelse if (msg === '1' || msg === 'about vikuna' || msg === 'about') {\n  intent = 'about_owner';\n} else if (msg === '2' || msg === 'book appointment' || msg === 'book' || msg === 'appointment') {\n  intent = 'book_appointment';\n} else if (msg === '3' || msg === 'contact us' || msg === 'call us' || msg === 'call') {\n  intent = 'call_owner';\n} else if (msg === '4' || msg === 'explore bbb' || msg === 'explore') {\n  intent = 'explore_bbb';\n}\n// === BBB MENU OPTIONS ===\nelse if (msg === 'browse industries' || msg === 'industries' || msg === 'segments') {\n  intent = 'list_segments';\n}\nelse if (msg === 'search business' || msg === 'search again') {\n  intent = 'search_prompt';\n  isBypass = (channel === 'whatsapp');\n}\nelse if (msg === 'main menu' || msg === 'menu' || msg === 'back' || msg === '0') {\n  intent = 'welcome';\n}\n// === EXIT ===\nelse if (['bye', 'exit', 'quit', 'goodbye', 'end', 'stop'].includes(msg)) {\n  intent = 'goodbye';\n}\n// === GREETINGS ===\nelse if (['hi', 'hello', 'hey', 'start', 'hii', 'hiii'].includes(msg)) {\n  intent = 'welcome';\n}\n// === SEARCH (needs embedding) ===\nelse {\n  intent = 'search';\n  needsEmbedding = true;\n}\n\nreturn {\n  is_valid: isValid,\n  message: message.trim(),\n  phone: phone,\n  channel: channel,\n  content_type: input.contentType || 'text',\n  customer_name: input.customerName || '',\n  group_id: input.group_id || '13ec19a3-59ee-41a2-8847-c914c496e567',\n  user_id: input.user_id || null,\n  start_time: Date.now(),\n  intent: intent,\n  needs_embedding: needsEmbedding,\n  is_bypass: isBypass,\n  params: params,\n  list_selection_id: listSelectionId,\n  raw_payload: input\n};"
+      },
+      "id": "4566c99b-f764-4966-9aac-001319b5ffde",
+      "name": "Parse Input",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -512,
+        -384
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.is_valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              },
+              "id": "8935b58f-9409-4e56-9857-87bc84ad4071"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "2a1d1375-d930-4704-9ee1-0d7dbabc2deb",
+      "name": "Check Valid",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -304,
+        -384
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nreturn {\n  success: false,\n  intent: 'error',\n  response_type: 'error',\n  detail_level: 'none',\n  message: input.error_message || 'Invalid request. Please check your input.',\n  results: [],\n  results_count: 0,\n  session_id: null,\n  is_new_session: false,\n  group_id: input.group_id || null,\n  group_name: '',\n  channel: input.channel || 'chat',\n  from_cache: false,\n  duration_ms: Date.now() - (input.start_time || Date.now()),\n  error_code: 'VALIDATION_ERROR'\n};"
+      },
+      "id": "069f74a3-ae8c-4349-abc0-3747758de6d5",
+      "name": "Validation Error",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        -96,
+        -96
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {
+          "responseCode": 400,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "bd8f25e5-de9e-4bef-912b-bd4a8d66a512",
+      "name": "Respond Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        160,
+        0
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.needs_embedding }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b6cbe1b0-e5a0-4982-9112-5d445f00b076",
+      "name": "Needs Embedding",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        -80,
+        -416
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ !!($json.data && $json.data[0] && $json.data[0].embedding) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              },
+              "id": "f98e5207-c082-4512-aec7-5a17e934dbc7"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c001403c-c94b-4fa5-bb5f-9e07e742467a",
+      "name": "Check Embedding",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        256,
+        -384
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('Parse Input').first().json;\nconst embeddingResponse = $input.first().json;\n\nconst embedding = embeddingResponse.data[0].embedding;\n\nconst params = {\n  ...input.params,\n  query: input.params.query || input.message,\n  embedding: embedding\n};\n\nreturn {\n  intent: input.intent,\n  message: input.message,\n  phone: input.phone,\n  user_id: input.user_id,\n  group_id: input.group_id,\n  channel: input.channel,\n  params: params,\n  start_time: input.start_time,\n  has_embedding: true\n};"
+      },
+      "id": "703d7fdf-e4dc-414e-ba6e-9c0c70a9c706",
+      "name": "Prepare With Embedding",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        496,
+        -480
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "// Embedding failed - proceed without it (Edge Function will use text search)\nconst input = $('Parse Input').first().json;\n\nreturn {\n  intent: input.intent,\n  message: input.message,\n  phone: input.phone,\n  user_id: input.user_id,\n  group_id: input.group_id,\n  channel: input.channel,\n  params: {\n    ...input.params,\n    query: input.params.query || input.message,\n    embedding: null  // Edge Function will handle text-only search\n  },\n  start_time: input.start_time,\n  has_embedding: false,\n  embedding_failed: true\n};"
+      },
+      "id": "53de0511-735c-4dff-9b47-3f118bbf4df2",
+      "name": "Embedding Fallback",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        560,
+        -176
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n\nreturn {\n  intent: input.intent,\n  message: input.message,\n  phone: input.phone,\n  user_id: input.user_id,\n  group_id: input.group_id,\n  channel: input.channel,\n  params: input.params,\n  start_time: input.start_time,\n  has_embedding: false\n};"
+      },
+      "id": "7c260b8b-a4a4-4b8e-8d5a-490317f7e384",
+      "name": "Prepare Without Embedding",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        160,
+        -208
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst parseInput = $('Parse Input').first().json;\n\n// Check if Edge Function failed completely\nif (!response || response.error === true || (response.errorMessage && !response.success)) {\n  // Return fallback response\n  return {\n    success: false,\n    intent: parseInput.intent || 'error',\n    response_type: 'error',\n    detail_level: 'none',\n    message: 'Our service is temporarily busy. Please try again in a moment.',\n    results: [],\n    results_count: 0,\n    session_id: null,\n    is_new_session: false,\n    group_id: parseInput.group_id,\n    group_name: '',\n    channel: parseInput.channel,\n    from_cache: false,\n    duration_ms: Date.now() - parseInput.start_time,\n    original_phone: parseInput.phone,\n    start_time: parseInput.start_time,\n    error_code: 'EDGE_FUNCTION_ERROR',\n    edge_error: response.errorMessage || response.message || 'Unknown error'\n  };\n}\n\n// Check for soft errors from Edge Function\nif (response.success === false) {\n  return {\n    ...response,\n    channel: parseInput.channel,\n    original_phone: parseInput.phone,\n    start_time: parseInput.start_time\n  };\n}\n\n// Success - pass through\nreturn {\n  ...response,\n  channel: parseInput.channel,\n  original_phone: parseInput.phone,\n  start_time: parseInput.start_time\n};"
+      },
+      "id": "863c1f05-7c50-4067-9375-37eadeb9455d",
+      "name": "Check Edge Response",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1024,
+        -48
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.channel }}",
+              "rightValue": "whatsapp",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "21b6fc43-b065-4bcc-9859-ec0b0d92ba3a",
+      "name": "Channel Router",
+      "type": "n8n-nodes-base.if",
+      "position": [
+        1104,
+        -384
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst results = input.results || [];\nconst phone = input.original_phone || '';\n\n// Normalize phone for MSG91\nlet recipientNumber = phone.replace(/[^0-9]/g, '');\nif (recipientNumber.length === 10) {\n  recipientNumber = '91' + recipientNumber;\n}\n\n// === TEXT-ONLY RESPONSES ===\nif (results.length === 0 || ['welcome', 'goodbye', 'error', 'conversation', 'owner_welcome', 'booking', 'bbb_welcome'].includes(input.response_type)) {\n  return {\n    msg_type: 'text',\n    recipient_number: recipientNumber,\n    text: (input.message || 'Sorry, something went wrong. Please try again.').replace(/\\*\\*/g, '*'),\n    original_response: input\n  };\n}\n\n// === SEGMENTS LIST - Interactive List ===\nif (input.response_type === 'segments_list') {\n  const rows = results.slice(0, 10).map(s => ({\n    id: 'segment_' + s.industry_id,\n    title: s.segment_name.substring(0, 24),\n    description: s.member_count + ' members'\n  }));\n  \n  return {\n    msg_type: 'interactive',\n    recipient_number: recipientNumber,\n    interactive: {\n      type: 'list',\n      header: { type: 'text', text: '📋 Industries' },\n      body: { text: 'Found ' + results.length + ' industries. Select one to view members:' },\n      footer: { text: input.group_name || 'BBB Directory' },\n      action: {\n        button: 'View Industries',\n        sections: [{\n          title: 'Industries',\n          rows: rows\n        }]\n      }\n    },\n    original_response: input\n  };\n}\n\n// === CONTACT DETAILS (single result) - CTA URL Button ===\nif (input.response_type === 'contact_details' && results.length === 1) {\n  const c = results[0];\n  \n  // Build rich text body\n  let text = '*' + c.business_name + '*\\n\\n';\n  if (c.industry && c.industry !== 'General') text += '🏷️ ' + c.industry + '\\n';\n  if (c.chapter) text += '📍 ' + c.chapter + '\\n';\n  if (c.city) text += '🌆 ' + c.city + '\\n';\n  \n  if (c.short_description) {\n    text += '\\n' + c.short_description.substring(0, 300) + '\\n';\n  }\n  \n  text += '\\n━━━━━━━━━━━━━━━\\n';\n  text += '*Contact Info:*\\n';\n  if (c.phone) text += '📞 ' + (c.phone_country_code || '+91') + ' ' + c.phone + '\\n';\n  if (c.email) text += '✉️ ' + c.email + '\\n';\n  if (c.website) text += '🌐 ' + c.website + '\\n';\n\n  // Build CTA URL button for View Card\nconst cardUrl = 'https://n8n.srv1096269.hstgr.cloud/webhook/card-webhook-001/bbb-card/' + c.membership_id;\n\n  return {\n    msg_type: 'interactive',\n    recipient_number: recipientNumber,\n    interactive: {\n      type: 'cta_url',\n      header: { type: 'text', text: '📋 ' + c.business_name.substring(0, 20) },\n      body: { text: text },\n      footer: { text: 'Tap button to view full business card' },\n      action: {\n        name: 'cta_url',\n        parameters: {\n          display_text: '🎴 View Business Card',\n          url: cardUrl\n        }\n      }\n    },\n    original_response: input\n  };\n}\n\n// === SEARCH RESULTS - Interactive List ===\nif (results.length > 0) {\n  const rows = results.slice(0, 10).map((r, idx) => ({\n    id: 'member_' + r.membership_id,\n    title: (r.business_name || 'Business').substring(0, 24),\n    description: (r.industry || r.city || '').substring(0, 72)\n  }));\n  \n  // Build body text - inform if more than 10 results\n  let bodyText = 'Found ' + results.length + ' business' + (results.length > 1 ? 'es' : '') + '.';\n  if (results.length > 10) {\n    bodyText += ' Showing top 10. Refine your search for better results.';\n  } else {\n    bodyText += ' Select one for details:';\n  }\n  \n  return {\n    msg_type: 'interactive',\n    recipient_number: recipientNumber,\n    interactive: {\n      type: 'list',\n      header: { type: 'text', text: '🔍 Search Results' },\n      body: { text: bodyText },\n      footer: { text: input.group_name || 'BBB Directory' },\n      action: {\n        button: 'View Results',\n        sections: [{\n          title: 'Businesses',\n          rows: rows\n        }]\n      }\n    },\n    original_response: input\n  };\n}\n\n// === FALLBACK ===\nreturn {\n  msg_type: 'text',\n  recipient_number: recipientNumber,\n  text: input.message || 'No results found.',\n  original_response: input\n};"
+      },
+      "id": "d7c9ee69-42f5-45ae-abef-e4400a67a42d",
+      "name": "Format WhatsApp",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1344,
+        -320
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "jsCode": "// Prepare MSG91 - builds complete payload for HTTP Request\nconst input = $json;\nconst response = input.original_response || input;\n\nconst recipientNumber = (input.recipient_number || response.original_phone || '').replace('+', '').replace(/[^0-9]/g, '');\n\n// Check if this is an interactive message\nif (input.msg_type === 'interactive' && input.interactive) {\n  return {\n    msg91_payload: {\n      recipient_number: recipientNumber,\n      integrated_number: \"917702864233\",\n      content_type: \"interactive\",\n      interactive: input.interactive\n    },\n    original_response: response\n  };\n}\n\n// Otherwise, build template payload\nconst messageText = (input.text || response.message || '').replace(/\\n/g, ' ').replace(/\\s+/g, ' ').trim();\nconst templateName = response.template_name || 'vani_reply';\nconst templateParams = response.template_params || [messageText];\n\nconst buildComponents = (params) => {\n  if (!params || params.length === 0) return [];\n  return [{\n    type: \"body\",\n    parameters: params.map(param => ({\n      type: \"text\",\n      text: String(param).replace(/\\n/g, ' ').replace(/\\s+/g, ' ').trim()\n    }))\n  }];\n};\n\nreturn {\n  msg91_payload: {\n    integrated_number: \"917702864233\",\n    content_type: \"template\",\n    payload: {\n      messaging_product: \"whatsapp\",\n      to: recipientNumber,\n      type: \"template\",\n      template: {\n        name: templateName,\n        language: { code: \"en\" },\n        components: buildComponents(templateParams)\n      }\n    }\n  },\n  recipient_number: recipientNumber,\n  original_response: response\n};"
+      },
+      "id": "8dc001ff-6c5d-46e6-aef7-bfd409dc8123",
+      "name": "Prepare MSG91",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        1504,
+        -432
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "requestMethod": "POST",
+        "url": "https://api.msg91.com/api/v5/whatsapp/whatsapp-outbound-message/",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "e3e32185-a016-45ff-b4d3-c69f51e2f133",
+      "name": "Send WhatsApp",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        1744,
+        -32
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "jsCode": "const original = $('Prepare MSG91').first().json.original_response;\nconst waResult = $input.first().json;\nconst prepareMsg91 = $('Prepare MSG91').first().json;\n\n// Check if send was successful\nconst waSuccess = waResult && !waResult.error && (waResult.type === 'success' || waResult.message_id || waResult.request_id);\n\nreturn {\n  ...original,\n  whatsapp_sent: waSuccess,\n  whatsapp_message_id: waResult.message_id || waResult.request_id || null,\n  whatsapp_error: waSuccess ? null : (waResult.message || waResult.error || 'Send failed'),\n  recipient_number: prepareMsg91.recipient_number\n};"
+      },
+      "id": "f3794282-060e-4fd3-849e-0b8e33fa27fa",
+      "name": "Check WhatsApp Send",
+      "type": "n8n-nodes-base.code",
+      "position": [
+        2032,
+        -128
+      ],
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "responseKey": "={\n  \"text\": \"👋 Welcome to BBB Business Directory!\\n\\nI can help you:\\n• 🔍 Search for businesses\\n• 📋 Browse by industry\\n• 📞 Get contact details\\n\\nWhat would you like to find?\"\n}"
+        }
+      },
+      "id": "89bfcc67-d3e7-4a3d-9a72-95dac2eaa4dc",
+      "name": "Respond WhatsApp",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        2192,
+        -64
+      ],
+      "typeVersion": 1,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {
+          "responseCode": 200,
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "id": "08d1c96e-18c0-4b93-90b9-fbf7d96a89fb",
+      "name": "Respond Chat",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "position": [
+        1424,
+        32
+      ],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://uwyqhzotluikawcboldr.supabase.co/functions/v1/group-discovery",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3eXFoem90bHVpa2F3Y2JvbGRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ4MjU1NDcsImV4cCI6MjA2MDQwMTU0N30.YB4k5XXubv8q4eMv0__VzmBX-B615qLu_ejHgpw_bIQ"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "intent",
+              "value": "={{ $json.intent }}"
+            },
+            {
+              "name": "phone",
+              "value": "={{ $json.phone }}"
+            },
+            {
+              "name": "message",
+              "value": "={{ $json.message }}"
+            },
+            {
+              "name": "user_id",
+              "value": "={{ $json.user_id }}"
+            },
+            {
+              "name": "group_id",
+              "value": "={{ $json.group_id }}"
+            },
+            {
+              "name": "channel",
+              "value": "={{ $json.channel }}"
+            },
+            {
+              "name": "params",
+              "value": "={{ $json.params }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        784,
+        -32
+      ],
+      "id": "f2bbc43f-a6d0-40c1-ada3-077bf22d85b8",
+      "name": "Call Edge Function"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/embeddings",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "text-embedding-3-small"
+            },
+            {
+              "name": "input",
+              "value": "=={{ $json.params.query || $json.message }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        80,
+        -480
+      ],
+      "id": "d7cf5c73-a7e5-4984-9007-47e6415bd31b",
+      "name": "Generate Embedding1",
+      "credentials": {
+        "openAiApi": {
+          "id": "D7quOivJEzyKnfHS",
+          "name": "BBBwhatsapp"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $json;\nconst responseType = response.response_type || 'welcome';\n\n// ============================================================================\n// INTENT DEFINITIONS\n// ============================================================================\nconst intents = {\n  search: {\n    id: \"search\",\n    label: \"🔍 Search Business\",\n    requires_input: true,\n    input_placeholder: \"Enter business name or keywords\",\n    whatsapp_type: \"text_prompt\"\n  },\n  list_segments: {\n    id: \"list_segments\",\n    label: \"📋 Browse Industries\",\n    requires_input: false,\n    whatsapp_type: \"button\"\n  },\n  get_contact: {\n    id: \"get_contact\",\n    label: \"📞 Get Contact\",\n    requires_input: true,\n    input_placeholder: \"Enter business name\",\n    whatsapp_type: \"text_prompt\"\n  },\n  list_members: {\n    id: \"list_members\",\n    label: \"👥 View Members\",\n    requires_input: false,\n    whatsapp_type: \"list\"\n  },\n  view_details: {\n    id: \"get_contact\",\n    label: \"📇 View Details\",\n    requires_input: false,\n    whatsapp_type: \"list\"\n  },\n  search_again: {\n    id: \"search\",\n    label: \"🔍 Search Again\",\n    requires_input: true,\n    input_placeholder: \"Enter business name or keywords\",\n    whatsapp_type: \"button\"\n  },\n  back: {\n    id: \"welcome\",\n    label: \"🔙 Back to Menu\",\n    requires_input: false,\n    whatsapp_type: \"button\"\n  }\n};\n\n// ============================================================================\n// FLOW MAPPING\n// ============================================================================\nconst flowMap = {\n  welcome: {\n    intents: [\"search\", \"list_segments\", \"get_contact\"],\n    expects_input: false\n  },\n  goodbye: {\n    intents: [\"search\", \"list_segments\"],\n    expects_input: false\n  },\n  segments_list: {\n    intents: [\"back\"],\n    expects_input: false,\n    options_from: \"results\",\n    options_intent: \"list_members\",\n    options_label_field: \"segment_name\",\n    options_value_field: \"industry_id\",\n    options_prompt: \"Select an industry\"\n  },\n  members_list: {\n    intents: [\"back\"],\n    expects_input: false,\n    options_from: \"results\",\n    options_intent: \"get_contact\",\n    options_label_field: \"business_name\",\n    options_value_field: \"membership_id\",\n    options_prompt: \"Select a member\"\n  },\n  search_results: {\n    intents: [\"search_again\", \"back\"],\n    expects_input: false,\n    options_from: \"results\",\n    options_intent: \"get_contact\",\n    options_label_field: \"business_name\",\n    options_value_field: \"membership_id\",\n    options_prompt: \"Select a business\"\n  },\n  contact_details: {\n    intents: [\"search\", \"list_segments\", \"back\"],\n    expects_input: false\n  },\n  error: {\n    intents: [\"search\", \"list_segments\", \"back\"],\n    expects_input: false\n  },\n  conversation: {\n    intents: [\"search\", \"list_segments\", \"back\"],\n    expects_input: false\n  }\n};\n\n// ============================================================================\n// BUILD RESPONSE\n// ============================================================================\nconst flow = flowMap[responseType] || flowMap['welcome'];\n\n// Build available intents\nconst availableIntents = flow.intents.map(key => intents[key]);\n\n// Build options if applicable\nlet options = null;\nif (flow.options_from && response[flow.options_from]) {\n  options = {\n    prompt: flow.options_prompt,\n    intent: flow.options_intent,\n    items: response[flow.options_from].map(item => ({\n      label: item[flow.options_label_field],\n      value: item[flow.options_value_field],\n      subtitle: item.short_description || (item.member_count ? `${item.member_count} members` : null)\n    }))\n  };\n}\n\n// Build contact actions if applicable\nlet contactActions = null;\nif (responseType === 'contact_details' && response.results && response.results[0]) {\n  const contact = response.results[0];\n  contactActions = [];\n  \n  if (contact.phone) {\n    contactActions.push({\n      type: \"call\",\n      label: \"📞 Call\",\n      value: `${contact.phone_country_code || '+91'}${contact.phone}`\n    });\n  }\n  if (contact.whatsapp || contact.phone) {\n    contactActions.push({\n      type: \"whatsapp\",\n      label: \"💬 WhatsApp\",\n      value: `${(contact.whatsapp_country_code || contact.phone_country_code || '+91').replace('+','')}${contact.whatsapp || contact.phone}`\n    });\n  }\n  if (contact.email) {\n    contactActions.push({\n      type: \"email\",\n      label: \"✉️ Email\",\n      value: contact.email\n    });\n  }\n  if (contact.website) {\n    contactActions.push({\n      type: \"website\",\n      label: \"🌐 Website\",\n      value: contact.website\n    });\n  }\n  if (contact.vcard_url) {\n    contactActions.push({\n      type: \"vcard\",\n      label: \"💾 Save Contact\",\n      value: contact.vcard_url\n    });\n  }\n}\n\nreturn {\n  ...response,\n  available_intents: availableIntents,\n  options: options,\n  contact_actions: contactActions,\n  expects_input: flow.expects_input\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        944,
+        -288
+      ],
+      "id": "2fbb7686-43ab-4a45-a70e-27051396a550",
+      "name": "Add Intent Flow"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://control.msg91.com/api/v5/whatsapp/whatsapp-outbound-message/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "authkey",
+              "value": "473091Ajj9po1JhFB56901978eP1"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "integrated_number",
+              "value": "={{ $json.msg91_payload.integrated_number }}"
+            },
+            {
+              "name": "content_type",
+              "value": "template"
+            },
+            {
+              "name": "payload",
+              "value": "={{ $json.msg91_payload.payload }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1840,
+        -176
+      ],
+      "id": "1a686f86-a863-4e2f-a49c-5b045c7df9ec",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8cd426f4-6c7f-4821-b8b0-df7e530c257f",
+              "leftValue": "={{ $json.is_bypass }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -304,
+        -624
+      ],
+      "id": "f41f989a-18b6-40fb-8e85-b03e93ff7559",
+      "name": "Check Bypass"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $json;\nconst phone = input.phone;\nconst groupId = input.group_id;\nconst membershipId = input.params?.membership_id || '';\n\n// Normalize phone for MSG91\nlet recipientNumber = phone.replace(/[^0-9]/g, '');\nif (recipientNumber.length === 10) {\n  recipientNumber = '91' + recipientNumber;\n}\n\n// Define bypass responses\nconst bypassResponses = {\n  'search_prompt': {\n    message: 'What would you like to search for? Enter a business name, industry, or product/service.',\n    template_name: 'vani_reply',\n    template_params: ['What would you like to search for? Enter a business name, industry, or product/service.']\n  },\n  'card_link': {\n    message: '🎴 *View Business Card*\\n\\nClick the link below to view the digital business card:\\n\\nhttps://n8n.srv1096269.hstgr.cloud/webhook/bbb-card/' + membershipId,\n    template_name: 'vani_reply',\n    template_params: ['View Business Card: https://n8n.srv1096269.hstgr.cloud/webhook/bbb-card/' + membershipId]\n  },\n  'vcard_link': {\n    message: '💾 *Save Contact*\\n\\nClick the link below to download the contact card:\\n\\nhttps://n8n.srv1096269.hstgr.cloud/webhook/bbb-vcard/' + membershipId,\n    template_name: 'vani_reply',\n    template_params: ['Save Contact: https://n8n.srv1096269.hstgr.cloud/webhook/bbb-vcard/' + membershipId]\n  }\n};\n\nconst response = bypassResponses[input.intent] || bypassResponses['search_prompt'];\n\nreturn {\n  success: true,\n  intent: input.intent,\n  response_type: 'conversation',\n  message: response.message,\n  text: response.message,\n  results: [],\n  results_count: 0,\n  channel: 'whatsapp',\n  original_phone: phone,\n  recipient_number: recipientNumber,\n  template_name: response.template_name,\n  template_params: response.template_params,\n  is_bypass: true\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -96,
+        -672
+      ],
+      "id": "bb8a81a8-102f-4f9c-a32c-9154821ecf72",
+      "name": "Bypass Response"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "fe504d1f-25ef-4bfc-8779-6879ec3588a0",
+              "leftValue": "={{ $json.msg91_payload.content_type }}",
+              "rightValue": "interactive",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1632,
+        -256
+      ],
+      "id": "a04df1b4-41c5-4a0a-96c3-40076378f051",
+      "name": "Check Content Type"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://control.msg91.com/api/v5/whatsapp/whatsapp-outbound-message/",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "authkey",
+              "value": "473091Ajj9po1JhFB56901978eP1"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "recipient_number",
+              "value": "={{ $json.msg91_payload.recipient_number }}"
+            },
+            {
+              "name": "integrated_number",
+              "value": "={{ $json.msg91_payload.integrated_number }}"
+            },
+            {
+              "name": "content_type",
+              "value": "interactive"
+            },
+            {
+              "name": "interactive",
+              "value": "={{ $json.msg91_payload.interactive }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1856,
+        -368
+      ],
+      "id": "62fc5eb4-82e1-4169-808f-daf700cfa073",
+      "name": "Send Interactive"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Main Webhook": {
+      "main": [
+        [
+          {
+            "node": "Parse Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Input": {
+      "main": [
+        [
+          {
+            "node": "Check Valid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Valid": {
+      "main": [
+        [
+          {
+            "node": "Check Bypass",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Validation Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validation Error": {
+      "main": [
+        [
+          {
+            "node": "Respond Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Needs Embedding": {
+      "main": [
+        [
+          {
+            "node": "Generate Embedding1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Without Embedding",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Embedding": {
+      "main": [
+        [
+          {
+            "node": "Prepare With Embedding",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Embedding Fallback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare With Embedding": {
+      "main": [
+        [
+          {
+            "node": "Call Edge Function",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embedding Fallback": {
+      "main": [
+        [
+          {
+            "node": "Call Edge Function",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Without Embedding": {
+      "main": [
+        [
+          {
+            "node": "Call Edge Function",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Edge Response": {
+      "main": [
+        [
+          {
+            "node": "Add Intent Flow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Channel Router": {
+      "main": [
+        [
+          {
+            "node": "Format WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Prepare MSG91",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare MSG91": {
+      "main": [
+        [
+          {
+            "node": "Check Content Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send WhatsApp": {
+      "main": [
+        []
+      ]
+    },
+    "Check WhatsApp Send": {
+      "main": [
+        [
+          {
+            "node": "Respond WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Edge Function": {
+      "main": [
+        [
+          {
+            "node": "Check Edge Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Embedding1": {
+      "main": [
+        [
+          {
+            "node": "Check Embedding",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Intent Flow": {
+      "main": [
+        [
+          {
+            "node": "Channel Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Check WhatsApp Send",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Bypass": {
+      "main": [
+        [
+          {
+            "node": "Bypass Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Needs Embedding",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bypass Response": {
+      "main": [
+        [
+          {
+            "node": "Prepare MSG91",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Content Type": {
+      "main": [
+        [
+          {
+            "node": "Send Interactive",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Interactive": {
+      "main": [
+        [
+          {
+            "node": "Check WhatsApp Send",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "dd576fb0-5b2b-4e26-8663-ab956e95f0c4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d02f26ce494e21831d4758181cd36d8b37e601d67ddcbdd7a37eac55bb4e4287"
+  },
+  "id": "5y88AQeUtrSUPjE4",
+  "tags": []
+}
