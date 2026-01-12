@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap');
+        
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #f8fafc; }
+
+        .nav-item {
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 77, 77, 0.04);
+            color: #ff4d4d;
+        }
+
+        .nav-item.active {
+            background: #fff1f1;
+            color: #ff4d4d;
+            font-weight: 700;
+        }
+
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 20%;
+            height: 60%;
+            width: 4px;
+            background: #ff4d4d;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .badge {
+            background: #ff4d4d;
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(255, 77, 77, 0.3);
+        }
+
+        .sidebar-container {
+            width: 260px;
+            height: 100vh;
+            background: white;
+            border-right: 1px solid #f1f5f9;
+            display: flex;
+            flex-col: column;
+        }
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar-container flex flex-col p-6">
+        <div class="px-3 mb-10">
+            <h1 class="text-xl font-black text-gray-900 tracking-tight flex items-center gap-2">
+                <span class="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center text-white text-sm">CN</span>
+                ContractNest
+            </h1>
+        </div>
+
+        <div class="mb-8">
+            <h3 class="px-3 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Core Operations</h3>
+            <nav class="space-y-1">
+                <a href="#" class="nav-item flex items-center justify-between px-3 py-3 rounded-xl text-gray-500">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-gauge-high"></i>
+                        <span class="text-sm">Ops Cockpit</span>
+                    </div>
+                </a>
+                <a href="#" class="nav-item active flex items-center justify-between px-3 py-3 rounded-xl">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-address-book"></i>
+                        <span class="text-sm">Entities</span>
+                    </div>
+                    <span class="text-[10px] font-bold text-gray-400">248</span>
+                </a>
+                <a href="#" class="nav-item flex items-center justify-between px-3 py-3 rounded-xl text-gray-500">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-bolt-lightning"></i>
+                        <span class="text-sm">Activity Feed</span>
+                    </div>
+                </a>
+            </nav>
+        </div>
+
+        <div class="mb-8">
+            <h3 class="px-3 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Financials & Workflow</h3>
+            <nav class="space-y-1">
+                <a href="#" class="nav-item flex items-center justify-between px-3 py-3 rounded-xl text-gray-500">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-file-invoice-dollar"></i>
+                        <span class="text-sm">Global Finance</span>
+                    </div>
+                    <span class="badge">12</span>
+                </a>
+                <a href="#" class="nav-item flex items-center justify-between px-3 py-3 rounded-xl text-gray-500">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-file-contract"></i>
+                        <span class="text-sm">Contracts</span>
+                    </div>
+                    <span class="badge">3</span>
+                </a>
+                <a href="#" class="nav-item flex items-center justify-between px-3 py-3 rounded-xl text-gray-500">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-hand-holding-heart"></i>
+                        <span class="text-sm">Service Desk</span>
+                    </div>
+                </a>
+            </nav>
+        </div>
+
+        <div class="mb-auto">
+            <h3 class="px-3 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Studio Assets</h3>
+            <nav class="space-y-1">
+                <a href="#" class="nav-item flex items-center justify-between px-3 py-3 rounded-xl text-gray-500">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-cubes"></i>
+                        <span class="text-sm">Catalog Library</span>
+                    </div>
+                </a>
+                <a href="#" class="nav-item flex items-center justify-between px-3 py-3 rounded-xl text-gray-500">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span class="text-sm">Template Builder</span>
+                    </div>
+                </a>
+            </nav>
+        </div>
+
+        <div class="mt-10 pt-6 border-t border-gray-100 px-3">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 bg-gray-900 rounded-full flex items-center justify-center text-white font-bold text-xs">CK</div>
+                <div class="flex-1 overflow-hidden">
+                    <p class="text-xs font-bold text-gray-900 truncate">Charan Kamal</p>
+                    <p class="text-[10px] text-gray-400">System Admin</p>
+                </div>
+                <i class="fa-solid fa-right-from-bracket text-gray-300 hover:text-red-500 cursor-pointer"></i>
+            </div>
+        </div>
+        <div class="mb-8 px-3">
+    <div class="bg-gradient-to-br from-gray-900 to-black rounded-2xl p-4 shadow-xl border border-white/10 relative overflow-hidden group cursor-pointer">
+        <div class="absolute -right-4 -top-4 w-16 h-16 bg-red-500/20 blur-2xl rounded-full group-hover:bg-red-500/40 transition-all"></div>
+        
+        <div class="flex items-center gap-3 relative z-10">
+            <div class="relative">
+                <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-black shadow-inner">
+                    <i class="fa-solid fa-wand-sparkles text-red-500"></i>
+                </div>
+                <span class="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-500 border-2 border-black rounded-full animate-pulse"></span>
+            </div>
+            <div>
+                <h4 class="text-xs font-black text-white tracking-widest uppercase">VaNi AI</h4>
+                <p class="text-[9px] text-gray-400 font-bold uppercase">Autonomous Mode: ON</p>
+            </div>
+        </div>
+        
+        <div class="mt-4 pt-3 border-t border-white/5">
+            <p class="text-[10px] text-gray-400 leading-tight italic">"I've drafted 2 contracts for your review."</p>
+        </div>
+    </div>
+</div>
+    </aside>
+
+</body>
+</html>
