@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ContractNest - Strategic Timeline</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        body { background: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; overflow: hidden; }
+        
+        .timeline-node { position: relative; padding-left: 30px; border-left: 2px dashed #e2e8f0; padding-bottom: 40px; }
+        .timeline-node::before { 
+            content: ''; position: absolute; left: -7px; top: 0; 
+            width: 12px; height: 12px; border-radius: 50%; background: white; 
+            border: 2px solid #ff4d4d; box-shadow: 0 0 10px rgba(255,77,77,0.3);
+        }
+        
+        .map-container { display: flex; align-items: flex-end; gap: 20px; height: 150px; overflow-x: auto; padding-bottom: 20px; }
+        .map-bar { width: 40px; border-radius: 8px; background: #fee2e2; transition: all 0.3s; position: relative; cursor: pointer; }
+        .map-bar:hover { background: #ff4d4d; }
+        .map-bar::after { content: attr(data-label); position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%); font-size: 8px; color: #94a3b8; font-weight: bold; white-space: nowrap; }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="flex">
+
+    <nav class="w-20 bg-white border-r flex flex-col items-center py-8 gap-10">
+        <div class="text-red-500 text-2xl font-black">CN</div>
+        <div class="flex flex-col gap-8 text-gray-300">
+            <i class="fa-solid fa-users text-red-500"></i>
+            <i class="fa-solid fa-file-invoice text-xl hover:text-red-500 cursor-pointer"></i>
+        </div>
+    </nav>
+
+    <main class="flex-1 flex flex-col overflow-hidden">
+        <header class="h-20 bg-white px-10 flex justify-between items-center border-b">
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center text-white font-bold">MS</div>
+                <h1 class="text-xl font-extrabold text-gray-900">Mr. Sequence Cockpit</h1>
+            </div>
+            <div class="flex gap-4">
+                <button class="px-5 py-2 text-sm font-bold text-gray-400">Export PDF</button>
+                <button class="bg-red-500 text-white px-6 py-2 rounded-xl font-bold shadow-lg shadow-red-100">Action Center</button>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-10 flex flex-col gap-10">
+            
+            <section class="bg-white rounded-[32px] p-8 shadow-sm">
+                <div class="flex justify-between items-center mb-10">
+                    <h3 class="text-xs font-black text-gray-400 uppercase tracking-widest">Chronological Relationship Map</h3>
+                    <div class="text-xs font-bold text-gray-400">Health: <span class="text-green-500">Stable</span></div>
+                </div>
+                
+                <div class="map-container">
+                    <div class="map-bar h-12" data-label="JAN '25"></div>
+                    <div class="map-bar h-24" data-label="FEB '25"></div>
+                    <div class="map-bar h-48 bg-red-400" data-label="MAR '25"></div> <div class="map-bar h-16" data-label="APR '25"></div>
+                    <div class="map-bar h-20" data-label="MAY '25"></div>
+                    <div class="map-bar h-64 bg-red-500" data-label="JUN '25"></div> <div class="map-bar h-32" data-label="JUL '25"></div>
+                    <div class="map-bar h-28" data-label="AUG '25"></div>
+                </div>
+            </section>
+
+            <section class="grid grid-cols-3 gap-10">
+                <div class="col-span-2 bg-white rounded-[32px] p-8 shadow-sm">
+                    <div class="flex justify-between items-center mb-8 border-b pb-4">
+                        <div class="flex gap-6">
+                            <button onclick="toggleView('feed')" id="btn-feed" class="text-sm font-bold text-red-500 border-b-2 border-red-500 pb-4">Standard Feed</button>
+                            <button onclick="toggleView('timeline')" id="btn-timeline" class="text-sm font-bold text-gray-400 pb-4">Timeline Nodes</button>
+                        </div>
+                    </div>
+
+                    <div id="feed-view" class="space-y-6">
+                        <div class="flex gap-4 p-4 hover:bg-gray-50 rounded-2xl transition-all">
+                            <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-500 flex items-center justify-center"><i class="fa-solid fa-file-contract"></i></div>
+                            <div>
+                                <p class="text-sm font-bold text-gray-800">New Contract Initialized</p>
+                                <p class="text-xs text-gray-400">Service: Managed Infrastructure • ₹1.2L</p>
+                            </div>
+                            <span class="ml-auto text-[10px] font-bold text-gray-300 uppercase">2h ago</span>
+                        </div>
+                    </div>
+
+                    <div id="timeline-view" class="hidden pl-4 pt-4">
+                        <div class="timeline-node">
+                            <p class="text-[10px] font-bold text-red-500 uppercase">Today</p>
+                            <h4 class="text-sm font-bold text-gray-800">Payment Processed</h4>
+                            <p class="text-xs text-gray-500">Invoice #CN-8829 cleared via Bank Transfer.</p>
+                        </div>
+                        <div class="timeline-node">
+                            <p class="text-[10px] font-bold text-gray-400 uppercase">12 Dec 2025</p>
+                            <h4 class="text-sm font-bold text-gray-800">Yearly Renewal Signed</h4>
+                            <p class="text-xs text-gray-500">Expanded service to include Vendor Management modules.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="bg-gray-900 rounded-[32px] p-8 text-white">
+                        <h4 class="text-xs font-bold text-gray-400 uppercase mb-6">Service Health</h4>
+                        <div class="flex items-center gap-4 mb-8">
+                            <div class="text-3xl font-black">9.2</div>
+                            <div class="text-[10px] text-emerald-400 font-bold tracking-widest uppercase">Excellent</div>
+                        </div>
+                        <button class="w-full py-3 bg-white/10 rounded-xl text-xs font-bold hover:bg-white/20 transition-all">Generate Health Report</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        function toggleView(view) {
+            const feed = document.getElementById('feed-view');
+            const timeline = document.getElementById('timeline-view');
+            const btnFeed = document.getElementById('btn-feed');
+            const btnTimeline = document.getElementById('btn-timeline');
+
+            if (view === 'feed') {
+                feed.classList.remove('hidden');
+                timeline.classList.add('hidden');
+                btnFeed.className = "text-sm font-bold text-red-500 border-b-2 border-red-500 pb-4";
+                btnTimeline.className = "text-sm font-bold text-gray-400 pb-4";
+            } else {
+                feed.classList.add('hidden');
+                timeline.classList.remove('hidden');
+                btnFeed.className = "text-sm font-bold text-gray-400 pb-4";
+                btnTimeline.className = "text-sm font-bold text-red-500 border-b-2 border-red-500 pb-4";
+            }
+        }
+    </script>
+</body>
+</html>

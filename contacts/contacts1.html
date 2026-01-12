@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ContractNest - Unified Workspace</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root { --brand-red: #ff4d4d; --bg-soft: #f8fafc; }
+        body { background: var(--bg-soft); font-family: 'Plus Jakarta Sans', sans-serif; height: 100vh; overflow: hidden; }
+        
+        .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.5); box-shadow: 0 4px 20px -5px rgba(0,0,0,0.05); }
+        
+        .tab-active { color: var(--brand-red); border-bottom: 3px solid var(--brand-red); }
+        
+        /* Side Drawer for Create Contact */
+        #createDrawer { transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); transform: translateX(100%); }
+        #createDrawer.open { transform: translateX(0); }
+
+        .form-input { width: 100%; padding: 12px; border-radius: 12px; border: 1.5px solid #e2e8f0; transition: all 0.2s; }
+        .form-input:focus { border-color: var(--brand-red); outline: none; box-shadow: 0 0 0 4px rgba(255, 77, 77, 0.1); }
+    </style>
+</head>
+<body class="flex">
+
+    <nav class="w-20 bg-white border-r flex flex-col items-center py-6 gap-8">
+        <div class="w-10 h-10 bg-red-500 rounded-xl flex items-center justify-center text-white font-bold">CN</div>
+        <div class="flex flex-col gap-6 text-gray-400">
+            <i class="fa-solid fa-grid-2 text-xl hover:text-red-500 cursor-pointer"></i>
+            <i class="fa-solid fa-users text-xl text-red-500"></i>
+            <i class="fa-solid fa-file-invoice-dollar text-xl hover:text-red-500 cursor-pointer"></i>
+        </div>
+    </nav>
+
+    <main class="flex-1 flex flex-col h-full overflow-hidden">
+        
+        <div class="px-8 pt-8 bg-white border-b">
+            <div class="flex justify-between items-center mb-6">
+                <h1 class="text-2xl font-bold text-gray-800">Contacts Workspace</h1>
+                <button onclick="toggleDrawer(true)" class="bg-[#ff4d4d] text-white px-6 py-2.5 rounded-full font-bold shadow-lg shadow-red-200 hover:scale-105 transition-transform flex items-center gap-2">
+                    <i class="fa-solid fa-plus text-xs"></i> Add Contact
+                </button>
+            </div>
+
+            <div class="flex gap-10 text-sm font-bold text-gray-400 uppercase tracking-widest">
+                <button class="pb-4 tab-active">Status & Identity</button>
+                <button class="pb-4 hover:text-gray-600 transition-colors">Billing Queue</button>
+                <button class="pb-4 hover:text-gray-600 transition-colors">Services Management</button>
+            </div>
+        </div>
+
+        <div class="px-8 py-4 flex items-center gap-4 bg-gray-50/50 border-b">
+            <span class="text-xs font-bold text-gray-400">FILTER BY:</span>
+            <div class="flex gap-2">
+                <button class="px-4 py-1.5 rounded-full bg-white border text-xs font-bold text-gray-600 hover:border-red-400">All (248)</button>
+                <button class="px-4 py-1.5 rounded-full bg-blue-50 text-blue-600 text-xs font-bold border border-blue-100">Buyers</button>
+                <button class="px-4 py-1.5 rounded-full bg-emerald-50 text-emerald-600 text-xs font-bold border border-emerald-100">Sellers</button>
+                <button class="px-4 py-1.5 rounded-full bg-purple-50 text-purple-600 text-xs font-bold border border-purple-100">Vendors</button>
+            </div>
+            <div class="ml-auto relative">
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-300 text-sm"></i>
+                <input type="text" placeholder="Search contacts..." class="pl-9 pr-4 py-2 rounded-lg bg-white border text-sm focus:outline-none w-64">
+            </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-8 space-y-4">
+            <div class="glass-card rounded-2xl p-5 flex items-center hover:border-red-200 transition-all cursor-pointer group">
+                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-red-50 to-red-100 flex items-center justify-center text-red-600 font-bold border border-red-200 mr-6">TS</div>
+                <div class="flex-1">
+                    <h3 class="font-bold text-gray-800">Test Corporate</h3>
+                    <div class="flex gap-3 mt-1">
+                        <span class="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded uppercase font-bold">Buyer</span>
+                        <span class="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded uppercase font-bold">Active</span>
+                    </div>
+                </div>
+                <div class="flex-1 text-sm">
+                    <p class="text-gray-400 text-xs uppercase font-bold mb-1">Primary Channel</p>
+                    <p class="text-gray-700">+91 4345234264</p>
+                </div>
+                <div class="flex-1 text-sm">
+                    <p class="text-gray-400 text-xs uppercase font-bold mb-1">Next Billing</p>
+                    <p class="text-gray-800 font-semibold">12 Jan 2026</p>
+                </div>
+                <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button class="p-2 text-gray-400 hover:text-red-500"><i class="fa-solid fa-pen"></i></button>
+                    <button class="p-2 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="createDrawer" class="fixed top-0 right-0 w-[500px] h-full bg-white shadow-2xl z-50 flex flex-col">
+        <div class="p-8 border-b flex justify-between items-center">
+            <div>
+                <h2 class="text-xl font-bold text-gray-800">Create New Contact</h2>
+                <p class="text-xs text-gray-400">Initialize a new business entity</p>
+            </div>
+            <button onclick="toggleDrawer(false)" class="text-gray-400 hover:text-red-500"><i class="fa-solid fa-xmark text-xl"></i></button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-8 space-y-8">
+            <div class="space-y-4">
+                <h3 class="text-xs font-black text-red-500 uppercase tracking-widest">1. Identity</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="space-y-1">
+                        <label class="text-[11px] font-bold text-gray-500">Classification</label>
+                        <select class="form-input text-sm">
+                            <option>Buyer</option>
+                            <option>Seller</option>
+                            <option>Vendor</option>
+                            <option>Partner</option>
+                        </select>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[11px] font-bold text-gray-500">Account Type</label>
+                        <select class="form-input text-sm">
+                            <option>Corporate</option>
+                            <option>Individual</option>
+                        </select>
+                    </div>
+                </div>
+                <input type="text" placeholder="Full Legal Name" class="form-input font-medium">
+            </div>
+
+            <div class="space-y-4">
+                <h3 class="text-xs font-black text-red-500 uppercase tracking-widest">2. Channels</h3>
+                <div class="flex gap-2">
+                    <input type="email" placeholder="Email Address" class="form-input flex-1">
+                    <button class="px-4 bg-gray-50 border rounded-xl hover:bg-red-50 hover:text-red-500 transition-colors">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
+                <input type="tel" placeholder="Phone (+91...)" class="form-input">
+            </div>
+
+            <div class="space-y-4">
+                <h3 class="text-xs font-black text-red-500 uppercase tracking-widest">3. Logistics</h3>
+                <textarea placeholder="Internal notes or address details..." class="form-input h-32 resize-none"></textarea>
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
+                    <div>
+                        <p class="text-sm font-bold text-gray-800">Auto-Activate Account</p>
+                        <p class="text-[10px] text-gray-400">Available for immediate billing</p>
+                    </div>
+                    <div class="w-12 h-6 bg-red-500 rounded-full flex items-center px-1">
+                        <div class="w-4 h-4 bg-white rounded-full ml-auto"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-8 border-t bg-gray-50/50 flex gap-4">
+            <button onclick="toggleDrawer(false)" class="flex-1 py-3 text-sm font-bold text-gray-500 hover:text-gray-700">Discard</button>
+            <button class="flex-[2] py-3 bg-black text-white rounded-xl font-bold shadow-xl hover:bg-gray-800 transition-colors">Save Contact</button>
+        </div>
+    </div>
+
+    <script>
+        function toggleDrawer(isOpen) {
+            const drawer = document.getElementById('createDrawer');
+            if(isOpen) drawer.classList.add('open');
+            else drawer.classList.remove('open');
+        }
+    </script>
+</body>
+</html>
