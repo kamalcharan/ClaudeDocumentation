@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        body { background: #fcfcfd; font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; height: 100vh; }
+        
+        .direction-toggle { background: #f1f5f9; border-radius: 16px; padding: 4px; display: flex; gap: 4px; }
+        .toggle-btn { padding: 8px 24px; border-radius: 12px; font-size: 12px; font-weight: 800; transition: all 0.3s; }
+        .toggle-btn.active { background: white; color: #ff4d4d; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+
+        .stat-card { background: white; border-radius: 28px; border: 1px solid #f1f5f9; padding: 24px; transition: all 0.3s; }
+        .stat-card.buyer-theme:hover { border-color: #3b82f6; }
+        .stat-card.giver-theme:hover { border-color: #ff4d4d; }
+    </style>
+</head>
+<body class="flex">
+
+    <main class="flex-1 flex flex-col h-screen overflow-hidden">
+        
+        <header class="px-10 py-6 flex justify-between items-center bg-white border-b border-gray-100">
+            <div class="flex items-center gap-8">
+                <div>
+                    <h1 class="text-xl font-black text-gray-900">Operations Hub</h1>
+                </div>
+                <div class="direction-toggle">
+                    <button class="toggle-btn active giver-theme" onclick="switchTheme('giver')">
+                        <i class="fa-solid fa-arrow-down-left mr-2"></i> GIVER (Sales)
+                    </button>
+                    <button class="toggle-btn text-gray-400 buyer-theme" onclick="switchTheme('buyer')">
+                        <i class="fa-solid fa-arrow-up-right mr-2"></i> BUYER (Procurement)
+                    </button>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <div id="vani-message" class="text-[10px] font-bold text-red-500 bg-red-50 px-4 py-2 rounded-full border border-red-100">
+                    VaNi: I am tracking 12 unpaid invoices (Giver Mode)
+                </div>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-10 space-y-8">
+            <div class="grid grid-cols-3 gap-6">
+                <div class="stat-card giver-theme" id="main-metric">
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Total Inward Revenue</p>
+                    <h2 class="text-4xl font-black text-gray-900">₹85.4L</h2>
+                    <p class="text-[10px] text-emerald-500 font-bold mt-4">↑ 12% Growth</p>
+                </div>
+                <div class="stat-card" id="secondary-metric">
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Outstanding Receivables</p>
+                    <h2 class="text-4xl font-black text-red-500">₹12.2L</h2>
+                    <p class="text-[10px] text-gray-400 font-bold mt-4">6 Entities Overdue</p>
+                </div>
+                <div class="stat-card bg-gray-900 text-white">
+                    <p class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">VaNi Priority</p>
+                    <p class="text-sm italic text-gray-300 leading-relaxed" id="vani-insight">
+                        "I've identified 4 Sellers who haven't renewed their service plans."
+                    </p>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-[32px] p-8 border border-gray-100">
+                <div class="flex justify-between items-center mb-8">
+                    <h3 class="text-sm font-black text-gray-900 uppercase tracking-widest" id="list-title">Giver: Active Sales Contracts</h3>
+                    <button class="text-xs font-bold text-red-500">+ New Sale</button>
+                </div>
+                
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between p-4 border-b border-gray-50 hover:bg-gray-50 rounded-xl transition-all">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center font-bold text-gray-400">CK</div>
+                            <div>
+                                <h4 class="text-sm font-bold text-gray-800">Charan Kamal (Buyer Personal)</h4>
+                                <p class="text-[10px] text-gray-400">Annual License • ₹2.5L</p>
+                            </div>
+                        </div>
+                        <span class="text-[10px] bg-green-50 text-green-600 px-3 py-1 rounded-md font-bold">Paid</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function switchTheme(mode) {
+            const btns = document.querySelectorAll('.toggle-btn');
+            const mainMetric = document.getElementById('main-metric');
+            const secMetric = document.getElementById('secondary-metric');
+            const insight = document.getElementById('vani-insight');
+            const listTitle = document.getElementById('list-title');
+            const vaniMsg = document.getElementById('vani-message');
+
+            btns.forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+
+            if(mode === 'buyer') {
+                mainMetric.innerHTML = '<p class="text-[10px] font-black text-gray-400 uppercase mb-2">Total Procurement Spend</p><h2 class="text-4xl font-black text-gray-900">₹24.1L</h2><p class="text-[10px] text-red-400 font-bold mt-4">↓ 5% Savings Found</p>';
+                secMetric.innerHTML = '<p class="text-[10px] font-black text-gray-400 uppercase mb-2">Upcoming Payables</p><h2 class="text-4xl font-black text-blue-500">₹4.8L</h2><p class="text-[10px] text-gray-400 font-bold mt-4">3 Vendors due this week</p>';
+                insight.innerText = '"I found a duplicate subscription for Adobe—shall I cancel it for you?"';
+                listTitle.innerText = 'Buyer: Vendor Service Contracts';
+                vaniMsg.innerText = 'VaNi: Tracking 3 upcoming payouts (Buyer Mode)';
+                vaniMsg.className = 'text-[10px] font-bold text-blue-500 bg-blue-50 px-4 py-2 rounded-full border border-blue-100';
+            } else {
+                location.reload(); // Quick reset for demo
+            }
+        }
+    </script>
+</body>
+</html>

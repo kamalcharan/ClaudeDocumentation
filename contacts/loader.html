@@ -1,0 +1,45 @@
+<div class="animate-pulse space-y-4">
+    <div class="flex items-center space-x-4 p-4 bg-white rounded-2xl border border-gray-100">
+        <div class="rounded-xl bg-slate-200 h-12 w-12"></div>
+        <div class="flex-1 space-y-3 py-1">
+            <div class="h-2 bg-slate-200 rounded w-1/4"></div>
+            <div class="grid grid-cols-3 gap-4">
+                <div class="h-2 bg-slate-200 rounded col-span-2"></div>
+                <div class="h-2 bg-slate-200 rounded col-span-1"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* VaNi Intelligent Agent Pulse */
+    .vani-loader {
+        position: relative;
+        width: 40px;
+        height: 40px;
+    }
+
+    .vani-loader::before, .vani-loader::after {
+        content: '';
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border-radius: 12px;
+        border: 3px solid #ff4d4d;
+        opacity: 0;
+        animation: vani-pulse 2s infinite cubic-bezier(0.215, 0.61, 0.355, 1);
+    }
+
+    .vani-loader::after {
+        animation-delay: 1s;
+    }
+
+    @keyframes vani-pulse {
+        0% { transform: scale(0.5); opacity: 1; }
+        100% { transform: scale(1.5); opacity: 0; }
+    }
+</style>
+
+<div class="vani-loader flex items-center justify-center">
+    <i class="fa-solid fa-wand-magic-sparkles text-red-500"></i>
+</div>

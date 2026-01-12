@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        body { background: #fcfcfd; font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; height: 100vh; }
+        
+        .contract-card { background: white; border-radius: 24px; border: 1px solid #f1f5f9; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .contract-card:hover { transform: scale(1.01); border-color: #ff4d4d; box-shadow: 0 20px 40px -20px rgba(0,0,0,0.1); }
+        
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        
+        .pipeline-step { position: relative; flex: 1; text-align: center; padding: 20px; background: white; border-radius: 16px; border: 1px solid #f1f5f9; }
+        .pipeline-step.active { border-bottom: 4px solid #ff4d4d; background: #fff1f1; }
+    </style>
+</head>
+<body class="flex">
+
+    <main class="flex-1 flex flex-col h-screen overflow-hidden">
+        
+        <header class="px-10 py-8 flex justify-between items-center bg-white border-b border-gray-100">
+            <div>
+                <h1 class="text-2xl font-black text-gray-900 tracking-tight">Contract Lifecycle</h1>
+                <p class="text-xs text-gray-400 font-bold uppercase mt-1 tracking-widest">Execution & Governance</p>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-3 bg-red-50 px-4 py-2 rounded-2xl border border-red-100">
+                    <i class="fa-solid fa-wand-magic-sparkles text-red-500 text-sm"></i>
+                    <p class="text-[10px] font-bold text-red-600 uppercase">VaNi: 3 Drafts ready for review</p>
+                </div>
+                <button class="bg-black text-white px-6 py-3 rounded-2xl font-bold hover:bg-gray-800 transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-file-circle-plus"></i> New Contract
+                </button>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-10 space-y-10">
+            
+            <div class="flex gap-4">
+                <div class="pipeline-step">
+                    <p class="text-[10px] font-black text-gray-400 uppercase">Drafting</p>
+                    <h2 class="text-xl font-black text-gray-900">12</h2>
+                </div>
+                <div class="pipeline-step active">
+                    <p class="text-[10px] font-black text-red-500 uppercase">Waiting on Them</p>
+                    <h2 class="text-xl font-black text-gray-900">08</h2>
+                </div>
+                <div class="pipeline-step">
+                    <p class="text-[10px] font-black text-gray-400 uppercase">Internal Review</p>
+                    <h2 class="text-xl font-black text-gray-900">03</h2>
+                </div>
+                <div class="pipeline-step">
+                    <p class="text-[10px] font-black text-gray-400 uppercase">Signed</p>
+                    <h2 class="text-xl font-black text-gray-900">142</h2>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-10">
+                
+                <div class="col-span-2 space-y-6">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-sm font-black text-gray-900 uppercase tracking-widest">Priority Execution</h3>
+                        <div class="relative">
+                            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-gray-300 text-xs"></i>
+                            <input type="text" placeholder="Search by Entity or ID..." class="pl-10 pr-4 py-2 bg-white border border-gray-100 rounded-xl text-xs focus:outline-none w-64">
+                        </div>
+                    </div>
+
+                    <div class="contract-card p-6 flex items-center justify-between">
+                        <div class="flex items-center gap-5 w-1/2">
+                            <div class="w-12 h-12 bg-red-50 text-red-500 rounded-xl flex items-center justify-center text-lg">
+                                <i class="fa-solid fa-file-contract"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-gray-900 text-sm">Service Master Agreement - Mr. Sequence</h4>
+                                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-tighter mt-1">
+                                    <span class="status-dot bg-orange-400"></span> Signature Pending • 48h Overdue
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <div class="text-center">
+                            <p class="text-[9px] text-gray-400 font-black uppercase">Value</p>
+                            <p class="text-sm font-black text-gray-900">₹12.5L</p>
+                        </div>
+
+                        <div class="flex items-center gap-3">
+                            <div class="bg-gray-50 px-3 py-1 rounded-lg text-[9px] font-bold text-gray-500">
+                                VaNi: Sent nudge to CEO
+                            </div>
+                            <button class="p-2 text-gray-300 hover:text-red-500"><i class="fa-solid fa-eye"></i></button>
+                            <button class="p-2 text-gray-300 hover:text-red-500"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-8">
+                    <div class="bg-gray-900 rounded-[32px] p-8 text-white">
+                        <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-6">Template Usage</h4>
+                        <div class="flex items-end gap-4 mb-2">
+                            <h2 class="text-4xl font-black">82%</h2>
+                            <p class="text-emerald-400 text-[10px] font-bold mb-2">Optimized</p>
+                        </div>
+                        <p class="text-xs text-gray-400 leading-relaxed mb-6">
+                            VaNi has successfully steered 82% of negotiations into your standard Catalog Templates.
+                        </p>
+                        <div class="w-full h-1 bg-white/10 rounded-full">
+                            <div class="w-[82%] h-full bg-red-500 rounded-full"></div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-[32px] p-8 border border-gray-100">
+                        <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-6">VaNi Clause Monitor</h4>
+                        <div class="space-y-4">
+                            <div class="flex gap-3">
+                                <i class="fa-solid fa-shield-halved text-orange-400 text-xs mt-1"></i>
+                                <p class="text-xs text-gray-600 italic">"Detected a custom 'Liability' clause in Test Corp contract. I recommend reverting to Standard Clause B."</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+</body>
+</html>

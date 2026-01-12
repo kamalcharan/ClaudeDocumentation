@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700&display=swap');
+        
+        .toast-container {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            perspective: 1000px;
+        }
+
+        .vani-toast {
+            background: rgba(17, 24, 39, 0.95); /* Dark Sleek Theme */
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            animation: toast-in 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes toast-in {
+            0% { transform: translateY(100%) scale(0.9) rotateX(-20deg); opacity: 0; }
+            100% { transform: translateY(0) scale(1) rotateX(0); opacity: 1; }
+        }
+
+        .progress-bar {
+            height: 2px;
+            background: #ff4d4d;
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            animation: progress-drain 4s linear forwards;
+        }
+
+        @keyframes progress-drain {
+            0% { width: 100%; }
+            100% { width: 0%; }
+        }
+    </style>
+</head>
+<body class="bg-gray-200 h-screen flex items-end justify-center pb-10">
+
+    <div class="toast-container">
+        <div class="vani-toast relative w-[400px] p-4 rounded-2xl flex items-center gap-4 shadow-2xl overflow-hidden">
+            <div class="relative shrink-0">
+                <div class="w-10 h-10 bg-red-500 rounded-xl flex items-center justify-center text-white">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                </div>
+            </div>
+
+            <div class="flex-1">
+                <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">VaNi Autonomous Task</p>
+                <p class="text-sm text-white font-semibold">Contract Drafted for Mr. Sequence</p>
+            </div>
+
+            <div class="flex items-center gap-2 border-l border-white/10 pl-4">
+                <button class="text-xs font-bold text-red-400 hover:text-red-300 transition-colors">View</button>
+                <button class="text-gray-500 hover:text-white transition-colors">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="progress-bar"></div>
+        </div>
+    </div>
+
+</body>
+</html>

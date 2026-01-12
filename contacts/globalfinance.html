@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        body { background: #fcfcfd; font-family: 'Plus Jakarta Sans', sans-serif; overflow: hidden; height: 100vh; }
+        
+        .finance-card { background: white; border-radius: 28px; border: 1px solid #f1f5f9; transition: all 0.3s ease; }
+        .finance-card:hover { border-color: #ff4d4d; box-shadow: 0 20px 40px -15px rgba(255, 77, 77, 0.1); }
+        
+        .metric-trend-up { color: #10b981; background: #ecfdf5; padding: 2px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; }
+        
+        /* VaNi Pulse Effect */
+        .vani-active { position: relative; }
+        .vani-active::after {
+            content: ''; position: absolute; top: -2px; right: -2px; width: 8px; height: 8px; 
+            background: #ff4d4d; border-radius: 50%; border: 2px solid white;
+        }
+    </style>
+</head>
+<body class="flex">
+
+    <main class="flex-1 flex flex-col h-screen overflow-hidden">
+        
+        <header class="px-10 py-8 flex justify-between items-center bg-white border-b border-gray-100">
+            <div>
+                <h1 class="text-2xl font-black text-gray-900 tracking-tight">Global Finance</h1>
+                <p class="text-xs text-gray-400 font-bold uppercase mt-1 tracking-widest">Financial Oversight & Receivables</p>
+            </div>
+            
+            <div class="flex items-center gap-6">
+                <div class="flex items-center gap-3 bg-gray-50 px-4 py-2 rounded-2xl border border-gray-100">
+                    <div class="w-8 h-8 bg-black rounded-xl flex items-center justify-center text-red-500 vani-active">
+                        <i class="fa-solid fa-wand-magic-sparkles text-xs"></i>
+                    </div>
+                    <div class="text-[10px] font-bold">
+                        <p class="text-gray-400 leading-none">VANI IS TRACKING</p>
+                        <p class="text-gray-900">₹12.4L Unbilled</p>
+                    </div>
+                </div>
+                <button class="bg-red-500 text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-red-100 hover:bg-red-600 transition-all">
+                    Run Batch Invoicing
+                </button>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-10 space-y-10">
+            
+            <div class="grid grid-cols-4 gap-6">
+                <div class="finance-card p-6">
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Gross Revenue (MTD)</p>
+                    <div class="flex items-end gap-3">
+                        <h2 class="text-3xl font-black text-gray-900">₹42.8L</h2>
+                        <span class="metric-trend-up mb-2">+12.4%</span>
+                    </div>
+                </div>
+                <div class="finance-card p-6 border-l-4 border-l-red-500">
+                    <p class="text-[10px] font-black text-red-500 uppercase tracking-widest mb-4">Awaiting Payment</p>
+                    <h2 class="text-3xl font-black text-gray-900">₹8.2L</h2>
+                    <p class="text-[10px] text-gray-400 font-bold mt-2">14 Invoices Overdue</p>
+                </div>
+                <div class="finance-card p-6">
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Projected Cashflow</p>
+                    <h2 class="text-3xl font-black text-gray-900">₹65.1L</h2>
+                    <p class="text-[10px] text-emerald-500 font-bold mt-2">Based on active contracts</p>
+                </div>
+                <div class="finance-card p-6 bg-gray-900 text-white">
+                    <p class="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">VaNi Efficiency</p>
+                    <h2 class="text-3xl font-black">94.2%</h2>
+                    <p class="text-[10px] text-gray-400 font-bold mt-2">Auto-recovery success rate</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-10">
+                
+                <div class="col-span-2 space-y-6">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-sm font-black text-gray-900 uppercase tracking-widest">Pending Receivables</h3>
+                        <div class="flex gap-2">
+                            <button class="px-4 py-1.5 bg-white border border-gray-200 rounded-lg text-[10px] font-bold">All</button>
+                            <button class="px-4 py-1.5 bg-red-50 text-red-500 rounded-lg text-[10px] font-bold">Overdue</button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div class="finance-card p-5 flex items-center justify-between group">
+                            <div class="flex items-center gap-4 w-1/3">
+                                <div class="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center font-bold text-gray-500 text-xs">TS</div>
+                                <div>
+                                    <h4 class="font-bold text-gray-900 text-sm">Test Corporate</h4>
+                                    <p class="text-[10px] text-gray-400">Inv #CN-2024-001</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs font-black text-gray-900">₹85,000</p>
+                                <p class="text-[9px] text-red-500 font-bold uppercase">4 Days Overdue</p>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="text-[10px] bg-emerald-50 text-emerald-600 px-3 py-1 rounded-md font-bold italic">
+                                    VaNi sent reminder
+                                </div>
+                                <button class="w-8 h-8 rounded-lg bg-gray-50 text-gray-400 group-hover:bg-black group-hover:text-white transition-all">
+                                    <i class="fa-solid fa-paper-plane text-[10px]"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <h3 class="text-sm font-black text-gray-900 uppercase tracking-widest">VaNi Insights</h3>
+                    <div class="bg-white rounded-[32px] p-8 border border-gray-100 space-y-8">
+                        <div class="flex gap-4">
+                            <div class="w-10 h-10 bg-red-100 text-red-500 rounded-2xl flex items-center justify-center shrink-0">
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                            </div>
+                            <div>
+                                <h5 class="text-xs font-black text-gray-900 uppercase">Revenue Leakage Risk</h5>
+                                <p class="text-xs text-gray-500 mt-1 leading-relaxed">
+                                    3 Entities have expired services but are still consuming resources.
+                                </p>
+                                <button class="text-[10px] font-bold text-red-500 mt-2">Pause Services & Notify</button>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-4">
+                            <div class="w-10 h-10 bg-emerald-100 text-emerald-500 rounded-2xl flex items-center justify-center shrink-0">
+                                <i class="fa-solid fa-chart-line"></i>
+                            </div>
+                            <div>
+                                <h5 class="text-xs font-black text-gray-900 uppercase">Upsell Opportunity</h5>
+                                <p class="text-xs text-gray-500 mt-1 leading-relaxed">
+                                    <b>Mr. Sequence</b> has hit 90% of their API quota. 
+                                </p>
+                                <button class="text-[10px] font-bold text-emerald-600 mt-2">Draft Tier Upgrade Proposal</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+</body>
+</html>
