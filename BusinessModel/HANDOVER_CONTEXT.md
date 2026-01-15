@@ -2,7 +2,8 @@
 
 > **Purpose**: Quick onboarding for continuing Business Model implementation
 > **Last Session**: January 2025
-> **Next Phase**: Phase 2 - Billing Service Layer
+> **Completed**: Phase 1 (Schema), Phase 2 (Billing Edge + API)
+> **Next Phase**: Phase 3 - JTD Credit Integration
 
 ---
 
@@ -19,34 +20,8 @@
 | 3c | `003c_is_tenant_admin_fix.sql` | ✅ Applied | Fixed function dependency |
 | 4 | `004_seed_product_configs.sql` | ✅ Applied | 3 products + 10 topup packs |
 
-### Edge Utils Created (Ready to Copy)
+### RPC Functions from Phase 1
 
-| File | Location | Purpose |
-|------|----------|---------|
-| `index.ts` | `contractnest-edge/supabase/functions/_shared/businessModel/` | Helper functions for RPC calls |
-| `types.ts` | `contractnest-edge/supabase/functions/_shared/businessModel/` | TypeScript type definitions |
-
----
-
-## 📊 Database Schema Summary
-
-### Tables Modified (001_schema_evolution.sql)
-- `t_bm_plan_version` - Added `billing_config JSONB`
-- `t_bm_tenant_subscription` - Added product_code, billing_cycle, trial/grace dates
-- `t_bm_subscription_usage` - Added tenant_id, metric_type, quantity, billing_period
-- `t_bm_invoice` - Added invoice_type, razorpay fields, line_items JSONB
-
-### New Tables Created (002_new_tables.sql)
-| Table | Purpose |
-|-------|---------|
-| `t_bm_product_config` | Product billing configurations (JSONB billing_config) |
-| `t_bm_credit_balance` | Tenant credit balances per type/channel |
-| `t_bm_credit_transaction` | Credit transaction history (audit trail) |
-| `t_bm_topup_pack` | Available topup packages |
-| `t_contract_invoice` | Contract billing (tenant→customer) |
-| `t_bm_billing_event` | Billing event log |
-
-### RPC Functions Created (003a_rpc_functions.sql)
 | Function | Purpose |
 |----------|---------|
 | `deduct_credits()` | Atomic credit deduction with FOR UPDATE NOWAIT |
@@ -62,62 +37,63 @@
 | `calculate_tiered_price()` | Tiered pricing calculation |
 | `process_credit_expiry()` | Expire old credits (SKIP LOCKED) |
 
-### Product Configs Seeded (004_seed_product_configs.sql)
-- **ContractNest**: Composite billing (base fee + usage + credits + addons)
-- **FamilyKnows**: Tiered family billing with free tier
-- **Kaladristi**: Subscription + usage billing
-- **Topup Packs**: 7 ContractNest (WhatsApp/SMS/Email), 3 Kaladristi (AI Reports)
+---
+
+## ✅ Phase 2 Completed
+
+### Architecture Correction Applied
+
+> **CRITICAL**: Original PRD proposed API services with business logic calling RPC directly.
+> This was corrected to follow ContractNest patterns:
+> ```
+> UI → API (validate, DTO) → Edge (single RPC) → RPC Functions → DB
+> ```
+> See `PRD_ADDENDUM_ARCHITECTURE.md` for details.
+
+### Files Created (To Apply)
+
+| # | File | Location | Purpose |
+|---|------|----------|---------|
+| 1 | `005_phase2_rpc_functions.sql` | `contractnest-edge/supabase/migrations/business-model-v2/` | 5 new RPC functions |
+| 2 | `billing/index.ts` | `contractnest-edge/supabase/functions/` | Billing Edge function |
+| 3 | `billing.dto.ts` | `contractnest-api/src/types/` | Request/Response DTOs |
+| 4 | `billingValidators.ts` | `contractnest-api/src/validators/` | Validation rules |
+| 5 | `billingService.ts` | `contractnest-api/src/services/` | HTTP client to Edge |
+| 6 | `billingController.ts` | `contractnest-api/src/controllers/` | Controller |
+| 7 | `billingRoutes.ts` | `contractnest-api/src/routes/` | Route definitions |
+
+### RPC Functions from Phase 2
+
+| Function | Purpose |
+|----------|---------|
+| `get_invoice_estimate(p_tenant_id)` | Calculate upcoming bill with line items |
+| `get_usage_summary(p_tenant_id, p_period_start, p_period_end)` | Usage metrics with limits |
+| `get_topup_packs(p_product_code, p_credit_type)` | Available topup packs |
+| `get_subscription_details(p_tenant_id)` | Comprehensive subscription info |
+| `purchase_topup(p_tenant_id, p_pack_id, p_payment_reference)` | Process topup purchase |
+
+### API Endpoints Created
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| GET | `/api/billing/status/:tenantId` | Comprehensive billing status |
+| GET | `/api/billing/subscription/:tenantId` | Subscription details |
+| GET | `/api/billing/credits/:tenantId` | Credit balances |
+| GET | `/api/billing/usage/:tenantId` | Usage summary |
+| GET | `/api/billing/invoice-estimate/:tenantId` | Invoice estimate |
+| GET | `/api/billing/alerts/:tenantId` | Billing alerts |
+| GET | `/api/billing/topup-packs` | Available topup packs |
+| POST | `/api/billing/usage` | Record usage event |
+| POST | `/api/billing/credits/deduct` | Deduct credits |
+| POST | `/api/billing/credits/add` | Add credits |
+| POST | `/api/billing/credits/topup` | Purchase topup |
+| POST | `/api/billing/credits/check` | Check availability |
 
 ---
 
-## 🚨 Important Notes & Gotchas
+## 🔮 Phase 3: JTD Credit Integration (NEXT)
 
-### 1. Table Schema References
-When writing SQL, always verify column names against `002_new_tables.sql`:
-- `t_bm_product_config`: Uses `billing_config` JSONB (NOT separate `billing_model` column)
-- `t_bm_topup_pack`: Uses `name` (NOT `pack_name`), `currency_code` (NOT `currency`), `expiry_days` (NOT `validity_days`)
-
-### 2. Function Dependencies
-- `is_tenant_admin()` function has dependency from `v_audit_logs_detailed` view
-- Must use `DROP FUNCTION ... CASCADE` when modifying
-- Split into separate migration file (003c) to handle gracefully
-
-### 3. Tenant Table Reference
-- Actual table is `t_tenants` with `is_admin` column
-- NOT `t_tenant` - this was corrected during Phase 1
-
-### 4. Currency Compatibility
-- All seed data uses 'INR' which matches `contractnest-ui/src/utils/constants/currencies.ts`
-
----
-
-## 🔮 Phase 2: Billing Service Layer
-
-### Location
-`contractnest-api/src/services/billing/`
-
-### Planned Deliverables
-| # | File | Purpose |
-|---|------|---------|
-| 1 | `billingService.ts` | Main billing service |
-| 2 | `pricingEngine.ts` | Pricing calculations |
-| 3 | `usageService.ts` | Usage tracking |
-| 4 | `creditService.ts` | Credit operations |
-| 5 | `invoiceService.ts` | Invoice generation |
-| 6 | `subscriptionService.ts` | Subscription management |
-| 7 | `billingRoutes.ts` | API routes |
-| 8 | `billingController.ts` | Route handlers |
-
-### Key Integration Points
-- Services should call the RPC functions created in Phase 1
-- Use `@supabase/supabase-js` client
-- Follow existing service patterns in `contractnest-api`
-
----
-
-## ⚠️ Phase 3: JTD Credit Integration (Future)
-
-### CRITICAL: Must integrate credit check/deduction into jtd-worker
+### 🚨 CRITICAL: Modify jtd-worker to check/deduct credits
 
 **File**: `contractnest-edge/supabase/functions/jtd-worker/index.ts`
 
@@ -148,33 +124,109 @@ if (['whatsapp', 'sms', 'email'].includes(channel_code)) {
 }
 ```
 
+### Phase 3 Deliverables
+
+| # | File | Purpose |
+|---|------|---------|
+| 1 | `006_jtd_billing_source_types.sql` | Add billing notification source types to JTD |
+| 2 | Modify `jtd-worker/index.ts` | Integrate credit check/deduction |
+| 3 | JTD templates | Billing notification templates |
+
 ---
 
 ## 📁 File Locations
 
-### Migration Files (Applied)
-```
-contractnest-edge/supabase/migrations/business-model-v2/
-├── 001_schema_evolution.sql
-├── 002_new_tables.sql
-├── 003a_rpc_functions.sql
-├── 003b_rls_and_helpers.sql
-├── 003c_is_tenant_admin_fix.sql
-└── 004_seed_product_configs.sql
-```
+### Phase 2 Files (To Copy)
 
-### Edge Utils (To Copy)
 ```
-MANUAL_COPY_FILES/business-model-phase1/contractnest-edge/supabase/functions/_shared/businessModel/
-├── index.ts
-└── types.ts
+MANUAL_COPY_FILES/business-model-phase2/
+├── contractnest-edge/
+│   └── supabase/
+│       ├── migrations/business-model-v2/
+│       │   └── 005_phase2_rpc_functions.sql
+│       └── functions/billing/
+│           └── index.ts
+├── contractnest-api/
+│   └── src/
+│       ├── types/billing.dto.ts
+│       ├── validators/billingValidators.ts
+│       ├── services/billingService.ts
+│       ├── controllers/billingController.ts
+│       └── routes/billingRoutes.ts
+└── ClaudeDocumentation/BusinessModel/
+    ├── PRD_ADDENDUM_ARCHITECTURE.md
+    ├── BM_delivery.md (updated)
+    └── HANDOVER_CONTEXT.md (this file)
 ```
 
 ### Documentation
+
 ```
 ClaudeDocumentation/BusinessModel/
-├── BUSINESS_MODEL_AGENT_PRD.md   # Full PRD
-└── BM_delivery.md                 # Delivery tracker (updated)
+├── BUSINESS_MODEL_AGENT_PRD.md        # Full PRD (original)
+├── PRD_ADDENDUM_ARCHITECTURE.md       # Architecture corrections (NEW)
+├── BM_delivery.md                      # Delivery tracker (updated)
+└── HANDOVER_CONTEXT.md                 # This file
+```
+
+---
+
+## 🚨 Important Notes
+
+### 1. Architecture Pattern (MUST FOLLOW)
+
+```
+CORRECT:
+UI → API (validate, DTO) → Edge (single RPC, <30ms) → RPC → DB
+
+WRONG:
+UI → API (business logic) → RPC → DB
+```
+
+### 2. Existing Integrations Module
+
+Razorpay credentials are stored in `t_tenant_integrations` via existing Integrations module:
+- Admin tenant's Razorpay = Platform payment account
+- Regular tenant's Razorpay = Their own account for Contract Billing
+
+**DO NOT** create new credential storage - use existing module.
+
+### 3. Table References
+
+- Tenant table is `t_tenants` with `is_admin` column (NOT `t_tenant`)
+- Credit balance table is `t_bm_credit_balance`
+- Topup pack table uses `name`, `currency_code`, `expiry_days`
+
+### 4. API Router Registration
+
+After copying Phase 2 files, register the billing routes in the API:
+
+```typescript
+// In contractnest-api/src/index.ts or routes/index.ts
+import billingRoutes from './routes/billingRoutes';
+
+// Add to router
+app.use('/api', billingRoutes);
+```
+
+---
+
+## 📋 Quick Start for Next Session
+
+```bash
+# 1. Read the PRD Addendum for architecture
+Read: ClaudeDocumentation/BusinessModel/PRD_ADDENDUM_ARCHITECTURE.md
+
+# 2. Read the delivery tracker
+Read: ClaudeDocumentation/BusinessModel/BM_delivery.md
+
+# 3. If starting Phase 3, modify jtd-worker:
+Read: contractnest-edge/supabase/functions/jtd-worker/index.ts
+# Apply credit check/deduction at lines ~303 and ~372
+
+# 4. If doing Phase 5 (Razorpay), check integrations:
+Read: contractnest-edge/supabase/functions/integrations/index.ts
+# Understand credential encryption/decryption pattern
 ```
 
 ---
@@ -182,35 +234,21 @@ ClaudeDocumentation/BusinessModel/
 ## 🔗 Key PRD Reference
 
 **Full PRD**: `ClaudeDocumentation/BusinessModel/BUSINESS_MODEL_AGENT_PRD.md`
+**Architecture Addendum**: `ClaudeDocumentation/BusinessModel/PRD_ADDENDUM_ARCHITECTURE.md`
 
 ### Billing Models Supported
+
 1. **Composite** (ContractNest): Base fee + usage + credits + add-ons
 2. **Tiered Family** (FamilyKnows): User-count tiers with free tier
 3. **Subscription + Usage** (Kaladristi): Base subscription + per-use charges
 
 ### Architecture Decisions
+
 - No Redis - use PostgreSQL row-level locking
-- JTD framework for notifications (not separate notification service)
+- JTD framework for notifications
 - JSONB for flexible billing configurations
 - Multi-tenant with RLS policies
-
----
-
-## 📋 Quick Start for Next Session
-
-```bash
-# 1. Read the PRD
-Read: ClaudeDocumentation/BusinessModel/BUSINESS_MODEL_AGENT_PRD.md
-
-# 2. Read the delivery tracker
-Read: ClaudeDocumentation/BusinessModel/BM_delivery.md
-
-# 3. Check existing API service patterns
-Read: contractnest-api/src/services/ (any existing service for patterns)
-
-# 4. Start Phase 2 implementation
-Create: contractnest-api/src/services/billing/billingService.ts
-```
+- **Edge functions call RPC** - NOT API services
 
 ---
 
