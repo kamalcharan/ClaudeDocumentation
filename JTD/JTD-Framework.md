@@ -606,10 +606,23 @@ Override settings per source type:
 
 ---
 
-## 15. Change Log
+## 15. Addendum Documents
+
+| Document | Purpose | Status |
+|----------|---------|--------|
+| [JTD-Addendum-CreditIntegration.md](./JTD-Addendum-CreditIntegration.md) | Credit-gated notifications, `no_credits` status, release mechanism | Design Approved |
+
+---
+
+## 16. Change Log
 
 | Date | Version | Changes |
 |------|---------|---------|
+| 2025-01 | 1.2.0 | Added credit integration addendum reference |
+| | | - New `no_credits` status for credit-gated notifications |
+| | | - TenantContext integration for credit checks |
+| | | - Release mechanism on credit topup |
+| | | - 7-day expiry for blocked JTDs |
 | 2025-12-17 | 1.1.0 | Architecture finalized |
 | | | - API-first approach confirmed |
 | | | - Request channels: Web, Mobile, Chatbot, WhatsApp |

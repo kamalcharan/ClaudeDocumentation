@@ -509,4 +509,246 @@ export async function handler(req: Request): Promise<Response> {
 
 ---
 
+## 10. TenantContext Architecture (Phase 3 Addition)
+
+> **Added**: January 2025
+> **Purpose**: Centralized tenant context for credit-gated operations
+
+### 10.1 Overview
+
+TenantContext is a **materialized context table** that provides a single source of truth for all tenant-related decisions across the product. It is NOT just for billing - it serves:
+
+- Credit availability checks (before sending notifications)
+- Feature flag evaluation
+- Limit enforcement
+- Subscription status checks
+- Branding/theming
+
+### 10.2 Key Design Decision: Table + Triggers
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        WHY TABLE, NOT JUST VIEW?                            │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  VIEW (Compute on read)              TABLE (Materialized)                   │
+│  ─────────────────────              ──────────────────────                  │
+│  • Fresh data always                • Pre-computed, fast reads              │
+│  • Slow (joins 6+ tables)           • Updated by triggers                   │
+│  • No caching benefit               • Can be cached in API layer            │
+│  • Complex query on every request   • Simple SELECT by PK                   │
+│                                                                             │
+│  DECISION: Use TABLE with TRIGGERS for real-time updates                   │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 10.3 Primary Key: product_code + tenant_id
+
+Each product has its own tenants. The same person using ContractNest and FamilyKnows has **two different tenant_ids**:
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        MULTI-PRODUCT ISOLATION                              │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  ContractNest                        FamilyKnows                            │
+│  ─────────────                       ───────────                            │
+│  product_code: "contractnest"        product_code: "familyknows"            │
+│  tenant_id: "abc-123"                tenant_id: "xyz-789"                   │
+│                                                                             │
+│  Different databases, different tenant IDs - NO FK relationship            │
+│                                                                             │
+│  API Header: x-product-code (required for all tenant context calls)        │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 10.4 Table Schema: t_tenant_context
+
+```sql
+CREATE TABLE t_tenant_context (
+    -- PRIMARY KEY
+    product_code TEXT NOT NULL,
+    tenant_id UUID NOT NULL,
+
+    -- PROFILE (denormalized)
+    business_name TEXT,
+    logo_url TEXT,
+    primary_color TEXT,
+    secondary_color TEXT,
+
+    -- SUBSCRIPTION
+    subscription_id UUID,
+    subscription_status TEXT,  -- active, trial, grace_period, suspended, null
+    plan_name TEXT,
+    billing_cycle TEXT,
+    period_start DATE,
+    period_end DATE,
+    trial_end_date DATE,
+    grace_end_date DATE,
+    next_billing_date DATE,
+
+    -- CREDITS (Available = balance - reserved)
+    credits_whatsapp INTEGER DEFAULT 0,
+    credits_sms INTEGER DEFAULT 0,
+    credits_email INTEGER DEFAULT 0,
+    credits_pooled INTEGER DEFAULT 0,
+
+    -- LIMITS (From plan)
+    limit_users INTEGER,           -- null = unlimited
+    limit_contracts INTEGER,
+    limit_storage_mb INTEGER DEFAULT 40,
+
+    -- USAGE (Current period)
+    usage_users INTEGER DEFAULT 0,
+    usage_contracts INTEGER DEFAULT 0,
+    usage_storage_mb INTEGER DEFAULT 0,
+
+    -- ADD-ONS
+    addon_vani_ai BOOLEAN DEFAULT FALSE,
+    addon_rfp BOOLEAN DEFAULT FALSE,
+
+    -- COMPUTED FLAGS
+    flag_can_access BOOLEAN DEFAULT FALSE,
+    flag_can_send_whatsapp BOOLEAN DEFAULT FALSE,
+    flag_can_send_sms BOOLEAN DEFAULT FALSE,
+    flag_can_send_email BOOLEAN DEFAULT FALSE,
+    flag_credits_low BOOLEAN DEFAULT FALSE,
+    flag_near_limit BOOLEAN DEFAULT FALSE,
+
+    -- METADATA
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW(),
+
+    PRIMARY KEY (product_code, tenant_id)
+);
+```
+
+### 10.5 Trigger-Based Updates
+
+| Source Table | Trigger Event | Updates in t_tenant_context |
+|--------------|---------------|----------------------------|
+| `t_bm_tenant_subscription` | INSERT/UPDATE | subscription_*, plan_name, flag_can_access |
+| `t_bm_credit_balance` | INSERT/UPDATE/DELETE | credits_*, flag_can_send_*, flag_credits_low |
+| `t_bm_credit_transaction` | INSERT (deduction) | credits_* (decrement) |
+| `t_bm_subscription_usage` | INSERT | usage_*, flag_near_limit |
+| `t_tenant_profile` | UPDATE | business_name, logo_url, colors |
+
+### 10.6 Integration Points
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    TENANT CONTEXT INTEGRATION FLOW                          │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                             │
+│  1. SIGNUP                                                                  │
+│     └── Creates initial t_tenant_context row                                │
+│                                                                             │
+│  2. PLAN ASSIGNMENT                                                         │
+│     └── Trigger updates subscription_*, limit_*, addon_*                    │
+│                                                                             │
+│  3. CREDIT TOPUP                                                            │
+│     ├── Trigger updates credits_*, flag_can_send_*                          │
+│     └── release_waiting_jtds() called to release blocked messages           │
+│                                                                             │
+│  4. NOTIFICATION SEND (JTD Creation)                                        │
+│     ├── Check: tenantContext.flag_can_send_whatsapp?                        │
+│     ├── If YES → Create JTD with status 'pending', add to queue             │
+│     └── If NO  → Create JTD with status 'no_credits', do NOT queue          │
+│                                                                             │
+│  5. USAGE RECORD                                                            │
+│     └── Trigger updates usage_*, flag_near_limit                            │
+│                                                                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 10.7 RPC Function: get_tenant_context
+
+```sql
+CREATE FUNCTION get_tenant_context(
+    p_product_code TEXT,
+    p_tenant_id UUID
+) RETURNS JSONB
+
+-- Returns structured JSON:
+{
+  "success": true,
+  "product_code": "contractnest",
+  "tenant_id": "...",
+  "profile": { ... },
+  "subscription": { ... },
+  "credits": { "whatsapp": 50, "sms": 0, "email": 200, "pooled": 0 },
+  "limits": { ... },
+  "usage": { ... },
+  "addons": { ... },
+  "flags": {
+    "can_access": true,
+    "can_send_whatsapp": true,
+    "can_send_sms": false,
+    "can_send_email": true,
+    "credits_low": false,
+    "near_limit": false
+  }
+}
+```
+
+### 10.8 Impact on JTD Framework
+
+See **JTD-Addendum.md** for full details. Summary:
+
+| Change | Description |
+|--------|-------------|
+| New status: `no_credits` | JTDs blocked due to insufficient credits |
+| Credit check before queue | Check `flag_can_send_*` before adding to PGMQ |
+| Release on topup | `release_waiting_jtds()` releases blocked JTDs (FIFO) |
+| 7-day expiry | `no_credits` JTDs auto-expire after 7 days |
+
+### 10.9 Access Pattern
+
+```
+UI Request
+    │
+    ├── Header: Authorization (JWT)
+    ├── Header: x-tenant-id
+    └── Header: x-product-code    ← Required for multi-product
+    │
+    ▼
+API Controller
+    │
+    └── tenantContextService.getContext(productCode, tenantId)
+              │
+              ▼
+        Edge Function: tenant-context
+              │
+              └── RPC: get_tenant_context(p_product_code, p_tenant_id)
+                        │
+                        └── SELECT * FROM t_tenant_context
+                            WHERE product_code = ? AND tenant_id = ?
+```
+
+### 10.10 Phase 3 Deliverables (Revised)
+
+| # | Deliverable | Layer | Status |
+|---|-------------|-------|--------|
+| 1 | `t_tenant_context` table | DB | Pending |
+| 2 | Triggers (5-6 functions) | DB | Pending |
+| 3 | `get_tenant_context` RPC | DB | Pending |
+| 4 | `release_waiting_jtds` RPC | DB | Pending |
+| 5 | `tenant-context` Edge function | Edge | Pending |
+| 6 | `tenantContextService.ts` | API | Pending |
+| 7 | JTD `no_credits` status + integration | DB/Edge | Pending |
+| 8 | 7-day expiry cron job | DB | Pending |
+
+---
+
+## 11. Document History (Updated)
+
+| Version | Date | Author | Changes |
+|---------|------|--------|---------|
+| 1.0 | Jan 2025 | Claude Code | Initial addendum - architecture corrections |
+| 1.1 | Jan 2025 | Claude Code | Added Section 10: TenantContext Architecture |
+
+---
+
 **End of Addendum**

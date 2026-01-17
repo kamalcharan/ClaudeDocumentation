@@ -12,13 +12,13 @@
 | Phase | Status | Planned | Completed | Notes |
 |-------|--------|---------|-----------|-------|
 | Phase 1 | ✅ Completed | Schema & Configs | All deliverables | Jan 2025 |
-| **Phase 2** | ✅ **Completed** | Billing Edge + API | All deliverables | Jan 2025 - Architecture corrected |
-| Phase 3 | ⚪ Pending | JTD Notifications | - | Depends on Phase 2, **includes JTD credit integration** |
+| Phase 2 | ✅ Completed | Billing Edge + API | All deliverables | Jan 2025 - Architecture corrected |
+| **Phase 3** | ✅ **Completed** | TenantContext + JTD Credit Integration | All deliverables | Jan 2026 - New architecture |
 | Phase 4 | ⚪ Pending | Plan UI Evolution | - | Depends on Phase 1 |
 | Phase 5 | ⚪ Pending | Razorpay Integration | - | Depends on Phase 2 |
 | Phase 6 | ⚪ Pending | Contract Billing | - | Depends on Phase 5 |
 | Phase 7 | ⚪ Pending | n8n Dunning | - | Depends on Phase 5 |
-| Phase 8 | ⚪ Pending | Billing Cycle Worker | - | Depends on Phase 2,3 |
+| Phase 8 | ⚪ Pending | Billing Cycle Worker | - | Depends on Phase 3 ✅ |
 | Phase 9 | ✅ Completed | Multi-Product Configs | With Phase 1 | - |
 | Phase 10 | ⚪ Pending | Bot Integration | - | Depends on Phase 2 |
 
@@ -109,76 +109,87 @@
 | POST | `/api/billing/credits/topup` | Purchase topup |
 | POST | `/api/billing/credits/check` | Check availability |
 
-### Completed Work
-
-| # | What Was Done | Files Created | Notes |
-|---|---------------|---------------|-------|
-| 1 | RPC functions (5) | `005_phase2_rpc_functions.sql` | To apply to Supabase |
-| 2 | Edge function | `billing/index.ts` | Single RPC per endpoint |
-| 3 | DTOs | `billing.dto.ts` | Request/Response types |
-| 4 | Validators | `billingValidators.ts` | express-validator rules |
-| 5 | Service | `billingService.ts` | HTTP client to Edge |
-| 6 | Controller | `billingController.ts` | Validate → call service |
-| 7 | Routes | `billingRoutes.ts` | 12 endpoints |
-| 8 | PRD Addendum | `PRD_ADDENDUM_ARCHITECTURE.md` | Architecture corrections |
-
-### Removed Items (Architecture Correction)
-
-The following were planned in original PRD but removed as they violate architecture patterns:
-
-| Original File | Why Removed | Replacement |
-|---------------|-------------|-------------|
-| `pricingEngine.ts` in API | Business logic belongs in RPC | `calculate_tiered_price()` RPC (Phase 1) |
-| `creditService.ts` in API | Business logic belongs in RPC | `deduct_credits()` RPC (Phase 1) |
-| `usageService.ts` in API | Business logic belongs in RPC | `record_usage()` RPC (Phase 1) |
-| `invoiceService.ts` in API | Business logic belongs in RPC | `get_invoice_estimate()` RPC (Phase 2) |
-| `subscriptionService.ts` in API | Business logic belongs in RPC | `get_subscription_details()` RPC (Phase 2) |
-
 ---
 
-## Phase 3: JTD Billing Notifications
+## Phase 3: TenantContext & JTD Credit Integration
 
-**Status**: ⚪ Pending
+**Status**: ✅ Completed
 **Depends On**: Phase 2
+**Completed**: January 2026
 
-### 🚨 IMPORTANT: JTD Credit Integration Required
+### Architecture Change
 
-**The jtd-worker must be updated to integrate credit check/deduction.**
-
-The `businessModel` utils created in Phase 1 need to be integrated into `jtd-worker/index.ts`:
-
-```typescript
-// In jtd-worker/index.ts - around line 303 (processMessage function)
-import { checkCreditAvailability, deductCredits } from '../_shared/businessModel/index.ts';
-
-// BEFORE sending (after line 303 "Update status to 'processing'"):
-if (['whatsapp', 'sms', 'email'].includes(channel_code)) {
-  const creditCheck = await checkCreditAvailability(supabase, tenant_id, 'notification', 1, channel_code);
-  if (!creditCheck.isAvailable) {
-    await updateJTDStatus(jtd_id, 'failed', undefined, 'Insufficient notification credits');
-    await deleteMessage(msg.msg_id);
-    return;
-  }
-}
-
-// AFTER successful send (around line 372, inside "if (result.success)"):
-if (['whatsapp', 'sms', 'email'].includes(channel_code)) {
-  await deductCredits(supabase, tenant_id, 'notification', 1, {
-    channel: channel_code,
-    referenceType: 'jtd',
-    referenceId: jtd_id,
-    description: `${channel_code} notification sent`,
-  });
-}
-```
+> **NEW APPROACH**: Original plan was to modify jtd-worker directly. This was changed to a centralized TenantContext system:
+> - Check credits BEFORE JTD creation (not at worker level)
+> - `no_credits` status for blocked notifications with FIFO release
+> - Triggers keep context in sync with source tables
+> - Multi-product isolation via `product_code + tenant_id`
 
 ### Planned Deliverables
 
 | # | Deliverable | Location | Status |
 |---|-------------|----------|--------|
-| 1 | Billing source types | `migrations/business-model-v2/006_jtd_billing_source_types.sql` | ⚪ |
-| 2 | Billing templates | JTD templates in database | ⚪ |
-| 3 | **JTD Credit Integration** | `jtd-worker/index.ts` modification | ⚪ |
+| 1 | TenantContext table + triggers | `migrations/business-model-v2/006_tenant_context.sql` | ✅ |
+| 2 | JTD Credit Integration | `migrations/jtd-framework/003_jtd_credit_integration.sql` | ✅ |
+| 3 | TenantContext Edge function | `functions/tenant-context/index.ts` | ✅ |
+| 4 | TenantContext API service | `services/tenantContextService.ts` | ✅ |
+| 5 | TenantContext API controller | `controllers/tenantContextController.ts` | ✅ |
+| 6 | TenantContext API routes | `routes/tenantContextRoutes.ts` | ✅ |
+| 7 | API index.ts update | `src/index.ts` | ✅ |
+| 8 | PRD Addendum (Section 10) | `PRD_ADDENDUM_ARCHITECTURE.md` | ✅ |
+| 9 | JTD Credit Addendum | `JTD-Addendum-CreditIntegration.md` | ✅ |
+
+### RPC Functions Created (Phase 3)
+
+| Function | Purpose |
+|----------|---------|
+| `get_tenant_context(p_product_code, p_tenant_id)` | Get cached tenant context |
+| `init_tenant_context(p_product_code, p_tenant_id, p_business_name)` | Initialize context on signup |
+| `release_waiting_jtds(p_tenant_id, p_channel, p_max_release)` | FIFO release blocked JTDs |
+| `expire_no_credits_jtds(p_expiry_days)` | Expire JTDs after 7 days |
+| `get_waiting_jtd_count(p_tenant_id, p_channel)` | Count blocked JTDs |
+
+### API Endpoints Created (Phase 3)
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| GET | `/api/tenant-context` | Get tenant context |
+| GET | `/api/tenant-context/can-send/:channel` | Check if can send via channel |
+| GET | `/api/tenant-context/waiting-jtds` | Get blocked JTD count |
+| POST | `/api/tenant-context/init` | Initialize context |
+| POST | `/api/tenant-context/invalidate-cache` | Invalidate cache |
+| GET | `/api/tenant-context/health` | Health check |
+
+### JTD Statuses Added
+
+| Status | Type | Purpose |
+|--------|------|---------|
+| `no_credits` | waiting | Blocked due to insufficient credits |
+| `expired` | terminal | Expired after 7 days without credits |
+
+### Triggers Created
+
+| Trigger | Source Table | Purpose |
+|---------|--------------|---------|
+| `trg_update_tenant_context_subscription` | `t_bm_subscriptions` | Sync subscription |
+| `trg_update_tenant_context_credits` | `t_bm_credit_balance` | Sync credits |
+| `trg_update_tenant_context_usage` | `t_bm_usage` | Sync usage |
+| `trg_update_tenant_context_profile` | `t_tenant_profiles` | Sync profile |
+| `trg_credit_topup_release_jtds` | `t_bm_credit_balance` | Auto-release JTDs |
+
+### Completed Work
+
+| # | What Was Done | Files Created | Notes |
+|---|---------------|---------------|-------|
+| 1 | TenantContext table | `006_tenant_context.sql` | Table + triggers + RPC |
+| 2 | JTD Credit Integration | `003_jtd_credit_integration.sql` | Statuses + release functions |
+| 3 | Edge function | `tenant-context/index.ts` | GET/POST endpoints |
+| 4 | API Service | `tenantContextService.ts` | 30s in-memory cache |
+| 5 | API Controller | `tenantContextController.ts` | Validation + routing |
+| 6 | API Routes | `tenantContextRoutes.ts` | 6 endpoints |
+| 7 | index.ts update | `index.ts` | Full file with routes |
+| 8 | PRD Addendum | Section 10 added | TenantContext architecture |
+| 9 | JTD Addendum | `JTD-Addendum-CreditIntegration.md` | Credit integration details |
 
 ---
 
@@ -238,6 +249,7 @@ See original PRD for detailed deliverables. Architecture follows same pattern:
 | Jan 2025 | Phase 1 | Phase 1 Complete | Split 003 into 3 files due to dependencies | All migrations applied |
 | Jan 2025 | Phase 2 | Phase 2 Complete | Architecture corrected: UI→API→Edge→RPC | PRD Addendum created |
 | Jan 2026 | Phase 2 Testing | All 9 endpoints tested | Column name fixes, RPC function fixes | Consolidated migration created |
+| Jan 2026 | Phase 3 | Phase 3 Complete | TenantContext instead of jtd-worker modification | New architecture for credit-gating |
 
 ---
 
@@ -252,6 +264,29 @@ UI → API (business logic) → RPC Functions → DB
 ```
 
 All phases must follow the correct pattern. See `PRD_ADDENDUM_ARCHITECTURE.md` for details.
+
+---
+
+## Appendix: File Locations
+
+### Phase 3 Files
+
+```
+MANUAL_COPY_FILES/phase3-tenant-context-impl/
+├── contractnest-edge/
+│   └── supabase/
+│       ├── migrations/
+│       │   ├── business-model-v2/006_tenant_context.sql
+│       │   └── jtd-framework/003_jtd_credit_integration.sql
+│       └── functions/tenant-context/index.ts
+├── contractnest-api/
+│   └── src/
+│       ├── services/tenantContextService.ts
+│       ├── controllers/tenantContextController.ts
+│       ├── routes/tenantContextRoutes.ts
+│       └── index.ts
+└── COPY_INSTRUCTIONS.txt
+```
 
 ---
 

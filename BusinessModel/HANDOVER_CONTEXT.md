@@ -2,8 +2,8 @@
 
 > **Purpose**: Quick onboarding for continuing Business Model implementation
 > **Last Session**: January 2026
-> **Completed**: Phase 1 (Schema), Phase 2 (Billing Edge + API - Tested)
-> **Next Phase**: Phase 3 - JTD Credit Integration
+> **Completed**: Phase 1 (Schema), Phase 2 (Billing Edge + API), Phase 3 (TenantContext + JTD Credit Integration)
+> **Next Phase**: Phase 4 - Plan UI Evolution OR Phase 5 - Razorpay Integration
 
 ---
 
@@ -50,7 +50,7 @@
 > ```
 > See `PRD_ADDENDUM_ARCHITECTURE.md` for details.
 
-### Files Created (To Apply)
+### Files Created
 
 | # | File | Location | Purpose |
 |---|------|----------|---------|
@@ -62,17 +62,7 @@
 | 6 | `billingController.ts` | `contractnest-api/src/controllers/` | Controller |
 | 7 | `billingRoutes.ts` | `contractnest-api/src/routes/` | Route definitions |
 
-### RPC Functions from Phase 2
-
-| Function | Purpose |
-|----------|---------|
-| `get_invoice_estimate(p_tenant_id)` | Calculate upcoming bill with line items |
-| `get_usage_summary(p_tenant_id, p_period_start, p_period_end)` | Usage metrics with limits |
-| `get_topup_packs(p_product_code, p_credit_type)` | Available topup packs |
-| `get_subscription_details(p_tenant_id)` | Comprehensive subscription info |
-| `purchase_topup(p_tenant_id, p_pack_id, p_payment_reference)` | Process topup purchase |
-
-### API Endpoints Created
+### API Endpoints Created (Phase 2)
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
@@ -89,98 +79,124 @@
 | POST | `/api/billing/credits/topup` | Purchase topup |
 | POST | `/api/billing/credits/check` | Check availability |
 
-### Testing Results (January 2026)
-
-All 9 endpoints tested and working with tenant `a58ca91a-7832-4b4c-b67c-a210032f26b8`:
-
-- [x] GET /api/billing/subscription/:tenantId - Returns subscription with plan details
-- [x] GET /api/billing/status/:tenantId - Returns billing status summary
-- [x] GET /api/billing/alerts/:tenantId - Returns trial/renewal alerts
-- [x] GET /api/billing/credits/:tenantId - Returns credit balances with summary
-- [x] GET /api/billing/usage/:tenantId - Returns usage summary for billing period
-- [x] GET /api/billing/topup-packs - Returns available topup packs
-- [x] POST /api/billing/credits/check - Check credit availability
-- [x] POST /api/billing/credits/deduct - Deduct credits with locking
-- [x] POST /api/billing/credits/add - Add credits to balance
-
-### Issues Encountered & Fixed
-
-| Issue | Resolution |
-|-------|------------|
-| Column name `id` vs `subscription_id` | Used actual PK `subscription_id` |
-| Column `reserved` vs `reserved_balance` | Fixed to `reserved_balance` |
-| Invalid UUID format `tp000001` | Changed to hex-only `d0000001` |
-| Nested aggregate error | Rewrote with subqueries in `get_credit_balance` |
-| Function signature conflicts | Drop all versions before recreating |
-
 ---
 
-## 🔮 Phase 3: JTD Credit Integration (NEXT)
+## ✅ Phase 3 Completed
 
-### 🚨 CRITICAL: Modify jtd-worker to check/deduct credits
+### TenantContext Architecture
 
-**File**: `contractnest-edge/supabase/functions/jtd-worker/index.ts`
+> **NEW APPROACH**: Instead of modifying jtd-worker directly, we created a centralized `TenantContext` system:
+> - `t_tenant_context` table with triggers for real-time updates
+> - Credit-gating BEFORE JTD creation (not at worker level)
+> - `no_credits` status for blocked notifications
+> - FIFO release mechanism when credits are topped up
+> - 7-day expiry for blocked JTDs
 
-**Integration Points**:
+### Files Created (Phase 3)
 
-```typescript
-// At top of file - add import
-import { checkCreditAvailability, deductCredits } from '../_shared/businessModel/index.ts';
+| # | File | Location | Purpose |
+|---|------|----------|---------|
+| 1 | `006_tenant_context.sql` | `contractnest-edge/supabase/migrations/business-model-v2/` | TenantContext table + triggers |
+| 2 | `003_jtd_credit_integration.sql` | `contractnest-edge/supabase/migrations/jtd-framework/` | no_credits status + release functions |
+| 3 | `tenant-context/index.ts` | `contractnest-edge/supabase/functions/` | TenantContext Edge function |
+| 4 | `tenantContextService.ts` | `contractnest-api/src/services/` | API service with caching |
+| 5 | `tenantContextController.ts` | `contractnest-api/src/controllers/` | API controller |
+| 6 | `tenantContextRoutes.ts` | `contractnest-api/src/routes/` | Route definitions |
+| 7 | `index.ts` (updated) | `contractnest-api/src/` | Routes registered |
 
-// Line ~303: AFTER "await updateJTDStatus(jtd_id, 'processing')" - Add credit check
-if (['whatsapp', 'sms', 'email'].includes(channel_code)) {
-  const creditCheck = await checkCreditAvailability(supabase, tenant_id, 'notification', 1, channel_code);
-  if (!creditCheck.isAvailable) {
-    await updateJTDStatus(jtd_id, 'failed', undefined, 'Insufficient notification credits');
-    await deleteMessage(msg.msg_id);
-    return;
-  }
-}
+### RPC Functions from Phase 3
 
-// Line ~372: Inside "if (result.success)" block - Add credit deduction
-if (['whatsapp', 'sms', 'email'].includes(channel_code)) {
-  await deductCredits(supabase, tenant_id, 'notification', 1, {
-    channel: channel_code,
-    referenceType: 'jtd',
-    referenceId: jtd_id,
-    description: `${channel_code} notification sent`,
-  });
-}
+| Function | Purpose |
+|----------|---------|
+| `get_tenant_context(p_product_code, p_tenant_id)` | Get cached tenant context |
+| `init_tenant_context(p_product_code, p_tenant_id, p_business_name)` | Initialize context on signup |
+| `release_waiting_jtds(p_tenant_id, p_channel, p_max_release)` | FIFO release blocked JTDs |
+| `expire_no_credits_jtds(p_expiry_days)` | Expire JTDs after 7 days |
+| `get_waiting_jtd_count(p_tenant_id, p_channel)` | Count blocked JTDs |
+
+### API Endpoints Created (Phase 3)
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| GET | `/api/tenant-context` | Get tenant context (credits, subscription, limits) |
+| GET | `/api/tenant-context/can-send/:channel` | Check if can send via channel |
+| GET | `/api/tenant-context/waiting-jtds` | Get count of blocked JTDs |
+| POST | `/api/tenant-context/init` | Initialize tenant context |
+| POST | `/api/tenant-context/invalidate-cache` | Invalidate cached context |
+| GET | `/api/tenant-context/health` | Health check |
+
+### TenantContext Table Schema
+
+```sql
+t_tenant_context (
+    product_code TEXT,           -- 'contractnest', 'familyknows'
+    tenant_id UUID,
+    -- Profile
+    business_name, logo_url, primary_color, secondary_color,
+    -- Subscription
+    subscription_id, subscription_status, plan_name, billing_cycle,
+    period_start, period_end, trial_end_date, grace_end_date,
+    -- Credits (per channel)
+    credits_whatsapp, credits_sms, credits_email, credits_pooled,
+    -- Limits & Usage
+    limit_users, limit_contracts, limit_storage_mb,
+    usage_users, usage_contracts,
+    -- Flags (computed)
+    flag_can_access, flag_can_send_whatsapp, flag_can_send_sms,
+    flag_can_send_email, flag_credits_low,
+    PRIMARY KEY (product_code, tenant_id)
+)
 ```
 
-### Phase 3 Deliverables
+### Triggers Created
 
-| # | File | Purpose |
-|---|------|---------|
-| 1 | `006_jtd_billing_source_types.sql` | Add billing notification source types to JTD |
-| 2 | Modify `jtd-worker/index.ts` | Integrate credit check/deduction |
-| 3 | JTD templates | Billing notification templates |
+| Trigger | Source Table | Purpose |
+|---------|--------------|---------|
+| `trg_update_tenant_context_subscription` | `t_bm_subscriptions` | Sync subscription changes |
+| `trg_update_tenant_context_credits` | `t_bm_credit_balance` | Sync credit changes |
+| `trg_update_tenant_context_usage` | `t_bm_usage` | Sync usage changes |
+| `trg_update_tenant_context_profile` | `t_tenant_profiles` | Sync profile changes |
+| `trg_credit_topup_release_jtds` | `t_bm_credit_balance` | Auto-release JTDs on topup |
+
+### JTD Credit Integration
+
+New JTD statuses added:
+- `no_credits` - Notification blocked due to insufficient credits
+- `expired` - Notification expired after 7 days without credits
+
+Status flows added:
+- `created` → `no_credits` (when no credits at creation)
+- `no_credits` → `pending` (when credits topped up)
+- `no_credits` → `expired` (after 7 days)
+
+### Documentation Created (Phase 3)
+
+| File | Purpose |
+|------|---------|
+| `PRD_ADDENDUM_ARCHITECTURE.md` (Section 10) | TenantContext architecture |
+| `JTD-Addendum-CreditIntegration.md` | JTD credit integration details |
 
 ---
 
 ## 📁 File Locations
 
-### Phase 2 Files (To Copy)
+### Phase 3 Files (in MANUAL_COPY_FILES)
 
 ```
-MANUAL_COPY_FILES/business-model-phase2/
+MANUAL_COPY_FILES/phase3-tenant-context-impl/
 ├── contractnest-edge/
 │   └── supabase/
-│       ├── migrations/business-model-v2/
-│       │   └── 005_phase2_rpc_functions.sql
-│       └── functions/billing/
-│           └── index.ts
+│       ├── migrations/
+│       │   ├── business-model-v2/006_tenant_context.sql
+│       │   └── jtd-framework/003_jtd_credit_integration.sql
+│       └── functions/tenant-context/index.ts
 ├── contractnest-api/
 │   └── src/
-│       ├── types/billing.dto.ts
-│       ├── validators/billingValidators.ts
-│       ├── services/billingService.ts
-│       ├── controllers/billingController.ts
-│       └── routes/billingRoutes.ts
-└── ClaudeDocumentation/BusinessModel/
-    ├── PRD_ADDENDUM_ARCHITECTURE.md
-    ├── BM_delivery.md (updated)
-    └── HANDOVER_CONTEXT.md (this file)
+│       ├── services/tenantContextService.ts
+│       ├── controllers/tenantContextController.ts
+│       ├── routes/tenantContextRoutes.ts
+│       └── index.ts (complete with routes)
+└── COPY_INSTRUCTIONS.txt
 ```
 
 ### Documentation
@@ -188,10 +204,32 @@ MANUAL_COPY_FILES/business-model-phase2/
 ```
 ClaudeDocumentation/BusinessModel/
 ├── BUSINESS_MODEL_AGENT_PRD.md        # Full PRD (original)
-├── PRD_ADDENDUM_ARCHITECTURE.md       # Architecture corrections (NEW)
-├── BM_delivery.md                      # Delivery tracker (updated)
+├── PRD_ADDENDUM_ARCHITECTURE.md       # Architecture + TenantContext
+├── BM_delivery.md                      # Delivery tracker
 └── HANDOVER_CONTEXT.md                 # This file
+
+ClaudeDocumentation/JTD/
+└── JTD-Addendum-CreditIntegration.md  # JTD credit integration
 ```
+
+---
+
+## 🔮 Next Phases
+
+### Phase 4: Plan UI Evolution
+- Product selector component
+- Composite billing builder
+- Usage dashboard
+- Credit manager
+
+### Phase 5: Razorpay Integration
+- Razorpay operations Edge function
+- Razorpay webhook handler
+- Payment processing RPC functions
+
+### Phase 8: Billing Cycle Worker (depends on Phase 3)
+- Uses TenantContext for billing cycle processing
+- Integrates with JTD for billing notifications
 
 ---
 
@@ -207,31 +245,26 @@ WRONG:
 UI → API (business logic) → RPC → DB
 ```
 
-### 2. Existing Integrations Module
+### 2. Multi-Product Isolation
 
-Razorpay credentials are stored in `t_tenant_integrations` via existing Integrations module:
-- Admin tenant's Razorpay = Platform payment account
-- Regular tenant's Razorpay = Their own account for Contract Billing
+TenantContext uses `product_code + tenant_id` as primary key:
+- Different products have isolated contexts
+- `x-product-code` header required for all tenant-context calls
+- Products: `contractnest`, `familyknows`, `kaladristi`
 
-**DO NOT** create new credential storage - use existing module.
+### 3. Credit-Gating Flow
 
-### 3. Table References
-
-- Tenant table is `t_tenants` with `is_admin` column (NOT `t_tenant`)
-- Credit balance table is `t_bm_credit_balance`
-- Topup pack table uses `name`, `currency_code`, `expiry_days`
-
-### 4. API Router Registration
-
-After copying Phase 2 files, register the billing routes in the API:
-
-```typescript
-// In contractnest-api/src/index.ts or routes/index.ts
-import billingRoutes from './routes/billingRoutes';
-
-// Add to router
-app.use('/api', billingRoutes);
 ```
+JTD Creation → Check canSendChannel() →
+  ├─ Has credits → status: 'pending' → Worker sends → Deduct credits
+  └─ No credits → status: 'no_credits' → Wait for topup → Auto-release (FIFO)
+```
+
+### 4. Pending Implementation
+
+- UI components for credit alerts (Phase 4)
+- JTD creation point modification to call `canSendChannel()`
+- Webhook trigger for `release_waiting_jtds()` on payment success
 
 ---
 
@@ -244,11 +277,10 @@ Read: ClaudeDocumentation/BusinessModel/PRD_ADDENDUM_ARCHITECTURE.md
 # 2. Read the delivery tracker
 Read: ClaudeDocumentation/BusinessModel/BM_delivery.md
 
-# 3. If starting Phase 3, modify jtd-worker:
-Read: contractnest-edge/supabase/functions/jtd-worker/index.ts
-# Apply credit check/deduction at lines ~303 and ~372
+# 3. If starting Phase 4 (UI):
+Read: contractnest-ui/src/pages/settings/businessmodel/
 
-# 4. If doing Phase 5 (Razorpay), check integrations:
+# 4. If starting Phase 5 (Razorpay):
 Read: contractnest-edge/supabase/functions/integrations/index.ts
 # Understand credential encryption/decryption pattern
 ```
@@ -259,20 +291,7 @@ Read: contractnest-edge/supabase/functions/integrations/index.ts
 
 **Full PRD**: `ClaudeDocumentation/BusinessModel/BUSINESS_MODEL_AGENT_PRD.md`
 **Architecture Addendum**: `ClaudeDocumentation/BusinessModel/PRD_ADDENDUM_ARCHITECTURE.md`
-
-### Billing Models Supported
-
-1. **Composite** (ContractNest): Base fee + usage + credits + add-ons
-2. **Tiered Family** (FamilyKnows): User-count tiers with free tier
-3. **Subscription + Usage** (Kaladristi): Base subscription + per-use charges
-
-### Architecture Decisions
-
-- No Redis - use PostgreSQL row-level locking
-- JTD framework for notifications
-- JSONB for flexible billing configurations
-- Multi-tenant with RLS policies
-- **Edge functions call RPC** - NOT API services
+**JTD Credit Integration**: `ClaudeDocumentation/JTD/JTD-Addendum-CreditIntegration.md`
 
 ---
 
