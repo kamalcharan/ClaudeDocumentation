@@ -2,8 +2,8 @@
 
 > **Purpose**: Quick onboarding for continuing Business Model implementation
 > **Last Session**: January 2026
-> **Completed**: Phase 1 (Schema), Phase 2 (Billing Edge + API), Phase 3 (TenantContext + JTD Credit Integration)
-> **Next Phase**: Phase 4 - Plan UI Evolution OR Phase 5 - Razorpay Integration
+> **Completed**: Phase 1 (Schema), Phase 2 (Billing Edge + API), Phase 3 (TenantContext + JTD Credit Integration), Phase 4 (Plan UI Evolution)
+> **Next Phase**: Phase 5 - Razorpay Integration OR Phase 8 - Billing Cycle Worker
 
 ---
 
@@ -178,6 +178,66 @@ Status flows added:
 
 ---
 
+## ✅ Phase 4 Completed
+
+### Unified Subscription Dashboard
+
+> **DESIGN DECISION**: Instead of separate components, Phase 4 implemented:
+> - Settings menu integration with Subscription section
+> - React Query hooks for real API data
+> - 5-step plan creation wizard with ReviewStep
+> - Unified Subscription Dashboard (merged Credits into Subscription)
+> - Glassmorphic design matching admin pages
+
+### Files Created (Phase 4)
+
+| # | File | Location | Purpose |
+|---|------|----------|---------|
+| 1 | Settings menus | `contractnest-ui/src/utils/constants/settingsMenus.ts` | Subscription menu items |
+| 2 | Routes | `contractnest-ui/src/App.tsx` | Subscription routes |
+| 3 | React Query Hooks | `contractnest-ui/src/hooks/queries/useBusinessModelQueries.ts` | Usage, Credits, Topup hooks |
+| 4 | ReviewStep | `contractnest-ui/src/components/businessmodel/planform/ReviewStep.tsx` | 5th wizard step |
+| 5 | Create wizard | `contractnest-ui/src/pages/settings/businessmodel/admin/pricing-plans/create.tsx` | Updated 5-step wizard |
+| 6 | Subscription Dashboard | `contractnest-ui/src/pages/settings/businessmodel/tenants/Subscription/index.tsx` | Unified glassmorphic UI |
+
+### React Query Hooks (Phase 4)
+
+| Hook | API Endpoint | Purpose |
+|------|--------------|---------|
+| `useUsageSummary()` | `/api/billing/usage/:tenantId` | Contracts, users, storage usage |
+| `useCreditBalance()` | `/api/billing/credits/:tenantId` | Per-channel credit balances |
+| `useTopupPacks()` | `/api/billing/topup-packs` | Available topup packs |
+
+### Unified Subscription Dashboard Features
+
+- **Glassmorphic Design**: `backdrop-filter: blur(12px)`, semi-transparent cards
+- **Summary Cards**: Plan info, Usage %, Notification Credits
+- **Consumption Breakdown**: Users, Contracts, Storage with color-coded progress bars
+- **Credit Balances**: Per-channel (WhatsApp, SMS, Email) with low balance indicators
+- **Quick Topup**: Inline topup pack buttons
+- **Tab Navigation**: Overview / Credits tabs
+- **Dark Mode**: Full theme support
+
+### Plan Creation Wizard (5 Steps)
+
+| Step | Component | Purpose |
+|------|-----------|---------|
+| 1 | BasicInfoStep | Product, name, description, trial days |
+| 2 | PricingStep | Currency, tiers, pricing model |
+| 3 | FeaturesStep | Feature toggles, limits |
+| 4 | NotificationsStep | Credit allocations per channel |
+| 5 | ReviewStep | Complete summary before creation |
+
+### Files Removed (Orphan Code Cleanup)
+
+| File | Reason |
+|------|--------|
+| `Credits.tsx` | Merged into unified Subscription dashboard |
+| Credits route | Single page handles both subscription + credits |
+| Credits menu item | Simplified navigation |
+
+---
+
 ## 📁 File Locations
 
 ### Phase 3 Files (in MANUAL_COPY_FILES)
@@ -199,6 +259,23 @@ MANUAL_COPY_FILES/phase3-tenant-context-impl/
 └── COPY_INSTRUCTIONS.txt
 ```
 
+### Phase 4 Files (in MANUAL_COPY_FILES)
+
+```
+MANUAL_COPY_FILES/step1-foundation/          # Settings menus, routes
+MANUAL_COPY_FILES/step2-usage-dashboard/     # useUsageSummary hook
+MANUAL_COPY_FILES/step3-credit-manager/      # useCreditBalance, useTopupPacks hooks
+MANUAL_COPY_FILES/step4-composite-billing/   # ReviewStep, 5-step wizard
+MANUAL_COPY_FILES/unified-subscription-dashboard/  # Final unified dashboard
+    ├── contractnest-ui/
+    │   └── src/
+    │       ├── App.tsx (Credits route removed)
+    │       ├── utils/constants/settingsMenus.ts (Credits menu removed)
+    │       └── pages/settings/businessmodel/tenants/Subscription/
+    │           └── index.tsx (Glassmorphic unified dashboard)
+    └── COPY_INSTRUCTIONS.txt
+```
+
 ### Documentation
 
 ```
@@ -215,12 +292,6 @@ ClaudeDocumentation/JTD/
 ---
 
 ## 🔮 Next Phases
-
-### Phase 4: Plan UI Evolution
-- Product selector component
-- Composite billing builder
-- Usage dashboard
-- Credit manager
 
 ### Phase 5: Razorpay Integration
 - Razorpay operations Edge function
@@ -262,9 +333,9 @@ JTD Creation → Check canSendChannel() →
 
 ### 4. Pending Implementation
 
-- UI components for credit alerts (Phase 4)
 - JTD creation point modification to call `canSendChannel()`
 - Webhook trigger for `release_waiting_jtds()` on payment success
+- Razorpay payment integration (Phase 5)
 
 ---
 
@@ -277,12 +348,13 @@ Read: ClaudeDocumentation/BusinessModel/PRD_ADDENDUM_ARCHITECTURE.md
 # 2. Read the delivery tracker
 Read: ClaudeDocumentation/BusinessModel/BM_delivery.md
 
-# 3. If starting Phase 4 (UI):
-Read: contractnest-ui/src/pages/settings/businessmodel/
-
-# 4. If starting Phase 5 (Razorpay):
+# 3. If starting Phase 5 (Razorpay):
 Read: contractnest-edge/supabase/functions/integrations/index.ts
 # Understand credential encryption/decryption pattern
+
+# 4. If starting Phase 8 (Billing Cycle Worker):
+Read: Phase 3 TenantContext files
+# Worker will use TenantContext for billing cycle processing
 ```
 
 ---

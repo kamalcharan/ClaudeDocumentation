@@ -13,8 +13,8 @@
 |-------|--------|---------|-----------|-------|
 | Phase 1 | ✅ Completed | Schema & Configs | All deliverables | Jan 2025 |
 | Phase 2 | ✅ Completed | Billing Edge + API | All deliverables | Jan 2025 - Architecture corrected |
-| **Phase 3** | ✅ **Completed** | TenantContext + JTD Credit Integration | All deliverables | Jan 2026 - New architecture |
-| Phase 4 | ⚪ Pending | Plan UI Evolution | - | Depends on Phase 1 |
+| Phase 3 | ✅ Completed | TenantContext + JTD Credit Integration | All deliverables | Jan 2026 - New architecture |
+| **Phase 4** | ✅ **Completed** | Plan UI Evolution | All deliverables | Jan 2026 - Unified Subscription Dashboard |
 | Phase 5 | ⚪ Pending | Razorpay Integration | - | Depends on Phase 2 |
 | Phase 6 | ⚪ Pending | Contract Billing | - | Depends on Phase 5 |
 | Phase 7 | ⚪ Pending | n8n Dunning | - | Depends on Phase 5 |
@@ -195,19 +195,81 @@
 
 ## Phase 4: Plan UI Evolution
 
-**Status**: ⚪ Pending
+**Status**: ✅ Completed
 **Depends On**: Phase 1
+**Completed**: January 2026
 
-### Planned Deliverables
+### Implementation Approach
+
+> **DESIGN DECISION**: Instead of separate components, Phase 4 was implemented as:
+> 1. Settings menu integration (Foundation & Navigation)
+> 2. Real API-connected hooks for usage/credits
+> 3. 5-step plan creation wizard with ReviewStep
+> 4. Unified Subscription Dashboard (merged Credits into Subscription)
+> 5. Glassmorphic design matching admin pages
+
+### Completed Deliverables
 
 | # | Deliverable | Location | Status |
 |---|-------------|----------|--------|
-| 1 | Product selector | `contractnest-ui/src/components/businessModel/ProductSelector.tsx` | ⚪ |
-| 2 | Composite billing builder | `contractnest-ui/src/components/businessModel/CompositeBillingBuilder/` | ⚪ |
-| 3 | Updated create page | `contractnest-ui/src/pages/settings/businessmodel/admin/pricing-plans/create.tsx` | ⚪ |
-| 4 | Updated edit page | `contractnest-ui/src/pages/settings/businessmodel/admin/pricing-plans/edit.tsx` | ⚪ |
-| 5 | Usage dashboard | `contractnest-ui/src/components/businessModel/UsageDashboard/` | ⚪ |
-| 6 | Credit manager | `contractnest-ui/src/components/businessModel/CreditManager/` | ⚪ |
+| 1 | Settings menus for Subscription | `contractnest-ui/src/utils/constants/settingsMenus.ts` | ✅ |
+| 2 | Subscription routes | `contractnest-ui/src/App.tsx` | ✅ |
+| 3 | Usage Summary Hook | `contractnest-ui/src/hooks/queries/useBusinessModelQueries.ts` | ✅ |
+| 4 | Credit Balance Hook | `contractnest-ui/src/hooks/queries/useBusinessModelQueries.ts` | ✅ |
+| 5 | Topup Packs Hook | `contractnest-ui/src/hooks/queries/useBusinessModelQueries.ts` | ✅ |
+| 6 | ReviewStep (5-step wizard) | `contractnest-ui/src/components/businessmodel/planform/ReviewStep.tsx` | ✅ |
+| 7 | Updated create page | `contractnest-ui/src/pages/settings/businessmodel/admin/pricing-plans/create.tsx` | ✅ |
+| 8 | Unified Subscription Dashboard | `contractnest-ui/src/pages/settings/businessmodel/tenants/Subscription/index.tsx` | ✅ |
+
+### React Query Hooks Created
+
+| Hook | Purpose |
+|------|---------|
+| `useUsageSummary()` | Fetch usage metrics from /api/billing/usage |
+| `useCreditBalance()` | Fetch credit balances from /api/billing/credits |
+| `useTopupPacks()` | Fetch available topup packs from /api/billing/topup-packs |
+| `formatStorageSize()` | Utility for formatting storage (MB/GB) |
+| `getUsageStatus()` | Compute usage status (ok/warning/critical) |
+
+### Plan Creation Wizard Steps
+
+| Step | Component | Purpose |
+|------|-----------|---------|
+| 1 | BasicInfoStep | Product, name, description, trial days |
+| 2 | PricingStep | Currency, tiers, pricing model |
+| 3 | FeaturesStep | Feature toggles, limits |
+| 4 | NotificationsStep | Credit allocations per channel |
+| 5 | ReviewStep | Complete summary before creation |
+
+### Unified Subscription Dashboard Features
+
+| Feature | Description |
+|---------|-------------|
+| Glassmorphic Design | `backdrop-filter: blur(12px)`, semi-transparent cards |
+| Summary Cards | Plan info, Usage %, Notification Credits |
+| Consumption Breakdown | Users, Contracts, Storage with progress bars |
+| Credit Balances | Per-channel (WhatsApp, SMS, Email) with low indicators |
+| Quick Topup | Inline topup pack buttons |
+| Tab Navigation | Overview / Credits tabs |
+| Dark Mode Support | Full theme adaptation |
+
+### Files Removed (Orphan Code)
+
+| File | Reason |
+|------|--------|
+| `Credits.tsx` | Merged into unified Subscription dashboard |
+| Credits route in App.tsx | Single page now handles both |
+| Credits menu item | Menu simplified |
+
+### Commits
+
+| Commit | Description |
+|--------|-------------|
+| Step 1 | Foundation & Navigation (settings menus, routes) |
+| Step 2 | Usage Dashboard with real API data |
+| Step 3 | Credit Manager hooks |
+| Step 4 | Composite Billing Builder (ReviewStep) |
+| Step 5 | Unified Subscription Dashboard |
 
 ---
 
@@ -250,6 +312,7 @@ See original PRD for detailed deliverables. Architecture follows same pattern:
 | Jan 2025 | Phase 2 | Phase 2 Complete | Architecture corrected: UI→API→Edge→RPC | PRD Addendum created |
 | Jan 2026 | Phase 2 Testing | All 9 endpoints tested | Column name fixes, RPC function fixes | Consolidated migration created |
 | Jan 2026 | Phase 3 | Phase 3 Complete | TenantContext instead of jtd-worker modification | New architecture for credit-gating |
+| Jan 2026 | Phase 4 | Phase 4 Complete | Unified dashboard, glassmorphic design | 5 steps delivered |
 
 ---
 
@@ -286,6 +349,23 @@ MANUAL_COPY_FILES/phase3-tenant-context-impl/
 │       ├── routes/tenantContextRoutes.ts
 │       └── index.ts
 └── COPY_INSTRUCTIONS.txt
+```
+
+### Phase 4 Files
+
+```
+MANUAL_COPY_FILES/step1-foundation/          # Settings menus, routes
+MANUAL_COPY_FILES/step2-usage-dashboard/     # useUsageSummary hook
+MANUAL_COPY_FILES/step3-credit-manager/      # useCreditBalance, useTopupPacks hooks
+MANUAL_COPY_FILES/step4-composite-billing/   # ReviewStep, 5-step wizard
+MANUAL_COPY_FILES/unified-subscription-dashboard/  # Final unified dashboard
+    ├── contractnest-ui/
+    │   └── src/
+    │       ├── App.tsx (Credits route removed)
+    │       ├── utils/constants/settingsMenus.ts (Credits menu removed)
+    │       └── pages/settings/businessmodel/tenants/Subscription/
+    │           └── index.tsx (Glassmorphic unified dashboard)
+    └── COPY_INSTRUCTIONS.txt
 ```
 
 ---
