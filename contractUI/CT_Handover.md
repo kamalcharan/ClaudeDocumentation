@@ -11,11 +11,13 @@
 
 | Component | Status | Details |
 |-----------|--------|---------|
-| **Database** | ✅ Partial | `cat_blocks`, `cat_templates`, `cat_asset_types` exist |
-| **Edge Functions** | ✅ Partial | `cat-blocks`, `cat-templates` complete |
-| **API Layer** | ✅ Done | Routes, controller, service for blocks + templates |
+| **Database** | ✅ Partial | `cat_blocks`, `cat_templates`, `cat_asset_types`, `t_idempotency_cache` exist |
+| **Edge Functions** | ✅ v2.0 | `cat-blocks`, `cat-templates` with idempotency + optimistic locking |
+| **Edge Shared Utils** | ✅ v2.0 | `_shared/edgeUtils.ts` - signature, pagination, idempotency |
+| **API Layer** | ✅ v2.0 | Validation + `requireIdempotencyKey` middleware |
 | **UI - BlockWizard** | ✅ Complete | All 8 block types with full step wizards |
 | **UI - Template Builder** | ✅ Done | 101KB template.tsx with builder |
+| **UI - Configure** | ✅ v2.0 | Version conflict modal, refresh button, idempotency |
 | **UI - Buyers** | ⚪ Pending | Not started |
 | **UI - Contracts** | ⚪ Pending | Sprint 2 |
 
@@ -193,8 +195,9 @@ components/catalog-studio/BlockWizard/
 ClaudeDocumentation/contractUI/
 ├── CatalogStudio-SprintPlan-v1.0.md      # Full sprint plan
 ├── CatalogStudio-Database-Schema-v1.0.md # Database schema
-├── CT_delivery.md                         # Delivery tracker (THIS)
-├── CT_Handover.md                         # Handover context
+├── CT_delivery.md                         # Delivery tracker
+├── CT_Handover.md                         # Handover context (THIS)
+├── idempotency.md                         # ✅ NEW - Idempotency framework guide
 ├── 12-catalog-studio.html                 # UI mockups
 ├── 12b-catalog-studio-complete.html       # Complete mockups
 └── samples/                               # Sample HTML files
@@ -204,20 +207,24 @@ ClaudeDocumentation/contractUI/
 
 ```
 contractnest-edge/supabase/functions/
-├── cat-blocks/index.ts           # ✅ 716 lines
-├── cat-templates/index.ts        # ✅ 787 lines
+├── cat-blocks/index.ts           # ✅ v2.0 - CRUD + idempotency + optimistic locking
+├── cat-templates/index.ts        # ✅ v2.0 - CRUD + idempotency + optimistic locking
 ├── contracts/                    # ⚪ Pending (Sprint 2)
 ├── tasks/                        # ⚪ Pending (Sprint 3)
-└── _shared/                      # Shared utilities
+└── _shared/
+    └── edgeUtils.ts              # ✅ v2.0 - Signature, pagination, idempotency helpers
 ```
 
 ### API
 
 ```
 contractnest-api/src/
-├── routes/catalogStudioRoutes.ts          # ✅ Routes
+├── routes/catalogStudioRoutes.ts          # ✅ v2.0 - Routes with validation
 ├── controllers/catalogStudioController.ts # ✅ Controller
 ├── services/catalogStudioService.ts       # ✅ Service
+├── middleware/requestContext.ts           # ✅ v2.0 - requireIdempotencyKey
+├── validators/catalogStudio.validators.ts # ✅ v2.0 - express-validator schemas
+├── utils/apiResponseHelpers.ts            # ✅ v2.0 - Response helpers
 └── types/
     └── catalogStudio/                     # ⚪ Type definitions needed
 ```
@@ -226,9 +233,15 @@ contractnest-api/src/
 
 ```
 contractnest-ui/src/
-├── components/catalog-studio/    # ✅ Complete wizard system
-├── pages/catalog-studio/         # ✅ Pages
-└── hooks/catalog-studio/         # ⚪ Hooks needed
+├── services/api.ts                        # ✅ v2.0 - patchWithIdempotency, version helpers
+├── components/catalog-studio/             # ✅ Complete wizard system
+├── pages/catalog-studio/
+│   └── configure.tsx                      # ✅ v2.0 - Version conflict modal
+├── hooks/
+│   ├── queries/useCatBlocksTest.ts        # ✅ v2.0 - getBlockVersion helper
+│   └── mutations/useCatBlocksMutations.ts # ✅ v2.0 - Idempotency support
+└── utils/catalog-studio/
+    └── catBlockAdapter.ts                 # ✅ v2.0 - Fixed category field mapping
 ```
 
 ---
@@ -304,6 +317,41 @@ DO NOT create new resources tables. Use existing:
 - `m_catalog_resource_types` - Resource type master
 - `t_category_resources_master` - Actual resources
 
+### 5. Idempotency Framework (v2.0)
+
+All POST/PATCH operations require `x-idempotency-key` header:
+
+```
+UI: generateIdempotencyKey() → postWithIdempotency() / patchWithIdempotency()
+API: requireIdempotencyKey middleware → buildEdgeHeaders()
+Edge: checkIdempotency() → storeIdempotency() (uses t_idempotency_cache)
+```
+
+**Documentation**: `ClaudeDocumentation/contractUI/idempotency.md`
+
+### 6. Optimistic Locking (v2.0)
+
+Updates include `expected_version` to prevent concurrent modification:
+
+```typescript
+// UI sends expected_version
+await updateBlock(id, data, expectedVersion);
+
+// Edge checks version
+.eq('version', expected_version)
+
+// Returns 409 VERSION_CONFLICT if mismatch
+```
+
+### 7. Category Field Mapping Fix
+
+The adapter uses `category` field (not UUID `block_type_id`) for block type:
+
+```typescript
+// catBlockAdapter.ts line 78
+const blockType = catBlock.block_type_name || catBlock.type || (catBlock as any).category || 'service';
+```
+
 ---
 
 ## 📋 Quick Start for Next Session
@@ -335,6 +383,7 @@ Read: CatalogStudio-SprintPlan-v1.0.md Section 2.1-2.4
 | `CatalogStudio-SprintPlan-v1.0.md` | Full implementation plan |
 | `CatalogStudio-Database-Schema-v1.0.md` | Database design |
 | `CT_delivery.md` | Sprint delivery tracker |
+| `idempotency.md` | **NEW** Idempotency framework guide |
 | `12-catalog-studio.html` | UI mockups |
 | `12b-catalog-studio-complete.html` | Complete UI reference |
 

@@ -308,6 +308,48 @@ contractnest-ui/src/
 | Jan 2026 | Sprint 1 | cat-templates edge function | System templates with copy feature |
 | Jan 2026 | Sprint 1 | BlockWizard UI complete | 8 block types, all steps |
 | Jan 2026 | Current | Delivery tracker created | CT_delivery.md + CT_Handover.md |
+| Jan 2026 | Current | Edge v2.0 improvements | Idempotency (using existing framework), optimistic locking, pagination |
+| Jan 2026 | Current | API v2.0 improvements | express-validator schemas, requireIdempotencyKey middleware |
+| Jan 2026 | Current | UI v2.0 improvements | patchWithIdempotency, version conflict modal, category field fix |
+
+---
+
+## v2.0 Improvements (January 2026)
+
+### Edge Layer Enhancements
+
+| Feature | File | Description |
+|---------|------|-------------|
+| Shared Utils | `_shared/edgeUtils.ts` | Signature validation, pagination, idempotency helpers |
+| Idempotency | Uses existing `t_idempotency_cache` | 15-min TTL, RPC functions |
+| Optimistic Locking | `checkVersionConflict()` | Returns 409 if version mismatch |
+| Pagination | `parsePaginationParams()` | Backward-compatible (returns old format if no params) |
+| Replay Protection | In-memory nonce cache | 5-minute cleanup interval |
+
+### API Layer Enhancements
+
+| Feature | File | Description |
+|---------|------|-------------|
+| Validation | `validators/catalogStudio.validators.ts` | express-validator schemas |
+| Idempotency Enforcement | `requireIdempotencyKey` middleware | 400 error if missing |
+| Response Helpers | `utils/apiResponseHelpers.ts` | Standardized success/error responses |
+
+### UI Layer Enhancements
+
+| Feature | File | Description |
+|---------|------|-------------|
+| Idempotency Helpers | `services/api.ts` | `generateIdempotencyKey()`, `patchWithIdempotency()` |
+| Version Conflict Helpers | `services/api.ts` | `isVersionConflictError()`, `getVersionConflictDetails()` |
+| Mutations Update | `hooks/mutations/useCatBlocksMutations.ts` | Auto-generates idempotency keys |
+| Query Update | `hooks/queries/useCatBlocksTest.ts` | `getBlockVersion()` helper |
+| Configure Page | `pages/catalog-studio/configure.tsx` | Version conflict modal, refresh button |
+| Adapter Fix | `utils/catalog-studio/catBlockAdapter.ts` | Uses `category` field for type mapping |
+
+### Documentation
+
+| Document | Location | Purpose |
+|----------|----------|---------|
+| Idempotency Guide | `ClaudeDocumentation/contractUI/idempotency.md` | How to use idempotency framework |
 
 ---
 
