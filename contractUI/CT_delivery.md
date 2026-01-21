@@ -311,6 +311,13 @@ contractnest-ui/src/
 | Jan 2026 | Current | Edge v2.0 improvements | Idempotency (using existing framework), optimistic locking, pagination |
 | Jan 2026 | Current | API v2.0 improvements | express-validator schemas, requireIdempotencyKey middleware |
 | Jan 2026 | Current | UI v2.0 improvements | patchWithIdempotency, version conflict modal, category field fix |
+| Jan 2026 | Current | UI Layout Optimizations | Remove search bar, reduce header height, auto-collapse sidebar |
+| Jan 2026 | Current | Enable Hidden Submenus | Activity Feed, All Contracts, Contract Preview, Invite Sellers |
+| Jan 2026 | Current | Block Wizard Consolidation | Text Block → 2 steps, Video Block → 2 steps |
+| Jan 2026 | Current | FileUploader Component | Reusable upload with useStorageManagement hook |
+| Jan 2026 | Current | IconPicker Custom Upload | Custom icon upload support via FileUploader |
+| Jan 2026 | Current | Field Validations | Centralized blockValidation.ts with limits |
+| Jan 2026 | Current | HTML Fix | stripHtml for block descriptions (in progress) |
 
 ---
 
@@ -368,6 +375,72 @@ contractnest-ui/src/
 cat_blocks.resource_pricing.options[].resource_id → t_category_resources_master.id
 cat_blocks.resource_pricing.resource_type_id → m_catalog_resource_types.id
 ```
+
+---
+
+## v3.0 Improvements (January 2026)
+
+### UI Layout Optimizations
+
+| Feature | Location | Description |
+|---------|----------|-------------|
+| Remove Search Bar | Header | Cleaner header layout |
+| Reduce Header Height | Header | More content space |
+| Auto-collapse Sidebar | Sidebar | Collapsed by default |
+| Enable Hidden Submenus | Sidebar | Activity Feed, All Contracts, Contract Preview, Invite Sellers |
+
+### Block Wizard Consolidation
+
+| Block Type | Before | After | Changes |
+|------------|--------|-------|---------|
+| Text Block | 4 steps | 2 steps | Type → Content (Name, Icon, RichText in one page) |
+| Video Block | 4 steps | 2 steps | Type → Media (Name, Icon, Video, Display Settings in one page) |
+
+**Files Modified:**
+- `wizard-data.ts` - Step configuration
+- `BlockWizardContent.tsx` - Step routing
+- `ContentStep.tsx` - Text block single page
+- `MediaStep.tsx` - Video block single page
+
+### New Components
+
+| Component | Location | Description |
+|-----------|----------|-------------|
+| FileUploader | `components/common/FileUploader.tsx` | Reusable upload with drag-drop, progress, preview |
+| IconPicker (v2) | `components/catalog-studio/IconPicker.tsx` | Added custom icon upload tab |
+
+### Storage Categories (New)
+
+| Category | File Types | Max Size | Purpose |
+|----------|------------|----------|---------|
+| block_icons | PNG, SVG, JPEG | 512KB | Custom block icons |
+| block_videos | MP4, WebM, MOV | 100MB | Video block uploads |
+| block_images | JPEG, PNG, WebP, GIF | 5MB | Image block uploads |
+
+### Field Validation Constants
+
+**File:** `utils/constants/blockValidation.ts`
+
+| Field | Max Length | Notes |
+|-------|------------|-------|
+| name | 255 | Required |
+| description | 2000 | Rich text |
+| content | 10000 | Text blocks |
+| tags | 50 each | Max 20 tags |
+| sku | 50 | Spare blocks |
+| terms | 1000 | Service/Spare |
+| checklistItem | 500 | Max 50 items |
+| mediaUrl | 2000 | Video/Image URLs |
+
+### HTML Display Fix
+
+| Feature | Files | Status |
+|---------|-------|--------|
+| stripHtml function | `htmlUtils.ts` | ✅ Implemented |
+| blocks.tsx fix | Lines 754, 852, 979 | ✅ Applied |
+| template.tsx fix | Lines 1301, 1410, 2137 | ✅ Applied |
+
+**Note:** Fix strips `<p>` tags from block.description for clean display in cards and previews.
 
 ---
 

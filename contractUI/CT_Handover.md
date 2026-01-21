@@ -15,9 +15,14 @@
 | **Edge Functions** | ✅ v2.0 | `cat-blocks`, `cat-templates` with idempotency + optimistic locking |
 | **Edge Shared Utils** | ✅ v2.0 | `_shared/edgeUtils.ts` - signature, pagination, idempotency |
 | **API Layer** | ✅ v2.0 | Validation + `requireIdempotencyKey` middleware |
-| **UI - BlockWizard** | ✅ Complete | All 8 block types with full step wizards |
+| **UI - BlockWizard** | ✅ v3.0 | All 8 block types, Text/Video consolidated to 2 steps |
 | **UI - Template Builder** | ✅ Done | 101KB template.tsx with builder |
 | **UI - Configure** | ✅ v2.0 | Version conflict modal, refresh button, idempotency |
+| **UI - Layout** | ✅ v3.0 | Header reduced, sidebar auto-collapse, hidden menus enabled |
+| **UI - FileUploader** | ✅ v3.0 | Reusable upload component with useStorageManagement |
+| **UI - IconPicker** | ✅ v3.0 | Custom icon upload support |
+| **UI - Field Validations** | ✅ v3.0 | Centralized blockValidation.ts |
+| **UI - HTML Fix** | 🔵 In Progress | stripHtml for descriptions |
 | **UI - Buyers** | ⚪ Pending | Not started |
 | **UI - Contracts** | ⚪ Pending | Sprint 2 |
 
@@ -234,14 +239,31 @@ contractnest-api/src/
 ```
 contractnest-ui/src/
 ├── services/api.ts                        # ✅ v2.0 - patchWithIdempotency, version helpers
-├── components/catalog-studio/             # ✅ Complete wizard system
+├── components/
+│   ├── common/
+│   │   └── FileUploader.tsx               # ✅ v3.0 - Reusable upload component
+│   └── catalog-studio/
+│       ├── BlockWizard/
+│       │   ├── BlockWizardContent.tsx     # ✅ v3.0 - Text/Video at step 2
+│       │   └── steps/
+│       │       ├── content/ContentStep.tsx # ✅ v3.0 - Text single page
+│       │       └── media/MediaStep.tsx     # ✅ v3.0 - Video single page
+│       └── IconPicker.tsx                 # ✅ v3.0 - Custom upload support
 ├── pages/catalog-studio/
+│   ├── blocks.tsx                         # ✅ v3.0 - stripHtml fix
+│   ├── template.tsx                       # ✅ v3.0 - stripHtml fix
 │   └── configure.tsx                      # ✅ v2.0 - Version conflict modal
 ├── hooks/
 │   ├── queries/useCatBlocksTest.ts        # ✅ v2.0 - getBlockVersion helper
 │   └── mutations/useCatBlocksMutations.ts # ✅ v2.0 - Idempotency support
-└── utils/catalog-studio/
-    └── catBlockAdapter.ts                 # ✅ v2.0 - Fixed category field mapping
+└── utils/
+    ├── catalog-studio/
+    │   ├── catBlockAdapter.ts             # ✅ v2.0 - Fixed category field mapping
+    │   ├── htmlUtils.ts                   # ✅ v3.0 - stripHtml function
+    │   └── wizard-data.ts                 # ✅ v3.0 - Text/Video 2 steps
+    └── constants/
+        ├── blockValidation.ts             # ✅ v3.0 - Field validation limits
+        └── storageConstants.ts            # ✅ v3.0 - block_icons/videos/images
 ```
 
 ---
@@ -350,6 +372,61 @@ The adapter uses `category` field (not UUID `block_type_id`) for block type:
 ```typescript
 // catBlockAdapter.ts line 78
 const blockType = catBlock.block_type_name || catBlock.type || (catBlock as any).category || 'service';
+```
+
+### 8. Block Wizard Consolidation (v3.0)
+
+Text and Video blocks now use 2-step wizards for faster creation:
+
+| Block | Steps | Content |
+|-------|-------|---------|
+| Text | Type → Content | Name, Icon, RichText (single page) |
+| Video | Type → Media | Name, Icon, Video Source, Display Settings (single page) |
+
+**Files:**
+- `wizard-data.ts` - Step definitions
+- `BlockWizardContent.tsx` - Renders ContentStep/MediaStep at step 2
+- `ContentStep.tsx` - Text block single page
+- `MediaStep.tsx` - Video block single page with collapsible settings
+
+### 9. FileUploader Component (v3.0)
+
+Reusable file upload component using `useStorageManagement` hook:
+
+```typescript
+<FileUploader
+  category="block_images"  // block_icons, block_videos, block_images
+  accept="image/*"
+  onUploadComplete={(file) => onChange('imageUrl', file.download_url)}
+  onUploadError={(error) => console.error(error)}
+  showPreview={true}
+/>
+```
+
+### 10. Field Validation Constants (v3.0)
+
+Centralized in `utils/constants/blockValidation.ts`:
+
+```typescript
+import { BLOCK_FIELD_LIMITS, getCharCountDisplay } from '@/utils/constants/blockValidation';
+
+// Usage in components
+maxLength={BLOCK_FIELD_LIMITS.name}  // 255
+{getCharCountDisplay(value.length, BLOCK_FIELD_LIMITS.name)}
+```
+
+### 11. HTML stripHtml Fix (v3.0 - In Progress)
+
+Block descriptions stored with HTML tags now display as plain text:
+
+```typescript
+import { stripHtml } from '@/utils/catalog-studio';
+
+// In blocks.tsx line 754, 852, 979
+{stripHtml(block.description)}
+
+// In template.tsx line 1301, 1410, 2137
+{stripHtml(tb.block.description)}
 ```
 
 ---
