@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Management - World Class Invite</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand: #0F172A;
+            --accent: #6366F1;
+            --success: #10B981;
+            --bg: #F8FAFC;
+            --surface: #FFFFFF;
+            --border: #E2E8F0;
+            --text: #334155;
+            --text-light: #64748B;
+            --island-bg: rgba(15, 23, 42, 0.9); /* Dark Brand Theme */
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 2rem;
+        }
+
+        .container { max-width: 1000px; margin: 0 auto; }
+
+        /* ===== STATS CARDS ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stat-value { font-size: 1.5rem; font-weight: 800; color: var(--brand); }
+        .stat-label { font-size: 0.875rem; color: var(--text-light); margin-top: 4px; }
+
+        /* ===== THE TEAM LIST ===== */
+        .team-section {
+            background: white;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-xl);
+            overflow: hidden;
+        }
+
+        /* GHOST ROW (THE NEW INVITE UI) */
+        .ghost-row {
+            background: #F1F5F9;
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            border-bottom: 2px solid var(--accent);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .ghost-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: #E2E8F0;
+            border: 2px dashed var(--text-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            color: var(--text-light);
+        }
+
+        .ghost-input-group {
+            flex: 1;
+            display: flex;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            padding: 4px 4px 4px 16px;
+            transition: 0.3s;
+        }
+
+        .ghost-input-group:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+
+        .ghost-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: 0.9375rem;
+            font-weight: 500;
+        }
+
+        .role-select {
+            border: none;
+            background: var(--bg);
+            border-radius: 100px;
+            padding: 6px 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-right: 4px;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .btn-invite {
+            background: var(--brand);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 100px;
+            font-weight: 700;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-invite:hover { transform: scale(1.03); background: var(--accent); }
+
+        /* EXISTING TEAM MEMBERS */
+        .team-member {
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            transition: 0.2s;
+        }
+
+        .team-member:hover { background: var(--bg); }
+
+        .member-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--accent);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
+        .member-info { flex: 1; }
+        .member-name { font-weight: 700; color: var(--brand); display: flex; align-items: center; gap: 8px; }
+        .member-email { font-size: 0.8125rem; color: var(--text-light); }
+        .role-badge { 
+            font-size: 10px; 
+            text-transform: uppercase; 
+            background: #F1F5F9; 
+            padding: 2px 8px; 
+            border-radius: 4px; 
+            color: var(--text-light); 
+        }
+
+        /* ===== ACTION ISLAND (FOR FILTERS/SEARCH) ===== */
+        .island-container {
+            position: fixed;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+        }
+
+        .island {
+            background: var(--island-bg);
+            backdrop-filter: blur(12px);
+            padding: 8px 8px 8px 20px;
+            border-radius: 100px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            border: 1px solid var(--island-border);
+        }
+
+        .search-mini {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 100px;
+            color: white;
+            font-size: 0.875rem;
+            outline: none;
+        }
+
+        .island-btn {
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        @keyframes popIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .new-entry { animation: popIn 0.5s ease-out; background: #ECFDF5; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header style="margin-bottom: 2rem;">
+            <h1 style="font-size: 2rem; font-weight: 800; letter-spacing: -1px;">Team Management</h1>
+            <p style="color: var(--text-light);">Directly invite and manage your core vikuna team members.</p>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div><div class="stat-value">5</div><div class="stat-label">Total Team</div></div>
+                <div style="font-size: 1.5rem;">👥</div>
+            </div>
+            <div class="stat-card">
+                <div><div class="stat-value" style="color:var(--success);">5</div><div class="stat-label">Active</div></div>
+                <div style="font-size: 1.5rem;">🛡️</div>
+            </div>
+            <div class="stat-card">
+                <div><div class="stat-value" id="pending-count">0</div><div class="stat-label">Pending</div></div>
+                <div style="font-size: 1.5rem;">⏳</div>
+            </div>
+            <div class="stat-card">
+                <div><div class="stat-value">5/100</div><div class="stat-label">Team Limit</div></div>
+                <div style="font-size: 1.5rem;">⚠️</div>
+            </div>
+        </div>
+
+        <div class="team-section">
+            <div class="ghost-row">
+                <div class="ghost-avatar" id="avatar-preview">?</div>
+                <div class="ghost-input-group">
+                    <input type="text" id="invite-input" class="ghost-input" placeholder="Enter email or mobile number..." oninput="updateAvatar(this.value)">
+                    <select class="role-select" id="role-select">
+                        <option value="Team">MEMBER</option>
+                        <option value="Admin">ADMIN</option>
+                        <option value="CFO">CFO</option>
+                    </select>
+                    <button class="btn-invite" onclick="sendQuickInvite()">Send Invite</button>
+                </div>
+            </div>
+
+            <div id="member-list">
+                <div class="team-member">
+                    <div class="member-avatar" style="background: #EF4444;">CK</div>
+                    <div class="member-info">
+                        <div class="member-name">charan kamal <span class="role-badge">Owner</span></div>
+                        <div class="member-email">vikunatech@gmail.com • 9885164231</div>
+                    </div>
+                </div>
+                <div class="team-member">
+                    <div class="member-avatar">TT</div>
+                    <div class="member-info">
+                        <div class="member-name">tingu taka <span class="role-badge">CFO</span></div>
+                        <div class="member-email">tingu@vikuna.com</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="island-container">
+        <div class="island">
+            <input type="text" class="search-mini" placeholder="Quick search...">
+            <button class="island-btn">
+                <span>Filters</span>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div style="height:20px; width:1px; background:rgba(255,255,255,0.2);"></div>
+            <button class="island-btn" style="color: var(--accent); padding-right: 12px;">Export CSV</button>
+        </div>
+    </div>
+
+    <script>
+        function updateAvatar(val) {
+            const preview = document.getElementById('avatar-preview');
+            if (val.includes('@')) {
+                preview.innerText = val.charAt(0).toUpperCase();
+                preview.style.background = 'var(--accent-bg)';
+                preview.style.borderStyle = 'solid';
+                preview.style.color = 'var(--accent)';
+            } else {
+                preview.innerText = '?';
+                preview.style.background = '#E2E8F0';
+                preview.style.borderStyle = 'dashed';
+            }
+        }
+
+        function sendQuickInvite() {
+            const input = document.getElementById('invite-input');
+            const role = document.getElementById('role-select').value;
+            
+            if (!input.value) return;
+
+            // 1. Create the New Member Row
+            const list = document.getElementById('member-list');
+            const newMember = document.createElement('div');
+            newMember.className = 'team-member new-entry';
+            
+            const initials = input.value.charAt(0).toUpperCase();
+            
+            newMember.innerHTML = `
+                <div class="member-avatar" style="background: #64748B;">${initials}</div>
+                <div class="member-info">
+                    <div class="member-name">${input.value.split('@')[0]} <span class="role-badge">${role}</span> <span style="color:var(--success); font-size:10px;">PENDING</span></div>
+                    <div class="member-email">${input.value}</div>
+                </div>
+            `;
+
+            // 2. Insert at the top of the list
+            list.insertBefore(newMember, list.firstChild);
+
+            // 3. Update Stats
+            const pending = document.getElementById('pending-count');
+            pending.innerText = parseInt(pending.innerText) + 1;
+            pending.style.color = 'var(--accent)';
+
+            // 4. Reset Input
+            input.value = '';
+            updateAvatar('');
+            
+            // 5. Toast Feedback
+            showToast('Invitation sent to ' + initials);
+        }
+
+        function showToast(msg) {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
+                background: var(--brand); color: white; padding: 12px 24px;
+                border-radius: 100px; font-weight: 600; font-size: 0.875rem; z-index: 1000;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            `;
+            toast.innerText = '✓ ' + msg;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+    </script>
+</body>
+</html>
