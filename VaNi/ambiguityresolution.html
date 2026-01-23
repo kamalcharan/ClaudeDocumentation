@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VaNi - Ambiguity Resolution</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand: #0F172A;
+            --vani-glow: #6366F1;
+            --warning: #F59E0B;
+            --warning-bg: #FFFBEB;
+            --bg: #F8FAFC;
+            --surface: #FFFFFF;
+            --border: #E2E8F0;
+            --text-light: #64748B;
+            --island-bg: rgba(15, 23, 42, 0.95);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--brand); overflow: hidden; height: 100vh; }
+
+        /* ===== SPLIT SCREEN LAYOUT ===== */
+        .resolution-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            height: 100vh;
+        }
+
+        /* LEFT: THE CONTRACT LENS */
+        .contract-viewer {
+            background: white;
+            padding: 4rem;
+            overflow-y: auto;
+            border-right: 1px solid var(--border);
+            position: relative;
+        }
+
+        .document-page {
+            box-shadow: 0 0 50px rgba(0,0,0,0.05);
+            padding: 4rem;
+            min-height: 1000px;
+            line-height: 1.8;
+            color: #475569;
+        }
+
+        .highlight-conflict {
+            background: #FEF3C7;
+            border-bottom: 2px solid var(--warning);
+            padding: 2px 0;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .conflict-tag {
+            position: absolute;
+            top: -25px;
+            left: 0;
+            background: var(--warning);
+            color: white;
+            font-size: 10px;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        /* RIGHT: THE AI CONSULTATION */
+        .ai-consultation {
+            padding: 4rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: linear-gradient(135deg, #F8FAFC 0%, #EEF2FF 100%);
+        }
+
+        .vani-chat-bubble {
+            background: white;
+            padding: 2rem;
+            border-radius: 24px 24px 24px 4px;
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.1);
+            margin-bottom: 2rem;
+            border: 1px solid var(--vani-glow);
+            position: relative;
+        }
+
+        .option-card {
+            background: white;
+            border: 1px solid var(--border);
+            padding: 1.5rem;
+            border-radius: 16px;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .option-card:hover { border-color: var(--vani-glow); transform: translateX(8px); }
+        .option-card.selected { border-color: var(--vani-glow); background: var(--vani-bg); border-width: 2px; }
+
+        .radio-circle {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .option-card.selected .radio-circle { border-color: var(--vani-glow); }
+        .option-card.selected .radio-circle::after {
+            content: '';
+            width: 10px;
+            height: 10px;
+            background: var(--vani-glow);
+            border-radius: 50%;
+        }
+
+        /* ===== ACTION ISLAND ===== */
+        .action-island {
+            position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
+            background: var(--island-bg); backdrop-filter: blur(12px);
+            padding: 12px 24px; border-radius: 100px; color: white;
+            display: flex; align-items: center; gap: 32px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+        }
+
+        .btn-resolve { background: var(--vani-glow); color: white; border: none; padding: 12px 32px; border-radius: 100px; font-weight: 700; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <main class="resolution-layout">
+        
+        <section class="contract-viewer">
+            <div style="margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 12px; font-weight: 700; color: var(--text-light);">CONTRACT #CNT-2026-X</span>
+                <span style="font-size: 12px; font-weight: 700; color: var(--warning);">● 1 AMBIGUITY FOUND</span>
+            </div>
+            
+            <div class="document-page">
+                <h2 style="margin-bottom: 2rem;">Service Level Agreement</h2>
+                <p>...This agreement stipulates that all server maintenance must be performed during non-peak hours (10:00 PM to 4:00 AM).</p>
+                <br>
+                <p>
+                    Section 4.2 (Billing): <span class="highlight-conflict">
+                        <span class="conflict-tag">Conflicting Term</span>
+                        Payments shall be processed on the 15th of each month, regardless of whether the service event in Section 2.1 occurred.
+                    </span>
+                </p>
+                <br>
+                <p>Section 2.1 (Performance): The client shall only be billed upon successful completion and sign-off of the server audit...</p>
+                <p>...However, Section 4.2 suggests a fixed monthly billing cycle...</p>
+            </div>
+        </section>
+
+        <section class="ai-consultation">
+            <div class="vani-chat-bubble">
+                <div style="font-weight: 800; color: var(--vani-glow); margin-bottom: 0.5rem;">VaNi Assistant</div>
+                <p style="font-size: 0.9375rem; line-height: 1.5;">I found a conflict between <b>Section 4.2</b> (Fixed Billing) and <b>Section 2.1</b> (Performance-based Billing). My "Brain" suggests <b>Performance-based</b> is the standard for TechCorp Mumbai. How should I orchestrate this?</p>
+            </div>
+
+            <h3 style="margin-bottom: 1.5rem; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-light);">Choose Resolution Path</h3>
+
+            <div class="option-card selected">
+                <div class="radio-circle"></div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 700;">Performance-based Billing</div>
+                    <div style="font-size: 12px; color: var(--text-light);">Only generate invoice after service sign-off is detected.</div>
+                </div>
+            </div>
+
+            <div class="option-card">
+                <div class="radio-circle"></div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 700;">Fixed Monthly Subscription</div>
+                    <div style="font-size: 12px; color: var(--text-light);">Generate invoice on the 15th regardless of service status.</div>
+                </div>
+            </div>
+
+            <div class="option-card">
+                <div class="radio-circle"></div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 700;">Hybrid (Manual Approval)</div>
+                    <div style="font-size: 12px; color: var(--text-light);">Pause orchestration each month and ask for my permission.</div>
+                </div>
+            </div>
+
+            <div style="margin-top: 2rem; display: flex; align-items: center; gap: 10px;">
+                <input type="checkbox" id="global-rule" checked>
+                <label for="global-rule" style="font-size: 12px; font-weight: 600; color: var(--text-light);">Save as a permanent rule for all TechCorp Mumbai contracts.</label>
+            </div>
+        </section>
+
+    </main>
+
+    <div class="action-island">
+        <span style="font-size: 14px; font-weight: 600; opacity: 0.8;">Unresolved: 1 of 42</span>
+        <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.2);"></div>
+        <button class="btn-resolve" onclick="alert('Rule synchronized to Brain. Continuing ingestion...')">Confirm Resolution</button>
+    </div>
+
+</body>
+</html>

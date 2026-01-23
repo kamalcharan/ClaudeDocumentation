@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VaNi Onboarding - Building the AI Brain</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand: #0F172A;
+            --vani-glow: #6366F1;
+            --vani-bg: #EEF2FF;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --bg: #F8FAFC;
+            --surface: #FFFFFF;
+            --border: #E2E8F0;
+            --text-light: #64748B;
+            --island-bg: rgba(15, 23, 42, 0.95);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--brand); overflow-x: hidden; }
+
+        /* ===== ONBOARDING HEADER ===== */
+        .onboarding-header {
+            padding: 2rem 4rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .step-indicator { display: flex; gap: 1rem; align-items: center; }
+        .step-pill { padding: 6px 16px; border-radius: 100px; font-size: 12px; font-weight: 700; background: var(--border); color: var(--text-light); }
+        .step-pill.active { background: var(--vani-glow); color: white; }
+
+        /* ===== MAIN CANVAS ===== */
+        .onboarding-container {
+            max-width: 1200px;
+            margin: 3rem auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 3rem;
+        }
+
+        /* ===== BRAIN BUILDING SECTION ===== */
+        .brain-section { animation: slideIn 0.6s ease-out; }
+        h1 { font-size: 2.5rem; font-weight: 800; letter-spacing: -1px; margin-bottom: 1rem; }
+        
+        .todo-list { margin: 2rem 0; display: flex; flex-direction: column; gap: 1rem; }
+        .todo-item {
+            background: white;
+            padding: 1.25rem;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: 0.3s;
+        }
+        .todo-item.done { border-color: var(--success); background: #ECFDF5; }
+        .todo-check { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 12px; }
+        .todo-item.done .todo-check { background: var(--success); border-color: var(--success); color: white; }
+
+        /* ===== INGESTION STATUS DASHBOARD ===== */
+        .status-dashboard {
+            background: var(--brand);
+            border-radius: 24px;
+            padding: 2.5rem;
+            color: white;
+            height: fit-content;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+        }
+
+        .stat-group { margin-bottom: 2rem; }
+        .stat-label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: rgba(255,255,255,0.5); letter-spacing: 1px; }
+        .stat-number { font-size: 3rem; font-weight: 800; display: block; }
+        
+        .progress-mini {
+            height: 8px; background: rgba(255,255,255,0.1); border-radius: 10px; margin-top: 10px; overflow: hidden;
+        }
+        .progress-bar { height: 100%; background: var(--vani-glow); width: 0%; transition: width 1s ease-in-out; }
+
+        /* ===== AMBIGUITY CARDS ===== */
+        .ambiguity-notice {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid var(--warning);
+            border-radius: 12px;
+            font-size: 0.875rem;
+            color: var(--warning);
+        }
+
+        /* ===== ACTION ISLAND ===== */
+        .action-island {
+            position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
+            background: var(--island-bg); backdrop-filter: blur(12px);
+            padding: 10px 10px 10px 24px; border-radius: 100px;
+            display: flex; align-items: center; gap: 32px; color: white;
+        }
+        .btn-confirm { background: white; color: var(--brand); border: none; padding: 12px 32px; border-radius: 100px; font-weight: 700; cursor: pointer; }
+
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <header class="onboarding-header">
+        <div style="font-weight: 800; font-size: 1.25rem;">VaNi <span style="font-weight: 400; opacity: 0.5;">by ContractNest</span></div>
+        <div class="step-indicator">
+            <div class="step-pill">1. Activate</div>
+            <div class="step-pill active">2. Build Brain</div>
+            <div class="step-pill">3. Orchestrate</div>
+        </div>
+        <div style="font-size: 12px; font-weight: 700; color: var(--text-light);">TRIAL: 14 DAYS LEFT</div>
+    </header>
+
+    <main class="onboarding-container">
+        
+        <section class="brain-section">
+            <h1>Building the AI Brain for <span style="color: var(--vani-glow);" id="customer-name">TechCorp Mumbai</span></h1>
+            <p style="color: var(--text-light);">VaNi is currently analyzing your domain rules and mapping orchestration paths.</p>
+            
+            <div class="todo-list">
+                <div class="todo-item done">
+                    <div class="todo-check">✓</div>
+                    <div>
+                        <div style="font-weight: 700;">Establish Orchestration Layer</div>
+                        <div style="font-size: 12px; color: var(--text-light);">Connection to Vikings API established.</div>
+                    </div>
+                </div>
+                <div class="todo-item done">
+                    <div class="todo-check">✓</div>
+                    <div>
+                        <div style="font-weight: 700;">Understanding Billing Rules</div>
+                        <div style="font-size: 12px; color: var(--text-light);">Extracted Net-30 and Milestone-based protocols.</div>
+                    </div>
+                </div>
+                <div class="todo-item" id="task-3">
+                    <div class="todo-check" id="loader">...</div>
+                    <div>
+                        <div style="font-weight: 700;">Mapping Service Commitments</div>
+                        <div style="font-size: 12px; color: var(--text-light);">Learning natural interaction windows for scheduling.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: white; padding: 2rem; border-radius: 20px; border: 1px solid var(--border);">
+                <h3 style="margin-bottom: 1rem;">Confirm Orchestration Rules</h3>
+                <p style="font-size: 0.875rem; margin-bottom: 1.5rem;">VaNi has identified that <b>80%</b> of your contracts require 48-hour notice before a visit. Is this a global rule for TechCorp Mumbai?</p>
+                <div style="display: flex; gap: 1rem;">
+                    <button class="btn-confirm" style="background: var(--vani-glow); color: white; padding: 10px 20px;">Confirm Rule</button>
+                    <button class="btn-confirm" style="background: #F1F5F9; color: var(--brand); padding: 10px 20px;">Adjust</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="status-dashboard">
+            <div class="stat-group">
+                <span class="stat-label">Contracts in Brain</span>
+                <span class="stat-number" id="sync-count">0</span>
+                <div class="progress-mini"><div class="progress-bar" id="sync-bar"></div></div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                <div>
+                    <span class="stat-label">In Progress</span>
+                    <span class="stat-number" style="font-size: 1.5rem;" id="proc-count">0</span>
+                </div>
+                <div>
+                    <span class="stat-label">Ambiguities</span>
+                    <span class="stat-number" style="font-size: 1.5rem; color: var(--warning);" id="ambig-count">0</span>
+                </div>
+            </div>
+
+            <div id="ambiguity-list" style="margin-top: 2.5rem;">
+                <span class="stat-label">Needs Attention</span>
+                <div class="ambiguity-notice">
+                    <b>CNT-2026-X</b>: Conflicting billing dates found in Clause 4.2.
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div class="action-island">
+        <span style="font-size: 14px; font-weight: 600; opacity: 0.8;">Phase: Ingesting Contracts</span>
+        <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.2);"></div>
+        <button class="btn-confirm" onclick="simulateIngestion()">Start Ingestion Cycle</button>
+    </div>
+
+    <script>
+        function simulateIngestion() {
+            let synced = 0;
+            let total = 42;
+            let ambig = 0;
+            
+            const interval = setInterval(() => {
+                if (synced + ambig >= total) {
+                    clearInterval(interval);
+                    document.getElementById('task-3').classList.add('done');
+                    document.getElementById('loader').innerText = '✓';
+                } else {
+                    // Randomly assign to Synced or Ambiguity
+                    if (Math.random() > 0.85) {
+                        ambig++;
+                        document.getElementById('ambig-count').innerText = ambig;
+                    } else {
+                        synced++;
+                        document.getElementById('sync-count').innerText = synced;
+                        document.getElementById('proc-count').innerText = total - synced - ambig;
+                        
+                        // Update Progress Bar
+                        const percent = (synced / total) * 100;
+                        document.getElementById('sync-bar').style.width = percent + '%';
+                    }
+                }
+            }, 200);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Cockpit - World Class UX</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand: #0F172A;
+            --accent: #6366F1;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --bg: #F8FAFC;
+            --surface: #FFFFFF;
+            --border: #E2E8F0;
+            --text-light: #64748B;
+            --island-bg: rgba(15, 23, 42, 0.9);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--brand); overflow-x: hidden; }
+
+        /* ===== 1. COCKPIT HEADER ===== */
+        .cockpit-header {
+            background: white;
+            padding: 2rem 3rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .contact-profile { display: flex; align-items: center; gap: 1.5rem; }
+        .avatar-huge { 
+            width: 64px; height: 64px; border-radius: 20px; 
+            background: var(--accent); color: white; 
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; font-weight: 800;
+        }
+
+        .header-stats { display: flex; gap: 3rem; }
+        .h-stat { text-align: right; }
+        .h-stat-val { font-size: 1.25rem; font-weight: 800; display: block; }
+        .h-stat-label { font-size: 0.75rem; font-weight: 700; color: var(--text-light); text-transform: uppercase; }
+
+        /* ===== 2. QUADRANT LAYOUT ===== */
+        .cockpit-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            grid-template-rows: auto auto;
+            gap: 2rem;
+            padding: 2rem 3rem 100px 3rem;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-title {
+            font-size: 1rem; font-weight: 800; margin-bottom: 1.5rem;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        /* ===== 3. COMPONENT STYLES ===== */
+        /* Invoices List */
+        .item-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 1rem 0; border-bottom: 1px solid var(--border);
+        }
+        .item-row:last-child { border-bottom: none; }
+
+        .badge {
+            font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 100px;
+        }
+        .badge-paid { background: #ECFDF5; color: var(--success); }
+        .badge-pending { background: #FFFBEB; color: var(--warning); }
+
+        /* Contract Visualizer */
+        .contract-viz {
+            background: var(--brand); color: white; padding: 1.5rem; border-radius: 16px;
+            margin-bottom: 1rem; position: relative; overflow: hidden;
+        }
+        .viz-progress {
+            height: 6px; background: rgba(255,255,255,0.1); border-radius: 10px;
+            margin: 1rem 0; overflow: hidden;
+        }
+        .viz-bar { height: 100%; background: var(--success); width: 65%; border-radius: 10px; }
+
+        /* Service Timeline */
+        .timeline { position: relative; padding-left: 20px; }
+        .timeline::before {
+            content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+            width: 2px; background: var(--border);
+        }
+        .t-event { position: relative; margin-bottom: 1.5rem; padding-left: 20px; }
+        .t-event::after {
+            content: ''; position: absolute; left: -5px; top: 5px;
+            width: 12px; height: 12px; border-radius: 50%; background: var(--accent);
+            border: 3px solid white;
+        }
+
+        /* ===== 4. ACTION ISLAND ===== */
+        .action-island-container {
+            position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
+            z-index: 100;
+        }
+        .action-island {
+            background: var(--island-bg); backdrop-filter: blur(12px);
+            padding: 10px 10px 10px 24px; border-radius: 100px;
+            display: flex; align-items: center; gap: 24px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+        }
+        .island-btn {
+            background: white; color: var(--brand); border: none;
+            padding: 10px 24px; border-radius: 100px; font-weight: 700; cursor: pointer;
+        }
+        .island-btn-secondary {
+            background: transparent; color: white; border: none;
+            font-weight: 600; cursor: pointer; padding: 0 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <header class="cockpit-header">
+        <div class="contact-profile">
+            <div class="avatar-huge">RS</div>
+            <div>
+                <h1 style="font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px;">Ravi Sharma</h1>
+                <p style="color: var(--text-light); font-size: 0.875rem;">TechCorp India • ravi.sharma@techcorp.com</p>
+            </div>
+        </div>
+        <div class="header-stats">
+            <div class="h-stat">
+                <span class="h-stat-label">Total LTV</span>
+                <span class="h-stat-val">₹42,000</span>
+            </div>
+            <div class="h-stat">
+                <span class="h-stat-label">Credit Balance</span>
+                <span class="h-stat-val" style="color: var(--warning);">₹3,200</span>
+            </div>
+            <div class="h-stat">
+                <span class="h-stat-label">Health Score</span>
+                <span class="h-stat-val" style="color: var(--success);">98%</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="cockpit-grid">
+        
+        <section style="display: flex; flex-direction: column; gap: 2rem;">
+            <div class="card">
+                <div class="card-title">
+                    Active Contracts
+                    <button style="font-size: 12px; color: var(--accent); border:none; background:none; font-weight:700;">+ NEW CONTRACT</button>
+                </div>
+                <div class="contract-viz">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-weight:700;">Annual AC Maintenance</span>
+                        <span style="font-size: 12px; opacity:0.7;">CNT-2026-0042</span>
+                    </div>
+                    <div class="viz-progress"><div class="viz-bar"></div></div>
+                    <div style="display:flex; justify-content:space-between; font-size: 12px;">
+                        <span>8 of 12 Months completed</span>
+                        <span>Expires Sept 2026</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Billing & Invoices</div>
+                <div class="item-row">
+                    <div>
+                        <div style="font-weight:700;">INV-9022</div>
+                        <div style="font-size:12px; color:var(--text-light);">Quarterly AMC Fee</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-weight:800;">₹3,200</div>
+                        <span class="badge badge-pending">PENDING</span>
+                    </div>
+                </div>
+                <div class="item-row">
+                    <div>
+                        <div style="font-weight:700;">INV-8841</div>
+                        <div style="font-size:12px; color:var(--text-light);">Ad-hoc Repair (Gas Topup)</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-weight:800;">₹1,500</div>
+                        <span class="badge badge-paid">PAID</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section style="display: flex; flex-direction: column; gap: 2rem;">
+            <div class="card">
+                <div class="card-title">Service Pulse</div>
+                <div style="display:flex; gap:1rem; margin-bottom: 2rem;">
+                    <div style="flex:1; background: var(--bg); padding:1rem; border-radius:12px; text-align:center;">
+                        <span class="h-stat-val">4</span>
+                        <span class="h-stat-label">Pending Visits</span>
+                    </div>
+                    <div style="flex:1; background: var(--bg); padding:1rem; border-radius:12px; text-align:center;">
+                        <span class="h-stat-val">24 Jan</span>
+                        <span class="h-stat-label">Next Service</span>
+                    </div>
+                </div>
+                
+                <div class="timeline">
+                    <div class="t-event">
+                        <div style="font-weight:700;">Scheduled Maintenance</div>
+                        <div style="font-size:12px; color:var(--text-light);">Assigned to: Sunil Kumar • Tomorrow</div>
+                    </div>
+                    <div class="t-event">
+                        <div style="font-weight:700; color:var(--text-light);">Emergency Repair Completed</div>
+                        <div style="font-size:12px; color:var(--text-light);">Resolved on 15 Jan • 2 hours active</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <div class="action-island-container">
+        <div class="action-island">
+            <span style="color:white; font-size:14px; font-weight:600;">Manage Ravi</span>
+            <div style="height:20px; width:1px; background:rgba(255,255,255,0.2);"></div>
+            <button class="island-btn-secondary" onclick="alert('Opening Messenger...')">Message</button>
+            <button class="island-btn-secondary" onclick="alert('Opening Logs...')">Logs</button>
+            <button class="island-btn" onclick="alert('Creating New Flow...')">+ Create New</button>
+        </div>
+    </div>
+
+</body>
+</html>

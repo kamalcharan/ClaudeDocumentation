@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VaNi - Orchestration Live Feed</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand: #0F172A;
+            --vani-glow: #6366F1;
+            --success: #10B981;
+            --bg: #F8FAFC;
+            --surface: #FFFFFF;
+            --border: #E2E8F0;
+            --text-light: #64748B;
+            --island-bg: rgba(15, 23, 42, 0.95);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--brand); height: 100vh; display: flex; flex-direction: column; }
+
+        /* ===== LIVE FEED HEADER ===== */
+        .feed-header {
+            background: white;
+            padding: 1.5rem 3rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .pulse-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.875rem;
+            font-weight: 700;
+            color: var(--success);
+        }
+
+        .pulse-dot {
+            width: 10px;
+            height: 10px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        /* ===== MAIN FEED AREA ===== */
+        .feed-container {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            overflow: hidden;
+        }
+
+        .scroll-feed {
+            padding: 3rem;
+            overflow-y: auto;
+            background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+        }
+
+        .action-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            animation: slideUp 0.5s ease-out;
+        }
+
+        .action-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .action-content { flex: 1; }
+        .action-meta { display: flex; justify-content: space-between; margin-bottom: 0.5rem; }
+        .action-time { font-size: 11px; font-weight: 700; color: var(--text-light); text-transform: uppercase; }
+        
+        .logic-badge {
+            font-size: 10px;
+            background: var(--vani-bg);
+            color: var(--vani-glow);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        /* ===== RIGHT PANEL: METRICS ===== */
+        .metrics-panel {
+            background: white;
+            border-left: 1px solid var(--border);
+            padding: 2.5rem;
+        }
+
+        .metric-box {
+            margin-bottom: 2.5rem;
+        }
+
+        .metric-label { font-size: 11px; font-weight: 700; color: var(--text-light); text-transform: uppercase; letter-spacing: 1px; }
+        .metric-value { font-size: 2rem; font-weight: 800; display: block; margin-top: 5px; }
+
+        /* ===== ACTION ISLAND ===== */
+        .action-island {
+            position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
+            background: var(--island-bg); backdrop-filter: blur(12px);
+            padding: 12px 24px; border-radius: 100px; color: white;
+            display: flex; align-items: center; gap: 32px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+        }
+
+        .btn-pause { background: #EF4444; color: white; border: none; padding: 10px 24px; border-radius: 100px; font-weight: 700; cursor: pointer; }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <header class="feed-header">
+        <div style="display:flex; align-items:center; gap:1.5rem;">
+            <div style="font-weight: 800; font-size: 1.25rem;">VaNi <span style="font-weight: 400; opacity: 0.5;">Orchestration Feed</span></div>
+            <div class="pulse-indicator"><div class="pulse-dot"></div> ENGINE ACTIVE</div>
+        </div>
+        <div style="color: var(--text-light); font-weight: 600; font-size: 14px;">TechCorp Mumbai HQ</div>
+    </header>
+
+    <main class="feed-container">
+        <section class="scroll-feed" id="live-stream">
+            
+            <div class="action-card">
+                <div class="action-icon">📧</div>
+                <div class="action-content">
+                    <div class="action-meta">
+                        <span class="action-time">JUST NOW</span>
+                        <span class="logic-badge">Based on Clause 2.4</span>
+                    </div>
+                    <div style="font-weight: 700;">Sent Service Booking Request</div>
+                    <div style="font-size: 14px; color: var(--text-light); margin-top: 4px;">To: ravi.sharma@techcorp.com • Subject: "Upcoming Maintenance Window"</div>
+                </div>
+            </div>
+
+            <div class="action-card">
+                <div class="action-icon">💰</div>
+                <div class="action-content">
+                    <div class="action-meta">
+                        <span class="action-time">14 MINS AGO</span>
+                        <span class="logic-badge">Rule: Fixed Monthly (Resolved)</span>
+                    </div>
+                    <div style="font-weight: 700;">Generated Invoice #INV-9022</div>
+                    <div style="font-size: 14px; color: var(--text-light); margin-top: 4px;">Automatic AR/AP sync completed with QuickBooks. Amount: ₹12,000</div>
+                </div>
+            </div>
+
+            <div class="action-card">
+                <div class="action-icon">📅</div>
+                <div class="action-content">
+                    <div class="action-meta">
+                        <span class="action-time">1 HOUR AGO</span>
+                        <span class="logic-badge">Service Commitment Map</span>
+                    </div>
+                    <div style="font-weight: 700;">Calendar Invite Confirmed</div>
+                    <div style="font-size: 14px; color: var(--text-light); margin-top: 4px;">Assigned Field Agent Sunil Kumar for Jan 25th service audit.</div>
+                </div>
+            </div>
+
+        </section>
+
+        <aside class="metrics-panel">
+            <div class="metric-box">
+                <span class="metric-label">Automated Actions</span>
+                <span class="metric-value">1,242</span>
+            </div>
+            <div class="metric-box">
+                <span class="metric-label">Service Compliance</span>
+                <span class="metric-value" style="color: var(--success);">100%</span>
+            </div>
+            <div class="metric-box">
+                <span class="metric-label">Time Saved (Est.)</span>
+                <span class="metric-value">48 Hours</span>
+            </div>
+            
+            <div style="margin-top: 4rem; padding: 1.5rem; background: var(--bg); border-radius: 16px;">
+                <h4 style="font-size: 0.75rem; font-weight: 800; margin-bottom: 1rem;">AGENT LOGS</h4>
+                <p style="font-size: 12px; color: var(--text-light); line-height: 1.6;">
+                    VaNi is currently monitoring 14 active contracts for TechCorp Mumbai. Next scheduled scan in 4 minutes.
+                </p>
+            </div>
+        </aside>
+    </main>
+
+    <div class="action-island">
+        <span style="font-size: 14px; font-weight: 600;">Human-in-the-Loop Mode</span>
+        <div style="width: 1px; height: 24px; background: rgba(255,255,255,0.2);"></div>
+        <button class="island-btn" style="background:transparent; color:white; border:none; font-weight:600; cursor:pointer;">Settings</button>
+        <button class="btn-pause" onclick="alert('Orchestration paused. VaNi will no longer act automatically.')">Stop VaNi</button>
+    </div>
+
+</body>
+</html>
