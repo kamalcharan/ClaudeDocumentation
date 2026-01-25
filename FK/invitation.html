@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FamilyKnows - Screen 2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: #0a0a0c;
+            color: white;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* The central hub remains from Screen 1 but smaller */
+        .mini-orb {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            border-radius: 50%;
+            filter: blur(2px);
+            box-shadow: 0 0 30px rgba(168, 85, 247, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        /* Floating Relationship Bubbles */
+        .bubble {
+            position: absolute;
+            width: 85px;
+            height: 85px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: float 6s infinite ease-in-out;
+        }
+
+        .bubble:active {
+            transform: scale(0.9) brightness(1.2);
+            border-color: #25D366; /* WhatsApp Green */
+        }
+
+        .bubble span {
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 4px;
+            color: #a855f7;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(5deg); }
+        }
+
+        /* Positions for the Constellation */
+        .pos-1 { top: 20%; left: 15%; animation-delay: 0s; }
+        .pos-2 { top: 15%; right: 10%; animation-delay: 1s; }
+        .pos-3 { top: 55%; left: 10%; animation-delay: 2s; }
+        .pos-4 { top: 50%; right: 15%; animation-delay: 1.5s; }
+        .pos-5 { bottom: 15%; left: 35%; animation-delay: 0.5s; }
+
+        .whatsapp-btn {
+            background: #25D366;
+            color: black;
+            font-weight: 800;
+            box-shadow: 0 10px 30px rgba(37, 211, 102, 0.2);
+        }
+
+        .line {
+            position: absolute;
+            background: linear-gradient(to bottom, rgba(168, 85, 247, 0.3), transparent);
+            width: 1px;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body class="p-8">
+
+    <div class="text-center mt-4">
+        <p class="text-indigo-400 text-sm font-bold tracking-widest uppercase mb-1">Step 2 of 3</p>
+        <h1 class="text-2xl font-bold">Populate Your Space</h1>
+        <p class="text-gray-400 text-sm mt-2 px-6">Tap a relationship to invite them into the hub.</p>
+    </div>
+
+    <div class="relative w-full flex-grow mt-10">
+        
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
+            <div class="mini-orb">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+            </div>
+            <span class="mt-4 font-bold text-indigo-300">The Millers</span>
+        </div>
+
+        <div class="bubble pos-1" onclick="selectRole('Mom')">
+            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Mom" class="w-10 h-10 rounded-full">
+            <span>Mom</span>
+        </div>
+
+        <div class="bubble pos-2" onclick="selectRole('Partner')">
+            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" class="w-10 h-10 rounded-full">
+            <span>Partner</span>
+        </div>
+
+        <div class="bubble pos-3" onclick="selectRole('Sibling')">
+            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Sis" class="w-10 h-10 rounded-full">
+            <span>Sibling</span>
+        </div>
+
+        <div class="bubble pos-4" onclick="selectRole('Grandpa')">
+            <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Old" class="w-10 h-10 rounded-full">
+            <span>Grandpa</span>
+        </div>
+
+        <div class="bubble pos-5" onclick="selectRole('Custom')">
+            <div class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center text-xl">+</div>
+            <span>Other</span>
+        </div>
+
+    </div>
+
+    <div id="invite-bar" class="w-full max-w-sm pb-10 transition-all duration-500 opacity-0 translate-y-10">
+        <button class="whatsapp-btn w-full py-5 rounded-2xl flex items-center justify-center gap-3">
+            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            Invite <span id="selected-role">Mom</span>
+        </button>
+    </div>
+
+    <script>
+        function selectRole(role) {
+            // Visual feedback on the role bar
+            const bar = document.getElementById('invite-bar');
+            const text = document.getElementById('selected-role');
+            
+            text.innerText = role;
+            bar.style.opacity = "1";
+            bar.style.transform = "translateY(0)";
+            
+            // Haptic/Sound simulation: In a real app, this would trigger a WhatsApp share sheet
+            console.log("Preparing invite for: " + role);
+        }
+    </script>
+</body>
+</html>

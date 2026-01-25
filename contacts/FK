@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FamilyKnows - Screen 1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: radial-gradient(circle at center, #1a1a2e 0%, #0a0a0c 100%);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            color: white;
+        }
+
+        /* The Glowing 3D Orb */
+        .orb-container {
+            position: relative;
+            height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .orb {
+            width: 150px;
+            height: 150px;
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            border-radius: 50%;
+            filter: blur(5px);
+            box-shadow: 0 0 50px rgba(168, 85, 247, 0.6),
+                        inset 0 0 30px rgba(255, 255, 255, 0.4);
+            animation: pulse 4s infinite ease-in-out;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .orb-ring {
+            position: absolute;
+            width: 220px;
+            height: 220px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: rotate 10s linear infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 1; }
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .glass-input {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: border 0.3s ease;
+        }
+
+        .glass-input:focus {
+            border: 1px solid #a855f7;
+            outline: none;
+        }
+
+        .btn-wow {
+            background: linear-gradient(90deg, #6366f1, #a855f7);
+            box-shadow: 0 10px 20px rgba(168, 85, 247, 0.3);
+            transition: transform 0.2s active;
+        }
+        
+        .btn-wow:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-between p-8">
+
+    <div class="mt-8 text-center">
+        <p class="text-indigo-400 text-sm font-bold tracking-[0.2em] uppercase mb-2">Step 1 of 3</p>
+        <h1 class="text-3xl font-bold">The Beginning</h1>
+    </div>
+
+    <div class="w-full flex flex-col items-center">
+        <div class="orb-container mb-8">
+            <div class="orb-ring"></div>
+            <div class="orb-ring" style="width: 260px; animation-duration: 15s; border-style: dashed;"></div>
+            <div id="central-orb" class="orb"></div>
+        </div>
+
+        <div class="w-full max-w-sm text-center">
+            <label class="text-gray-400 text-sm mb-4 block">NAME YOUR WORKSPACE</label>
+            <input type="text" 
+                   id="ws-input"
+                   placeholder="e.g. The Miller Residence" 
+                   class="glass-input w-full p-5 rounded-2xl text-xl text-center font-semibold placeholder:text-gray-600 tracking-wide text-white"
+                   oninput="updateOrb(this.value)">
+            <p class="text-gray-500 text-xs mt-4">This will be the heart of your family hub.</p>
+        </div>
+    </div>
+
+    <div class="w-full max-w-sm pb-8">
+        <button class="btn-wow w-full py-5 rounded-2xl font-bold text-lg tracking-wide uppercase">
+            Create Space
+        </button>
+    </div>
+
+    <script>
+        // Wow factor: The orb reacts to the length of the name
+        function updateOrb(val) {
+            const orb = document.getElementById('central-orb');
+            const scale = 1 + (val.length * 0.02);
+            const hue = 260 + (val.length * 5); // Shift color as they type
+            
+            orb.style.transform = `scale(${scale})`;
+            orb.style.filter = `blur(5px) hue-rotate(${val.length * 5}deg)`;
+            
+            if(val.length > 0) {
+                orb.style.boxShadow = `0 0 80px rgba(168, 85, 247, 0.9)`;
+            } else {
+                orb.style.boxShadow = `0 0 50px rgba(168, 85, 247, 0.6)`;
+            }
+        }
+    </script>
+</body>
+</html>

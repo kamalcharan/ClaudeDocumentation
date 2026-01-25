@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FamilyKnows - Screen 3</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: #0a0a0c;
+            color: white;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* The Portal Background Effect */
+        .portal-bg {
+            position: absolute;
+            width: 150%;
+            height: 150%;
+            background: radial-gradient(circle at center, rgba(99, 102, 241, 0.15) 0%, transparent 50%);
+            animation: drift 20s infinite linear;
+            z-index: -1;
+        }
+
+        @keyframes drift {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* The Hero "Digital Key" Card */
+        .key-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 40px;
+            padding: 40px 24px;
+            width: 85%;
+            max-width: 350px;
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transform: translateY(30px);
+            animation: slideUp 0.8s forwards cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        @keyframes slideUp {
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .avatar-stack {
+            display: flex;
+            justify-content: center;
+            margin-bottom: -20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .avatar-main {
+            width: 80px;
+            height: 80px;
+            border: 4px solid #0a0a0c;
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
+        }
+
+        .welcome-text {
+            background: linear-gradient(to bottom, #fff 0%, #a5a5a5 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .btn-enter {
+            background: white;
+            color: black;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-enter:active {
+            transform: scale(0.95);
+            background: #e0e0e0;
+        }
+
+        /* Shimmer effect for the button */
+        .btn-enter::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.3), transparent);
+            transform: rotate(45deg);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="portal-bg"></div>
+
+    <div class="avatar-stack">
+        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="Inviter" class="avatar-main">
+    </div>
+
+    <div class="key-card">
+        <p class="text-indigo-400 font-bold tracking-widest text-xs uppercase mb-4">You're Invited</p>
+        <h1 class="text-3xl font-bold welcome-text mb-2">Welcome Home</h1>
+        <p class="text-gray-400 text-sm leading-relaxed mb-8">
+            <span class="text-white font-semibold">Felix</span> has started <span class="text-white font-semibold">The Miller Hub</span> and wants you at the center of it.
+        </p>
+
+        <div class="space-y-4">
+            <button class="btn-enter w-full py-5 rounded-2xl text-lg shadow-xl" onclick="enterApp()">
+                Step Inside
+            </button>
+            <p class="text-[10px] text-gray-500 uppercase tracking-tighter">No password required • One-tap join</p>
+        </div>
+    </div>
+
+    <div class="absolute bottom-10 opacity-30">
+        <span class="font-bold tracking-[0.3em] text-sm">FAMILYKNOWS</span>
+    </div>
+
+    <script>
+        function enterApp() {
+            // "Wow Factor" transition: Expand the card to fill the screen
+            const card = document.querySelector('.key-card');
+            card.style.transition = "all 0.6s cubic-bezier(0.95, 0.05, 0.795, 0.035)";
+            card.style.transform = "scale(10)";
+            card.style.opacity = "0";
+            
+            setTimeout(() => {
+                alert("Transitioning to the Dashboard...");
+            }, 500);
+        }
+    </script>
+</body>
+</html>
