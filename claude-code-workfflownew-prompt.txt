@@ -1,245 +1,245 @@
-# CLAUDE.md - ContractNest Multi-Repo Setup
+  # CLAUDE.md - ContractNest Multi-Repo Setup
 
-## REPO STRUCTURE
-```
-contractnest-combined/          ← Parent repo
-├── contractnest-api/           ← Submodule (main)
-├── contractnest-ui/            ← Submodule (main)
-├── contractnest-edge/          ← Submodule (main)
-├── ClaudeDocumentation/        ← Submodule (master)
-├── ContractNest-Mobile/        ← Submodule (main)
-├── FamilyKnows/                ← Submodule (main)
-└── FK-New/                     ← Submodule (main)
-```
+  ## REPO STRUCTURE
+  ```
+  contractnest-combined/          ← Parent repo
+  ├── contractnest-api/           ← Submodule (main)
+  ├── contractnest-ui/            ← Submodule (main)
+  ├── contractnest-edge/          ← Submodule (main)
+  ├── ClaudeDocumentation/        ← Submodule (master)
+  ├── ContractNest-Mobile/        ← Submodule (main)
+  ├── FamilyKnows/                ← Submodule (main)
+  └── FK-New/                     ← Submodule (main)
+  ```
 
----
+  ---
 
-## CRITICAL RULES FOR CLAUDE
+  ## CRITICAL RULES FOR CLAUDE
 
-### Rule 1: ONLY Provide Files Changed in THIS Iteration
-❌ WRONG: Give all 6 files when only 4 are new  
-✅ RIGHT: Give only the 4 new/modified files
+  ### Rule 1: ONLY Provide Files Changed in THIS Iteration
+  ❌ WRONG: Give all 6 files when only 4 are new  
+  ✅ RIGHT: Give only the 4 new/modified files
 
-### Rule 2: NO Merge Workflow
-- Do NOT provide git merge commands
-- Do NOT provide branch checkout commands
-- User handles merging via their own scripts
+  ### Rule 2: NO Merge Workflow
+  - Do NOT provide git merge commands
+  - Do NOT provide branch checkout commands
+  - User handles merging via their own scripts
 
-### Rule 3: Track What's Already Delivered
-- Remember which files were given in previous iterations
-- Only include NEW or RE-MODIFIED files in MANUAL_COPY_FILES/
+  ### Rule 3: Track What's Already Delivered
+  - Remember which files were given in previous iterations
+  - Only include NEW or RE-MODIFIED files in MANUAL_COPY_FILES/
 
-### Rule 4: Clear Iteration Labeling
-- Always state: "Iteration X of Y" if known
-- Always state: "Files NEW this iteration: X"
-- Always state: "Previously delivered (not included): Y"
+  ### Rule 4: Clear Iteration Labeling
+  - Always state: "Iteration X of Y" if known
+  - Always state: "Files NEW this iteration: X"
+  - Always state: "Previously delivered (not included): Y"
 
----
+  ---
 
-## REQUIRED OUTPUT FORMAT
+  ## REQUIRED OUTPUT FORMAT
 
-After making changes, provide this EXACT format:
+  After making changes, provide this EXACT format:
 
-```
-═══════════════════════════════════════════════════
-📦 ITERATION SUMMARY
-═══════════════════════════════════════════════════
-Iteration: [X of Y] or [X]
-Files NEW This Time: [count]
-Previously Delivered (NOT included): [list or "None"]
+  ```
+  ═══════════════════════════════════════════════════
+  📦 ITERATION SUMMARY
+  ═══════════════════════════════════════════════════
+  Iteration: [X of Y] or [X]
+  Files NEW This Time: [count]
+  Previously Delivered (NOT included): [list or "None"]
 
-═══════════════════════════════════════════════════
-📁 FILES IN MANUAL_COPY_FILES/
-═══════════════════════════════════════════════════
-[List ONLY files being delivered THIS iteration]
+  ═══════════════════════════════════════════════════
+  📁 FILES IN MANUAL_COPY_FILES/
+  ═══════════════════════════════════════════════════
+  [List ONLY files being delivered THIS iteration]
 
-1. [filename] → [purpose]
-2. [filename] → [purpose]
+  1. [filename] → [purpose]
+  2. [filename] → [purpose]
 
-═══════════════════════════════════════════════════
-💻 COPY COMMANDS (Run from contractnest-combined/)
-═══════════════════════════════════════════════════
+  ═══════════════════════════════════════════════════
+  💻 COPY COMMANDS (Run from contractnest-combined/)
+  ═══════════════════════════════════════════════════
 
-# [Submodule Name] Changes
-Copy-Item "MANUAL_COPY_FILES\[path]\[file]" -Destination "[submodule]\[path]\[file]" -Force
+  # [Submodule Name] Changes
+  Copy-Item "MANUAL_COPY_FILES\[path]\[file]" -Destination "[submodule]\[path]\[file]" -Force
 
-# Verify
-Write-Host "✅ Files copied!" -ForegroundColor Green
+  # Verify
+  Write-Host "✅ Files copied!" -ForegroundColor Green
 
-═══════════════════════════════════════════════════
-🧪 TEST THIS ITERATION
-═══════════════════════════════════════════════════
-- [ ] [Feature/fix from THIS iteration only]
-- [ ] [Feature/fix from THIS iteration only]
+  ═══════════════════════════════════════════════════
+  🧪 TEST THIS ITERATION
+  ═══════════════════════════════════════════════════
+  - [ ] [Feature/fix from THIS iteration only]
+  - [ ] [Feature/fix from THIS iteration only]
 
-═══════════════════════════════════════════════════
-📌 NEXT STEPS (Your Choice)
-═══════════════════════════════════════════════════
-After testing passes:
-  Option A: Continue to next iteration
-  Option B: Run .\scripts\push-main.ps1 to commit all
+  ═══════════════════════════════════════════════════
+  📌 NEXT STEPS (Your Choice)
+  ═══════════════════════════════════════════════════
+  After testing passes:
+    Option A: Continue to next iteration
+    Option B: Run .\scripts\push-main.ps1 to commit all
 
-═══════════════════════════════════════════════════
-```
+  ═══════════════════════════════════════════════════
+  ```
 
----
+  ---
 
-## EXAMPLE: Multi-Iteration Task
+  ## EXAMPLE: Multi-Iteration Task
 
-### User Request: "Build 10 files for feature X"
+  ### User Request: "Build 10 files for feature X"
 
-**Iteration 1 Response:**
-```
-═══════════════════════════════════════════════════
-📦 ITERATION SUMMARY
-═══════════════════════════════════════════════════
-Iteration: 1 of ~3
-Files NEW This Time: 3
-Previously Delivered (NOT included): None
+  **Iteration 1 Response:**
+  ```
+  ═══════════════════════════════════════════════════
+  📦 ITERATION SUMMARY
+  ═══════════════════════════════════════════════════
+  Iteration: 1 of ~3
+  Files NEW This Time: 3
+  Previously Delivered (NOT included): None
 
-📁 FILES IN MANUAL_COPY_FILES/
-1. UserService.ts → New service for user management
-2. UserController.ts → API endpoints
-3. user.types.ts → TypeScript interfaces
-```
+  📁 FILES IN MANUAL_COPY_FILES/
+  1. UserService.ts → New service for user management
+  2. UserController.ts → API endpoints
+  3. user.types.ts → TypeScript interfaces
+  ```
 
-**Iteration 2 Response:**
-```
-═══════════════════════════════════════════════════
-📦 ITERATION SUMMARY
-═══════════════════════════════════════════════════
-Iteration: 2 of ~3
-Files NEW This Time: 4
-Previously Delivered (NOT included): 
-  - UserService.ts
-  - UserController.ts  
-  - user.types.ts
+  **Iteration 2 Response:**
+  ```
+  ═══════════════════════════════════════════════════
+  📦 ITERATION SUMMARY
+  ═══════════════════════════════════════════════════
+  Iteration: 2 of ~3
+  Files NEW This Time: 4
+  Previously Delivered (NOT included): 
+    - UserService.ts
+    - UserController.ts  
+    - user.types.ts
 
-📁 FILES IN MANUAL_COPY_FILES/
-1. UserList.tsx → UI component for listing users
-2. UserDetail.tsx → UI component for user details
-3. useUsers.ts → React hook
-4. user.api.ts → API client functions
-```
+  📁 FILES IN MANUAL_COPY_FILES/
+  1. UserList.tsx → UI component for listing users
+  2. UserDetail.tsx → UI component for user details
+  3. useUsers.ts → React hook
+  4. user.api.ts → API client functions
+  ```
 
-**Iteration 3 Response (with a fix to previous file):**
-```
-═══════════════════════════════════════════════════
-📦 ITERATION SUMMARY
-═══════════════════════════════════════════════════
-Iteration: 3 of 3 (FINAL)
-Files NEW This Time: 2
-Files RE-MODIFIED (included again): 1
-  - UserService.ts (bug fix)
-Previously Delivered (NOT included):
-  - UserController.ts
-  - user.types.ts
-  - UserList.tsx
-  - UserDetail.tsx
-  - useUsers.ts
-  - user.api.ts
+  **Iteration 3 Response (with a fix to previous file):**
+  ```
+  ═══════════════════════════════════════════════════
+  📦 ITERATION SUMMARY
+  ═══════════════════════════════════════════════════
+  Iteration: 3 of 3 (FINAL)
+  Files NEW This Time: 2
+  Files RE-MODIFIED (included again): 1
+    - UserService.ts (bug fix)
+  Previously Delivered (NOT included):
+    - UserController.ts
+    - user.types.ts
+    - UserList.tsx
+    - UserDetail.tsx
+    - useUsers.ts
+    - user.api.ts
 
-📁 FILES IN MANUAL_COPY_FILES/
-1. UserService.ts → BUG FIX: Fixed null check
-2. UserTests.spec.ts → Unit tests
-3. UserE2E.spec.ts → E2E tests
-```
+  📁 FILES IN MANUAL_COPY_FILES/
+  1. UserService.ts → BUG FIX: Fixed null check
+  2. UserTests.spec.ts → Unit tests
+  3. UserE2E.spec.ts → E2E tests
+  ```
 
----
+  ---
 
-## FOLDER STRUCTURE FOR MANUAL_COPY_FILES
+  ## FOLDER STRUCTURE FOR MANUAL_COPY_FILES
 
-```
-MANUAL_COPY_FILES/
-├── COPY_INSTRUCTIONS.txt       ← Always include this
-├── contractnest-api/           ← Mirror submodule structure
-│   └── src/
-│       └── services/
-│           └── UserService.ts
-├── contractnest-ui/
-│   └── src/
-│       └── components/
-│           └── UserList.tsx
-├── contractnest-edge/
-│   └── supabase/
-│       └── functions/
-│           └── my-function/
-│               └── index.ts
-├── FamilyKnows/
-│   └── src/
-│       └── ...
-└── FK-New/
-    └── src/
-        └── ...
-```
+  ```
+  MANUAL_COPY_FILES/
+  ├── COPY_INSTRUCTIONS.txt       ← Always include this
+  ├── contractnest-api/           ← Mirror submodule structure
+  │   └── src/
+  │       └── services/
+  │           └── UserService.ts
+  ├── contractnest-ui/
+  │   └── src/
+  │       └── components/
+  │           └── UserList.tsx
+  ├── contractnest-edge/
+  │   └── supabase/
+  │       └── functions/
+  │           └── my-function/
+  │               └── index.ts
+  ├── FamilyKnows/
+  │   └── src/
+  │       └── ...
+  └── FK-New/
+      └── src/
+          └── ...
+  ```
 
----
+  ---
 
-## COPY_INSTRUCTIONS.txt FORMAT
+  ## COPY_INSTRUCTIONS.txt FORMAT
 
-```
-═══════════════════════════════════════════════════
-ITERATION: [X]
-DATE: [YYYY-MM-DD]
-═══════════════════════════════════════════════════
+  ```
+  ═══════════════════════════════════════════════════
+  ITERATION: [X]
+  DATE: [YYYY-MM-DD]
+  ═══════════════════════════════════════════════════
 
-FILES THIS ITERATION:
-─────────────────────
-1. contractnest-api/src/services/UserService.ts
-2. contractnest-ui/src/components/UserList.tsx
+  FILES THIS ITERATION:
+  ─────────────────────
+  1. contractnest-api/src/services/UserService.ts
+  2. contractnest-ui/src/components/UserList.tsx
 
-COPY COMMANDS:
-─────────────────────
-Copy-Item "MANUAL_COPY_FILES\contractnest-api\src\services\UserService.ts" -Destination "contractnest-api\src\services\UserService.ts" -Force
-Copy-Item "MANUAL_COPY_FILES\contractnest-ui\src\components\UserList.tsx" -Destination "contractnest-ui\src\components\UserList.tsx" -Force
+  COPY COMMANDS:
+  ─────────────────────
+  Copy-Item "MANUAL_COPY_FILES\contractnest-api\src\services\UserService.ts" -Destination "contractnest-api\src\services\UserService.ts" -Force
+  Copy-Item "MANUAL_COPY_FILES\contractnest-ui\src\components\UserList.tsx" -Destination "contractnest-ui\src\components\UserList.tsx" -Force
 
-TEST:
-─────────────────────
-- [ ] User list displays correctly
-- [ ] User service returns data
-```
+  TEST:
+  ─────────────────────
+  - [ ] User list displays correctly
+  - [ ] User service returns data
+  ```
 
----
+  ---
 
-## WHAT NOT TO INCLUDE
+  ## WHAT NOT TO INCLUDE
 
-❌ Do NOT provide:
-- `git checkout` commands
-- `git merge` commands  
-- `git push` commands
-- Branch switching instructions
-- Full merge workflows
-- Files from previous iterations (unless re-modified)
+  ❌ Do NOT provide:
+  - `git checkout` commands
+  - `git merge` commands  
+  - `git push` commands
+  - Branch switching instructions
+  - Full merge workflows
+  - Files from previous iterations (unless re-modified)
 
-✅ DO provide:
-- MANUAL_COPY_FILES/ with new files only
-- Copy-Item commands
-- Testing checklist for THIS iteration
-- Clear iteration tracking
+  ✅ DO provide:
+  - MANUAL_COPY_FILES/ with new files only
+  - Copy-Item commands
+  - Testing checklist for THIS iteration
+  - Clear iteration tracking
 
----
+  ---
 
-## COMMIT SCRIPTS AVAILABLE
+  ## COMMIT SCRIPTS AVAILABLE
 
-User has these scripts in `contractnest-combined/scripts/`:
+  User has these scripts in `contractnest-combined/scripts/`:
 
-| Script | Purpose |
-|--------|---------|
-| `push-main.ps1` | Push all submodules to main/master |
-| `push-feature.ps1` | Push while staying on feature branch |
-| `pull-safe.ps1` | Pull all repos safely |
-| `merge-feature.ps1` | Merge feature branch to master |
+  | Script | Purpose |
+  |--------|---------|
+  | `push-main.ps1` | Push all submodules to main/master |
+  | `push-feature.ps1` | Push while staying on feature branch |
+  | `pull-safe.ps1` | Pull all repos safely |
+  | `merge-feature.ps1` | Merge feature branch to master |
 
-**Claude does NOT need to explain these** - user knows how to use them.
+  **Claude does NOT need to explain these** - user knows how to use them.
 
----
+  ---
 
-## QUICK REFERENCE
+  ## QUICK REFERENCE
 
-When user says... | Claude should...
-------------------|------------------
-"Continue" / "Next" | Provide ONLY new files for next iteration
-"Give me all files" | Provide ALL files (cumulative) - ONLY if explicitly asked
-"Start fresh" | Reset iteration count, provide all files
-"Fix [file]" | Provide ONLY the fixed file(s)
-"Test passed, continue" | Provide ONLY new files for next iteration
+  When user says... | Claude should...
+  ------------------|------------------
+  "Continue" / "Next" | Provide ONLY new files for next iteration
+  "Give me all files" | Provide ALL files (cumulative) - ONLY if explicitly asked
+  "Start fresh" | Reset iteration count, provide all files
+  "Fix [file]" | Provide ONLY the fixed file(s)
+  "Test passed, continue" | Provide ONLY new files for next iteration
