@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ContractNest - Unified Global Hub</title>
+    <style>
+        :root {
+            --brand: #0F172A;
+            --accent: #4F46E5;
+            --seller-theme: #4F46E5;
+            --buyer-theme: #0EA5E9;
+            --partner-theme: #7C3AED;
+            --bg: #F1F5F9;
+            --card: #FFFFFF;
+            --border: #E2E8F0;
+            --text-main: #1E293B;
+            --text-muted: #64748B;
+            --red: #EF4444;
+            --green: #22C55E;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+        /* --- HEADER & PERSPECTIVE SWITCHER --- */
+        header {
+            background: var(--brand); color: white; padding: 0 24px; height: 64px;
+            display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+        }
+
+        .perspective-switcher {
+            display: flex; background: rgba(255,255,255,0.1); padding: 4px; border-radius: 12px; gap: 4px;
+        }
+
+        .role-btn {
+            padding: 8px 16px; border-radius: 8px; border: none; background: transparent;
+            color: white; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s;
+        }
+
+        .role-btn.active { background: var(--accent); }
+
+        /* --- DATA TOGGLE --- */
+        .toggle-container { display: flex; align-items: center; gap: 10px; font-size: 11px; color: #94A3B8; }
+        .switch { position: relative; display: inline-block; width: 34px; height: 18px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; transition: .4s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 12px; width: 12px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--green); }
+        input:checked + .slider:before { transform: translateX(16px); }
+
+        /* --- LAYOUT --- */
+        .main-wrapper { display: flex; flex: 1; overflow: hidden; }
+        .content-area { flex: 1; overflow-y: auto; padding: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+
+        /* --- CARDS & WIDGETS --- */
+        .portfolio-grid { grid-column: span 2; display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+        .stat-card { background: var(--card); padding: 20px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .stat-val { font-size: 22px; font-weight: 700; display: block; margin: 4px 0; }
+        .stat-lbl { font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 700; }
+
+        .section-box { background: var(--card); border-radius: 16px; border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+        .section-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #FAFBFD; }
+        .section-header h2 { font-size: 12px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; }
+
+        .action-row { padding: 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; transition: 0.2s; }
+        .action-row:hover { background: #F8FAFC; }
+        
+        .btn-action { padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); background: white; font-size: 11px; font-weight: 700; cursor: pointer; }
+        .btn-primary { background: var(--accent); color: white; border: none; }
+
+        /* --- SIDEBAR --- */
+        .sidebar-vani { width: 340px; background: white; border-left: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+        .vani-banner { padding: 20px; background: #F5F7FF; border-bottom: 1px solid var(--border); }
+        .vani-insight { margin-bottom: 16px; padding: 16px; background: white; border: 1px solid #E0E7FF; border-radius: 12px; font-size: 13px; border-left: 4px solid var(--accent); }
+
+        /* --- EMPTY STATE --- */
+        .empty-state { grid-column: span 2; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 100px; color: var(--text-muted); text-align: center; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div style="display:flex; align-items:center; gap:24px;">
+            <h1 style="font-size: 20px;">ContractNest</h1>
+            <div class="perspective-switcher" id="roleSwitcher">
+                <button class="role-btn active" onclick="metamorphosis('seller')">Revenue (Seller)</button>
+                <button class="role-btn" onclick="metamorphosis('buyer')">Expense (Buyer)</button>
+                <button class="role-btn" onclick="metamorphosis('partner')">Tasks (Partner)</button>
+            </div>
+        </div>
+        <div class="toggle-container">
+            <span>DUMMY DATA</span>
+            <label class="switch">
+                <input type="checkbox" id="dataToggle" onchange="renderHub()" checked>
+                <span class="slider"></span>
+            </label>
+        </div>
+    </header>
+
+    <div class="main-wrapper">
+        <main class="content-area" id="hubMain"></main>
+
+        <aside class="sidebar-vani" id="hubSide">
+            <div class="vani-banner">
+                <h3 style="font-size:14px; color:var(--accent);">VaNi Agentic Insights</h3>
+            </div>
+            <div id="vaniContent" style="padding: 20px; overflow-y: auto;"></div>
+        </aside>
+    </div>
+
+    <script>
+        let role = 'seller';
+        const dataOn = () => document.getElementById('dataToggle').checked;
+
+        const content = {
+            seller: {
+                stats: [
+                    { lbl: 'Portfolio LTV', val: '₹71,204', ref: '' },
+                    { lbl: 'Total AR', val: '₹16,743', ref: '' },
+                    { lbl: 'SLA Health', val: '85%', ref: '' },
+                    { lbl: 'Active Blocks', val: '02', ref: '' }
+                ],
+                actions: [
+                    { title: 'Equipment Calibration', sub: 'Vikuna Tech • Overdue', btn: 'Dispatch Staff', ref: '' },
+                    { title: '3rd Contract (CN-1038)', sub: 'Status: Pending Accept', btn: 'Resend Link', ref: '' }
+                ],
+                vani: [
+                    { title: 'Evidence Missing', desc: 'Acme service marked done, but no photo proof.', btn: 'Ping Tech' },
+                    { title: 'Invoice Ready', desc: 'Calibration complete. Generate INV-0017?', btn: 'Raise' }
+                ]
+            },
+            buyer: {
+                stats: [
+                    { lbl: 'Accounts Payable', val: '₹8,371', ref: '' },
+                    { lbl: 'Active Contracts', val: '03', ref: '' },
+                    { lbl: 'Compliance Gap', val: '01', ref: '' },
+                    { lbl: 'Service Uptime', val: '99%', ref: '' }
+                ],
+                actions: [
+                    { title: 'EMI Installment 1/2', sub: 'Vikuna Contract • Due Tomorrow', btn: 'Pay Now', ref: '' },
+                    { title: 'New RFQ Proposal', sub: 'From SecureServe • Review Bid', btn: 'Compare', ref: '' }
+                ],
+                vani: [
+                    { title: 'AP Optimization', desc: 'Vendor offers 2% discount for early pay.', btn: 'Pay Early' },
+                    { title: 'Unverified Work', desc: 'Vendor marked as done without evidence.', btn: 'Dispute' }
+                ]
+            }
+        };
+
+        function metamorphosis(newRole) {
+            role = newRole;
+            document.querySelectorAll('.role-btn').forEach(b => b.classList.toggle('active', b.innerText.toLowerCase().includes(newRole)));
+            renderHub();
+        }
+
+        function renderHub() {
+            const main = document.getElementById('hubMain');
+            const side = document.getElementById('vaniContent');
+            main.innerHTML = ''; side.innerHTML = '';
+
+            if (!dataOn()) {
+                main.innerHTML = `<div class="empty-state"><h3>No Active ${role.toUpperCase()} Data</h3><p>Switch dummy data to see operational flow.</p></div>`;
+                return;
+            }
+
+            const activeData = content[role] || content.seller;
+
+            // Stats
+            let statsHtml = `<div class="portfolio-grid">`;
+            activeData.stats.forEach(s => {
+                statsHtml += `<div class="stat-card"><span class="stat-lbl">${s.lbl}</span><span class="stat-val">${s.val}</span><small>${s.ref}</small></div>`;
+            });
+            main.innerHTML = statsHtml + `</div>`;
+
+            // Actions
+            let actionHtml = `<div class="section-box" style="grid-column: span 2;">
+                <div class="section-header"><h2>Critical ${role.toUpperCase()} Actions</h2></div>`;
+            activeData.actions.forEach(a => {
+                actionHtml += `<div class="action-row">
+                    <div style="flex:1;"><span style="font-weight:700;">${a.title}</span><p style="font-size:12px; color:var(--text-muted);">${a.sub}</p><small>${a.ref}</small></div>
+                    <button class="btn-action btn-primary">${a.btn}</button>
+                </div>`;
+            });
+            main.innerHTML += actionHtml + `</div>`;
+
+            // VaNi
+            activeData.vani.forEach(v => {
+                side.innerHTML += `<div class="vani-insight"><b>${v.title}</b><p style="margin:8px 0;">${v.desc}</p><button class="btn-action" style="width:100%">${v.btn}</button></div>`;
+            });
+        }
+
+        renderHub();
+    </script>
+</body>
+</html>

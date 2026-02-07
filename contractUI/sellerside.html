@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seller Cockpit - Service Command</title>
+    <style>
+        :root {
+            --brand-primary: #4F46E5;
+            --brand-secondary: #7C3AED;
+            --green: #22c55e;
+            --orange: #f59e0b;
+            --red: #ef4444;
+            --blue: #3b82f6;
+            --bg-primary: #f1f5f9;
+            --bg-secondary: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+            --card-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg-primary); color: var(--text-primary); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+        /* HEADER */
+        .hero-header {
+            flex-shrink: 0; padding: 16px 24px; background: var(--bg-secondary); border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .account-badge { display: flex; align-items: center; gap: 12px; }
+        .avatar { width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary)); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; }
+        
+        .header-stats { display: flex; gap: 40px; }
+        .stat-group { text-align: right; }
+        .stat-val { font-size: 18px; font-weight: 700; display: block; }
+        .stat-lbl { font-size: 11px; text-transform: uppercase; color: var(--text-secondary); font-weight: 600; }
+
+        /* MAIN LAYOUT */
+        .main-content { flex: 1; display: grid; grid-template-columns: 320px 1fr 350px; overflow: hidden; }
+        .column { display: flex; flex-direction: column; border-right: 1px solid var(--border); background: var(--bg-primary); }
+        .column-header { padding: 16px; background: var(--bg-secondary); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .column-header h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-secondary); }
+        .scroll-area { flex: 1; overflow-y: auto; padding: 12px; }
+
+        /* CONTRACT CARDS (Column 1) */
+        .contract-card {
+            background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; padding: 14px;
+            margin-bottom: 12px; cursor: pointer; transition: 0.2s;
+        }
+        .contract-card:hover { border-color: var(--brand-primary); }
+        .contract-card.selected { border: 2px solid var(--brand-primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+        .c-type { font-size: 10px; font-weight: 700; color: var(--brand-primary); text-transform: uppercase; }
+        .c-name { font-size: 14px; font-weight: 600; margin: 4px 0; display: block; }
+
+        /* EVENT CARDS (Column 2 - THE CORE) */
+        .event-card {
+            background: var(--bg-secondary); border-radius: 12px; border: 1px solid var(--border);
+            margin-bottom: 16px; position: relative; overflow: hidden; box-shadow: var(--card-shadow);
+        }
+        .event-card.overdue { border-left: 4px solid var(--red); }
+        .event-card.planned { border-left: 4px solid var(--orange); }
+        
+        .event-body { padding: 16px; }
+        .event-top { display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .event-cat { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: #f1f5f9; }
+        .event-ageing { font-size: 11px; color: var(--red); font-weight: 600; }
+        
+        .event-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+        .event-subtext { font-size: 12px; color: var(--text-secondary); margin-bottom: 12px; }
+
+        /* ACTION BAR ON CARDS */
+        .event-actions {
+            display: flex; border-top: 1px solid var(--border); background: #fafafa;
+        }
+        .action-btn {
+            flex: 1; padding: 10px; border: none; background: transparent; font-size: 12px;
+            font-weight: 600; color: var(--text-primary); cursor: pointer; border-right: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        .action-btn:last-child { border-right: none; }
+        .action-btn:hover { background: #f1f5f9; color: var(--brand-primary); }
+        .action-btn.primary-act { color: var(--brand-primary); }
+
+        /* FINANCIAL ROWS (Column 3) */
+        .inv-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px; background: var(--bg-secondary); border-radius: 8px; margin-bottom: 8px;
+            border: 1px solid var(--border);
+        }
+        .inv-status { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+        .status-paid { background: #dcfce7; color: #166534; }
+        .status-unpaid { background: #fee2e2; color: #991b1b; }
+
+        /* FLOATING ACTION ISLAND */
+        .action-island {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: #1e293b; padding: 8px 16px; border-radius: 24px;
+            display: flex; gap: 16px; align-items: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        .island-item { color: white; font-size: 13px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .island-sep { width: 1px; height: 16px; background: #475569; }
+    </style>
+</head>
+<body>
+
+    <header class="hero-header">
+        <div class="account-badge">
+            <div class="avatar">AI</div>
+            <div>
+                <h1 style="font-size: 18px;">Acme Industries</h1>
+                <p style="font-size: 12px; color: var(--text-secondary);">Primary Client • john@acme.com</p>
+            </div>
+        </div>
+        <div class="header-stats">
+            <div class="stat-group">
+                <span class="stat-val" style="color: var(--green);">₹1.2Cr</span>
+                <span class="stat-lbl">Revenue</span>
+            </div>
+            <div class="stat-group">
+                <span class="stat-val" style="color: var(--red);">₹15L</span>
+                <span class="stat-lbl">Receivable</span>
+            </div>
+            <div class="stat-group">
+                <span class="stat-val">85%</span>
+                <span class="stat-lbl">SLA Health</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <section class="column">
+            <div class="column-header">
+                <h2>Contracts (5)</h2>
+                <button style="border:none; background:none; color:var(--brand-primary); font-weight:bold; cursor:pointer;">+ New</button>
+            </div>
+            <div class="scroll-area">
+                <div class="contract-card selected">
+                    <span class="c-type">Service Contract</span>
+                    <span class="c-name">Annual HVAC Maintenance</span>
+                    <p style="font-size: 11px; color: var(--text-secondary);">CNT-2024-001 • Exp: 31 Dec</p>
+                </div>
+                <div class="contract-card">
+                    <span class="c-type">AMC</span>
+                    <span class="c-name">Security & Surveillance</span>
+                    <p style="font-size: 11px; color: var(--text-secondary);">CNT-2024-042 • Exp: 15 Oct</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="column" style="background: #f8fafc;">
+            <div class="column-header">
+                <h2>Service Timeline</h2>
+                <div style="font-size: 12px; color: var(--text-secondary);">Filter: <b>Active Contract</b></div>
+            </div>
+            <div class="scroll-area">
+                
+                <div class="event-card overdue">
+                    <div class="event-body">
+                        <div class="event-top">
+                            <span class="event-cat">🛠 REPAIR</span>
+                            <span class="event-ageing">⚠️ 3 DAYS OVERDUE</span>
+                        </div>
+                        <h3 class="event-title">Emergency Compressor Fix</h3>
+                        <p class="event-subtext">Location: Sector B, Flat 402 • Asset: HVAC Unit-04</p>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <div style="width:24px; height:24px; border-radius:50%; background:#e2e8f0; font-size:10px; display:flex; align-items:center; justify-content:center;">JS</div>
+                            <span style="font-size:12px; color:var(--text-secondary);">Assigned to: <b>J. Sharma (Staff)</b></span>
+                        </div>
+                    </div>
+                    <div class="event-actions">
+                        <button class="action-btn">📅 Reschedule</button>
+                        <button class="action-btn primary-act">✅ Mark Complete</button>
+                        <button class="action-btn">💬 Chat</button>
+                    </div>
+                </div>
+
+                <div class="event-card planned">
+                    <div class="event-body">
+                        <div class="event-top">
+                            <span class="event-cat">📅 INSPECTION</span>
+                            <span style="font-size:11px; color:var(--orange); font-weight:600;">TOMORROW, 10:00 AM</span>
+                        </div>
+                        <h3 class="event-title">Monthly Routine Checkup</h3>
+                        <p class="event-subtext">Location: Main Garden • Asset: Irrigation Pump</p>
+                    </div>
+                    <div class="event-actions">
+                        <button class="action-btn">👤 Reassign</button>
+                        <button class="action-btn primary-act">🚀 Start Work</button>
+                    </div>
+                </div>
+
+                <div class="event-card" style="border-left: 4px solid var(--blue);">
+                    <div class="event-body">
+                        <div class="event-top">
+                            <span class="event-cat" style="background:#dbeafe; color:var(--blue);">💰 BILLING</span>
+                            <span style="font-size:11px; font-weight:600;">DUE IN 5 DAYS</span>
+                        </div>
+                        <h3 class="event-title">Feb 2026 Service Invoice</h3>
+                        <p class="event-subtext">Contract: Annual HVAC Maintenance</p>
+                    </div>
+                    <div class="event-actions">
+                        <button class="action-btn">📄 Preview</button>
+                        <button class="action-btn primary-act">📤 Raise Invoice</button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section class="column">
+            <div class="column-header">
+                <h2>Account Ledger</h2>
+            </div>
+            <div class="scroll-area">
+                <div style="padding: 12px; background: white; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px;">
+                    <p class="stat-lbl">Payment Collection</p>
+                    <div style="height: 8px; background: #e2e8f0; border-radius: 4px; margin: 8px 0; overflow: hidden;">
+                        <div style="width: 88%; height: 100%; background: var(--green);"></div>
+                    </div>
+                    <p style="font-size: 12px; font-weight: bold; color: var(--green);">88% Collected <span style="color:var(--text-secondary); font-weight: normal;">(₹1.1Cr)</span></p>
+                </div>
+
+                <p class="stat-lbl" style="margin-bottom: 8px;">Recent Transactions</p>
+                <div class="inv-row">
+                    <div>
+                        <span style="font-size:12px; font-weight:600; display:block;">INV-9021</span>
+                        <span style="font-size:10px; color:var(--text-secondary);">01 Feb 2026</span>
+                    </div>
+                    <span style="font-size:13px; font-weight:bold;">₹2,40,000</span>
+                    <span class="inv-status status-paid">PAID</span>
+                </div>
+                <div class="inv-row">
+                    <div>
+                        <span style="font-size:12px; font-weight:600; display:block;">INV-8842</span>
+                        <span style="font-size:10px; color:var(--text-secondary);">15 Jan 2026</span>
+                    </div>
+                    <span style="font-size:13px; font-weight:bold;">₹15,00,000</span>
+                    <span class="inv-status status-unpaid">OVERDUE</span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div class="action-island">
+        <div class="island-item" style="color: #818cf8;"><span>➕</span> Log Activity</div>
+        <div class="island-sep"></div>
+        <div class="island-item"><span>📧</span> Email</div>
+        <div class="island-item"><span>💬</span> WhatsApp</div>
+        <div class="island-sep"></div>
+        <div class="island-item"><span>👤</span> Account Profile</div>
+    </div>
+
+</body>
+</html>

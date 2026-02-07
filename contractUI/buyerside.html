@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buyer Cockpit - Service Assurance</title>
+    <style>
+        :root {
+            --brand-primary: #0ea5e9; /* Sky Blue for a more "Service/Trust" feel */
+            --brand-secondary: #6366f1;
+            --green: #22c55e;
+            --orange: #f59e0b;
+            --red: #ef4444;
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg-primary); color: var(--text-primary); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+        /* HEADER: AUDITOR STYLE */
+        .hero-header {
+            flex-shrink: 0; padding: 20px 24px; background: var(--bg-secondary); border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .provider-profile { display: flex; align-items: center; gap: 12px; }
+        .provider-logo { width: 44px; height: 44px; border-radius: 8px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 1px solid var(--border); }
+        
+        .header-stats { display: flex; gap: 48px; }
+        .stat-group { text-align: left; }
+        .stat-val { font-size: 20px; font-weight: 700; display: block; color: var(--text-primary); }
+        .stat-lbl { font-size: 11px; text-transform: uppercase; color: var(--text-secondary); font-weight: 600; letter-spacing: 0.5px; }
+
+        /* MAIN LAYOUT */
+        .main-content { flex: 1; display: grid; grid-template-columns: 320px 1fr 350px; overflow: hidden; }
+        .column { display: flex; flex-direction: column; border-right: 1px solid var(--border); }
+        .column-header { padding: 16px 20px; background: var(--bg-secondary); border-bottom: 1px solid var(--border); }
+        .column-header h2 { font-size: 12px; text-transform: uppercase; color: var(--text-secondary); font-weight: 700; }
+        .scroll-area { flex: 1; overflow-y: auto; padding: 16px; }
+
+        /* CONTRACT CARDS: AUDIT MODE */
+        .contract-card {
+            background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 12px; padding: 16px;
+            margin-bottom: 12px; transition: 0.2s;
+        }
+        .contract-card.active { border-left: 4px solid var(--green); }
+        .c-tag { font-size: 10px; font-weight: 700; color: var(--green); margin-bottom: 4px; display: block; }
+        .c-name { font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--text-primary); }
+        
+        /* DELIVERY TIMELINE (Middle Column) */
+        .delivery-card {
+            background: var(--bg-secondary); border-radius: 12px; border: 1px solid var(--border);
+            margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .delivery-body { padding: 16px; }
+        .status-pill { font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; }
+        .pill-done { background: #dcfce7; color: #166534; }
+        .pill-live { background: #dbeafe; color: #1e40af; animation: pulse 2s infinite; }
+        
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+
+        .delivery-title { font-size: 15px; font-weight: 600; margin: 10px 0 4px 0; }
+        .delivery-meta { font-size: 12px; color: var(--text-secondary); display: flex; gap: 12px; }
+
+        /* PROOF AREA */
+        .proof-footer {
+            padding: 12px 16px; background: #f8fafc; border-top: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center; border-radius: 0 0 12px 12px;
+        }
+        .btn-proof { font-size: 12px; font-weight: 600; color: var(--brand-primary); cursor: pointer; text-decoration: none; display: flex; align-items: center; gap: 4px; }
+
+        /* BILLING (Column 3) */
+        .bill-card {
+            background: var(--bg-secondary); padding: 16px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 12px;
+        }
+        .bill-header { display: flex; justify-content: space-between; margin-bottom: 12px; }
+        .bill-amt { font-size: 18px; font-weight: 700; }
+        .btn-pay { width: 100%; padding: 10px; background: var(--text-primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+
+        /* BUYER ACTION ISLAND */
+        .action-island {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            background: #1e293b; padding: 10px 24px; border-radius: 30px;
+            display: flex; gap: 20px; align-items: center; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .island-item { color: white; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .island-btn-primary { background: var(--brand-primary); padding: 6px 16px; border-radius: 20px; }
+    </style>
+</head>
+<body>
+
+    <header class="hero-header">
+        <div class="provider-profile">
+            <div class="provider-logo">🛡️</div>
+            <div>
+                <h1 style="font-size: 18px;">Contractor: SecureServe Pro</h1>
+                <p style="font-size: 12px; color: var(--text-secondary);">Primary Service Provider • Active since 2023</p>
+            </div>
+        </div>
+        <div class="header-stats">
+            <div class="stat-group">
+                <span class="stat-val" style="color: var(--green);">99.2%</span>
+                <span class="stat-lbl">Uptime / SLA</span>
+            </div>
+            <div class="stat-group">
+                <span class="stat-val">14m</span>
+                <span class="stat-lbl">Avg Response</span>
+            </div>
+            <div class="stat-group">
+                <span class="stat-val" style="color: var(--brand-primary);">₹4.2L</span>
+                <span class="stat-lbl">Current Month Spend</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <section class="column">
+            <div class="column-header">
+                <h2>Active Services (2)</h2>
+            </div>
+            <div class="scroll-area">
+                <div class="contract-card active">
+                    <span class="c-tag">ACTIVE</span>
+                    <span class="c-name">Annual HVAC Maintenance</span>
+                    <div style="font-size: 11px; color: var(--text-secondary);">Next Inspection: <b>Feb 14</b></div>
+                </div>
+                <div class="contract-card active">
+                    <span class="c-tag">ACTIVE</span>
+                    <span class="c-name">24/7 Facility Security</span>
+                    <div style="font-size: 11px; color: var(--text-secondary);">Next Audit: <b>Mar 01</b></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="column" style="background: #f1f5f9;">
+            <div class="column-header" style="display:flex; justify-content:space-between;">
+                <h2>Delivery Proof & Activity</h2>
+                <span style="font-size: 11px; color: var(--brand-primary); font-weight:700;">LIVE UPDATES ON</span>
+            </div>
+            <div class="scroll-area">
+                
+                <div class="delivery-card">
+                    <div class="delivery-body">
+                        <span class="status-pill pill-done">Completed</span>
+                        <h3 class="delivery-title">Compressor Replacement - Unit 04</h3>
+                        <div class="delivery-meta">
+                            <span>📅 Feb 05, 2026</span>
+                            <span>📍 Sector B, Flat 402</span>
+                        </div>
+                    </div>
+                    <div class="proof-footer">
+                        <span style="font-size: 12px; color: var(--text-secondary);">Verified by Staff: J. Sharma</span>
+                        <a href="#" class="btn-proof">📂 Download Report</a>
+                    </div>
+                </div>
+
+                <div class="delivery-card" style="border-top: 3px solid var(--brand-primary);">
+                    <div class="delivery-body">
+                        <span class="status-pill pill-live">In Progress</span>
+                        <h3 class="delivery-title">Quarterly Fire Safety Audit</h3>
+                        <p style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;">
+                            The team is currently inspecting the main extinguishers in Wing C.
+                        </p>
+                    </div>
+                    <div class="proof-footer">
+                        <span style="font-size: 12px; font-weight: 600;">Started: 10:30 AM</span>
+                        <span style="font-size: 11px; color: var(--brand-primary);">Est. Completion: 2:00 PM</span>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <section class="column">
+            <div class="column-header">
+                <h2>Billing & Documents</h2>
+            </div>
+            <div class="scroll-area">
+                <div class="bill-card">
+                    <div class="bill-header">
+                        <span class="stat-lbl">Pending Invoice</span>
+                        <span style="font-size: 11px; color: var(--red); font-weight: 700;">DUE IN 2 DAYS</span>
+                    </div>
+                    <span class="bill-amt">₹4,25,000</span>
+                    <p style="font-size: 12px; color: var(--text-secondary); margin: 8px 0 16px 0;">Security Audit Services - Feb 2026</p>
+                    <button class="btn-pay">Pay Invoice Now</button>
+                </div>
+
+                <div style="padding: 16px; border-radius: 12px; border: 1px dashed var(--border); background: #fafafa;">
+                    <p class="stat-lbl" style="margin-bottom: 12px;">Compliance Documents</p>
+                    <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:8px;">
+                        <span>Insurance Certificate</span>
+                        <span style="color:var(--green);">Valid</span>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:12px;">
+                        <span>Vendor Onboarding</span>
+                        <span style="color:var(--green);">Verified</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div class="action-island">
+        <div class="island-item island-btn-primary"><span>🆘</span> Request Support</div>
+        <div class="island-sep"></div>
+        <div class="island-item"><span>📅</span> Book Review</div>
+        <div class="island-item"><span>📂</span> Docs Vault</div>
+        <div class="island-sep"></div>
+        <div class="island-item"><span>⭐</span> Rate Service</div>
+    </div>
+
+</body>
+</html>

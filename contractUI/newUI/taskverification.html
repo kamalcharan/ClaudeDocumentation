@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Seller: Task Verification & Evidence Approval</title>
+    <style>
+        :root {
+            --brand: #0F172A;
+            --accent: #4F46E5;
+            --bg: #F8FAFC;
+            --white: #FFFFFF;
+            --border: #E2E8F0;
+            --green: #22C55E;
+            --red: #EF4444;
+            --text-muted: #64748B;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background: rgba(15, 23, 42, 0.6); display: flex; align-items: center; justify-content: center; height: 100vh; }
+
+        .verify-modal {
+            background: white; width: 600px; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+            overflow: hidden; border: 1px solid var(--border);
+        }
+
+        /* HEADER */
+        .modal-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h2 { font-size: 16px; font-weight: 700; }
+        .status-badge { font-size: 10px; font-weight: 800; padding: 4px 8px; background: #DBEAFE; color: #1E40AF; border-radius: 4px; text-transform: uppercase; }
+
+        .modal-body { padding: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+
+        /* EVIDENCE PREVIEW */
+        .evidence-preview {
+            width: 100%; height: 200px; background: #F1F5F9; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center; position: relative;
+            border: 2px dashed var(--border); overflow: hidden;
+        }
+        .evidence-label { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.6); color: white; padding: 2px 8px; border-radius: 4px; font-size: 10px; }
+
+        /* TASK DATA */
+        .task-details h3 { font-size: 14px; margin-bottom: 4px; }
+        .task-meta { font-size: 12px; color: var(--text-muted); margin-bottom: 16px; }
+        
+        .info-box { background: #F8FAFC; padding: 12px; border-radius: 8px; margin-bottom: 12px; border: 1px solid var(--border); }
+        .info-box label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; display: block; margin-bottom: 4px; }
+        .info-box p { font-size: 13px; font-weight: 600; }
+
+        /* FOOTER ACTIONS */
+        .modal-footer { padding: 16px 24px; background: #F8FAFC; border-top: 1px solid var(--border); display: flex; justify-content: space-between; gap: 12px; }
+        .btn { padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; border: none; transition: 0.2s; }
+        .btn-reject { background: #FEE2E2; color: #B91C1C; }
+        .btn-reject:hover { background: #FECACA; }
+        .btn-approve { background: var(--green); color: white; }
+        .btn-approve:hover { opacity: 0.9; }
+    </style>
+</head>
+<body>
+
+    <div class="verify-modal">
+        <div class="modal-header">
+            <div>
+                <h2>Verify Task Completion</h2>
+                <p style="font-size: 12px; color: var(--text-muted);">Contract: CN-1036</p>
+            </div>
+            <span class="status-badge">Submitted for Approval</span>
+        </div>
+
+        <div class="modal-body">
+            <div>
+                <span class="label" style="display:block; margin-bottom:8px; font-size:11px; font-weight:700; color:var(--text-muted);">FIELD EVIDENCE PHOTO</span>
+                <div class="evidence-preview">
+                    <span class="evidence-label">Regulatory Proof</span>
+                    <span style="font-size: 40px;">📷</span> 
+                    </div>
+                <p style="font-size:11px; color:var(--text-muted); margin-top:8px; text-align:center;">Uploaded by J. Sharma • 2:15 PM today</p>
+            </div>
+
+            <div class="task-details">
+                <h3>Equipment Calibration</h3>
+                <p class="task-meta">Asset: HVAC Unit-04 • Location: Sector B</p>
+                
+                <div class="info-box">
+                    <label>Technician Notes</label>
+                    <p>"Calibrated sensor and checked pressure. Unit is running within optimal parameters."</p>
+                </div>
+
+                <div class="info-box">
+                    <label>Regulatory Compliance</label>
+                    <p style="color: var(--green);">✅ Certificate Generated</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn btn-reject">Reject (Request Re-work)</button>
+            <div style="display:flex; gap:12px;">
+                <button class="btn" style="background:transparent; border:1px solid var(--border);">Close</button>
+                <button class="btn btn-approve">Approve & Release Billing</button>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

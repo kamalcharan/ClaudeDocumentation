@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Seller: Asset & Entity Linker</title>
+    <style>
+        :root {
+            --brand: #0F172A;
+            --accent: #4F46E5;
+            --bg: #F8FAFC;
+            --white: #FFFFFF;
+            --border: #E2E8F0;
+            --text-muted: #64748B;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background: rgba(15, 23, 42, 0.5); display: flex; align-items: center; justify-content: center; height: 100vh; }
+
+        /* MODAL CONTAINER */
+        .linker-modal {
+            background: white; width: 500px; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            overflow: hidden; border: 1px solid var(--border);
+        }
+
+        .modal-header { padding: 20px; border-bottom: 1px solid var(--border); background: #FAFBFD; }
+        .modal-header h2 { font-size: 16px; font-weight: 700; color: var(--brand); }
+        .block-ref { font-size: 12px; color: var(--accent); font-weight: 600; margin-top: 4px; }
+
+        .modal-body { padding: 24px; }
+        
+        /* FORM GROUP */
+        .form-group { margin-bottom: 20px; }
+        .label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; letter-spacing: 0.5px; }
+        
+        .select-input {
+            width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px;
+            font-size: 14px; outline: none; transition: 0.2s; background: #F8FAFC;
+        }
+        .select-input:focus { border-color: var(--accent); background: white; }
+
+        /* ASSET PREVIEW */
+        .asset-preview {
+            background: #F5F7FF; border: 1px solid #E0E7FF; padding: 12px; border-radius: 8px;
+            display: flex; align-items: center; gap: 12px; margin-top: 8px;
+        }
+        .asset-icon { font-size: 20px; width: 40px; height: 40px; background: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+
+        /* FOOTER */
+        .modal-footer { padding: 16px 24px; background: #F8FAFC; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 12px; }
+        .btn { padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; border: none; }
+        .btn-ghost { background: transparent; color: var(--text-muted); }
+        .btn-primary { background: var(--accent); color: white; }
+    </style>
+</head>
+<body>
+
+    <div class="linker-modal">
+        <div class="modal-header">
+            <h2>Link Asset to Service Block</h2>
+            <p class="block-ref">Block: Equipment Calibration</p>
+        </div>
+
+        <div class="modal-body">
+            <div class="form-group">
+                <label class="label">Select Entity (Location)</label>
+                <select class="select-input">
+                    <option>Block B - Main Wing</option>
+                    <option selected>Sector B, Flat 402</option>
+                    <option>Main Garden Lobby</option>
+                </select>
+                <p style="font-size:11px; color:var(--text-muted); margin-top:4px;">Metamorphosis: Assigning task to specific location.</p>
+            </div>
+
+            <div class="form-group">
+                <label class="label">Select Asset (Machine)</label>
+                <select class="select-input">
+                    <option>HVAC Unit-01 (External)</option>
+                    <option selected>HVAC Unit-04 (Master Suite)</option>
+                    <option>Backup Generator - 02</option>
+                </select>
+                
+                <div class="asset-preview">
+                    <div class="asset-icon">❄️</div>
+                    <div>
+                        <span style="font-size:13px; font-weight:700;">Carrier V-Series (HVAC Unit-04)</span>
+                        <p style="font-size:11px; color:var(--text-muted);">Last Service: 3 months ago • Condition: Normal</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="label">Primary Executor</label>
+                <div style="display:flex; gap:10px;">
+                    <select class="select-input" style="flex:1;">
+                        <option>Internal Staff (J. Sharma)</option>
+                        <option>Partner (Vikuna Tech Staff)</option>
+                    </select>
+                    <button class="btn btn-primary" style="padding: 0 15px;">Check Availability</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button class="btn btn-ghost">Cancel</button>
+            <button class="btn btn-primary">Confirm & Update Timeline</button>
+        </div>
+    </div>
+
+</body>
+</html>

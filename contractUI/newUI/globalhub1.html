@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ContractNest - Global Hub Metamorphosis</title>
+    <style>
+        :root {
+            --brand: #0F172A;
+            --accent: #4F46E5;
+            --bg: #F1F5F9;
+            --card: #FFFFFF;
+            --border: #E2E8F0;
+            --text-main: #1E293B;
+            --text-muted: #64748B;
+            --red: #EF4444;
+            --green: #22C55E;
+            --blue: #0EA5E9;
+            --purple: #7C3AED;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+        /* --- HEADER & PERSPECTIVE SWITCHER --- */
+        header {
+            background: var(--brand); color: white; padding: 0 24px; height: 64px;
+            display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+        }
+
+        .perspective-switcher {
+            display: flex; background: rgba(255,255,255,0.1); padding: 4px; border-radius: 12px; gap: 4px;
+        }
+
+        .role-btn {
+            padding: 8px 16px; border-radius: 8px; border: none; background: transparent;
+            color: white; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s;
+        }
+
+        .role-btn.active { background: var(--accent); }
+
+        /* --- DATA TOGGLE --- */
+        .toggle-container { display: flex; align-items: center; gap: 10px; font-size: 12px; color: #94A3B8; }
+        .switch { position: relative; display: inline-block; width: 40px; height: 20px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #334155; transition: .4s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--green); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        /* --- LAYOUT --- */
+        .main-wrapper { display: flex; flex: 1; overflow: hidden; }
+        .content-area { flex: 1; overflow-y: auto; padding: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+
+        /* --- COMPONENTS --- */
+        .portfolio-grid { grid-column: span 2; display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+        .stat-card { background: var(--card); padding: 20px; border-radius: 16px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .stat-val { font-size: 24px; font-weight: 700; display: block; margin: 4px 0; }
+        .stat-lbl { font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px; }
+
+        .section-box { background: var(--card); border-radius: 16px; border: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
+        .section-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #FAFBFD; }
+        .section-header h2 { font-size: 12px; text-transform: uppercase; color: var(--text-muted); letter-spacing: 1px; }
+
+        .item-row { padding: 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; transition: 0.2s; cursor: pointer; }
+        .item-row:hover { background: #F8FAFC; }
+        
+        /* --- EMPTY STATE --- */
+        .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; text-align: center; color: var(--text-muted); width: 100%; grid-column: span 2; }
+        .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.3; }
+
+        /* --- SIDEBAR --- */
+        .sidebar-vani { width: 320px; background: white; border-left: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+        .vani-header { padding: 20px; background: #F8FAFC; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+        .vani-indicator { width: 10px; height: 10px; background: var(--green); border-radius: 50%; box-shadow: 0 0 8px var(--green); }
+        
+        .insight-card { margin: 16px; padding: 16px; border-radius: 12px; border: 1px solid #E0E7FF; background: #F5F7FF; font-size: 13px; line-height: 1.5; position: relative; }
+        .insight-tag { position: absolute; top: -10px; right: 10px; background: var(--accent); color: white; font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 700; }
+
+        /* Role Colors */
+        .role-seller { border-top: 3px solid var(--seller-theme); }
+        .role-buyer { border-top: 3px solid var(--blue); }
+        .role-partner { border-top: 3px solid var(--purple); }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div style="display:flex; align-items:center; gap:24px;">
+            <h1 style="font-size: 20px;">ContractNest</h1>
+            <div class="perspective-switcher" id="perspectiveSwitcher">
+                <button class="role-btn active" onclick="switchRole('seller')">Revenue (Seller)</button>
+                <button class="role-btn" onclick="switchRole('buyer')">Expense (Buyer)</button>
+                <button class="role-btn" onclick="switchRole('partner')">Operations (Partner)</button>
+            </div>
+        </div>
+        
+        <div class="toggle-container">
+            <span>DUMMY DATA</span>
+            <label class="switch">
+                <input type="checkbox" id="dataToggle" onchange="toggleData()" checked>
+                <span class="slider"></span>
+            </label>
+        </div>
+    </header>
+
+    <div class="main-wrapper">
+        <main class="content-area" id="mainContent">
+            </main>
+
+        <aside class="sidebar-vani">
+            <div class="vani-header">
+                <div class="vani-indicator"></div>
+                <span style="font-size: 14px; font-weight: 700;">VaNi Orchestrator</span>
+            </div>
+            <div id="sidebarContent">
+                </div>
+        </aside>
+    </div>
+
+    <script>
+        let currentRole = 'seller';
+        let dataEnabled = true;
+
+        const dummyData = {
+            seller: {
+                stats: [
+                    { label: 'LTV Portfolio', val: '₹72.4L', cite: '' },
+                    { label: 'Pending AR', val: '₹16,743', cite: '' },
+                    { label: 'SLA Health', val: '88%', cite: '' },
+                    { label: 'Active Tasks', val: '14', cite: '' }
+                ],
+                timeline: [
+                    { title: 'Equipment Calibration', sub: 'Acme Industries • Overdue', status: 'red', meta: '₹65,268' },
+                    { title: 'General Service', sub: 'Vikuna Tech • Scheduled Today', status: 'orange', meta: '₹5,936' }
+                ],
+                insights: [
+                    { tag: 'AR ALERT', text: 'Invoice INV-00016 for Vikuna Contract is overdue. Nudge Buyer?' },
+                    { tag: 'SLA RISK', text: '3rd Contract is still "Pending Acceptance". Send sign-off link?' }
+                ]
+            },
+            buyer: {
+                stats: [
+                    { label: 'Total Commitments', val: '₹45.2L', cite: '' },
+                    { label: 'Accounts Payable', val: '₹8,371', cite: '' },
+                    { label: 'Vendor Uptime', val: '99.2%', cite: '' },
+                    { label: 'Active RFQs', val: '02', cite: '' }
+                ],
+                timeline: [
+                    { title: 'Monthly Audit', sub: 'SecureServe Pro • Live Updates', status: 'blue', meta: 'Verification' },
+                    { title: 'EMI Installment 1/2', sub: 'Contract CN-1036 • Due Tomorrow', status: 'orange', meta: '₹8,371.5' }
+                ],
+                insights: [
+                    { tag: 'AP ACTION', text: 'New invoice received from SecureServe. Review & Pay?' },
+                    { tag: 'COMPLIANCE', text: 'Evidence missing for HVAC service. Request report?' }
+                ]
+            },
+            partner: {
+                stats: [
+                    { label: 'Work Orders', val: '08', cite: '' },
+                    { label: 'Deployment Rate', val: '94%', cite: '' },
+                    { label: 'Pending Fees', val: '₹2.1L', cite: '' },
+                    { label: 'Audit Flags', val: '01', cite: '' }
+                ],
+                timeline: [
+                    { title: 'Site Inspection', sub: 'Project Alpha • Upload Evidence', status: 'purple', meta: 'Required' },
+                    { title: 'Staff Briefing', sub: 'West Wing • 09:00 AM', status: 'blue', meta: 'Manual' }
+                ],
+                insights: [
+                    { tag: 'EVIDENCE', text: 'Staff completed task but photo not uploaded. Prompt team?' },
+                    { tag: 'HANDOVER', text: 'Service complete. Transfer logs to primary Seller?' }
+                ]
+            }
+        };
+
+        function toggleData() {
+            dataEnabled = document.getElementById('dataToggle').checked;
+            render();
+        }
+
+        function switchRole(role) {
+            currentRole = role;
+            const btns = document.querySelectorAll('.role-btn');
+            btns.forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            render();
+        }
+
+        function render() {
+            const main = document.getElementById('mainContent');
+            const side = document.getElementById('sidebarContent');
+            main.innerHTML = '';
+            side.innerHTML = '';
+
+            if (!dataEnabled) {
+                main.innerHTML = `<div class="empty-state">
+                    <div class="empty-icon">📁</div>
+                    <h3>No Active ${currentRole.toUpperCase()} Data</h3>
+                    <p>Toggle "Dummy Data" to see how this cockpit metamorphoses.</p>
+                </div>`;
+                side.innerHTML = `<div style="padding:20px; text-align:center; color:var(--text-muted); font-size:12px;">VaNi is standing by for new telemetry...</div>`;
+                return;
+            }
+
+            const data = dummyData[currentRole];
+
+            // Render Stats
+            let statsHtml = `<div class="portfolio-grid">`;
+            data.stats.forEach(s => {
+                statsHtml += `<div class="stat-card">
+                    <span class="stat-lbl">${s.label}</span>
+                    <span class="stat-val">${s.val}</span>
+                    <span style="font-size:10px; color:var(--text-muted);">${s.cite}</span>
+                </div>`;
+            });
+            statsHtml += `</div>`;
+            main.innerHTML += statsHtml;
+
+            // Render Timeline & Actions
+            let colsHtml = `
+                <div class="section-box role-${currentRole}">
+                    <div class="section-header"><h2>Universal Timeline</h2></div>
+                    <div class="scroll-list">
+                        ${data.timeline.map(t => `
+                            <div class="item-row">
+                                <div style="width:10px; height:10px; border-radius:50%; background:var(--${t.status});"></div>
+                                <div style="flex:1;">
+                                    <span style="font-size:13px; font-weight:700;">${t.title}</span>
+                                    <p style="font-size:11px; color:var(--text-muted);">${t.sub}</p>
+                                </div>
+                                <span style="font-size:12px; font-weight:600;">${t.meta}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                <div class="section-box">
+                    <div class="section-header"><h2>Pending Logs</h2></div>
+                    <div class="scroll-list">
+                         <div class="item-row" style="opacity:0.6;">
+                            <span style="font-size:12px;">Recent system activity for <b>${currentRole}</b> view...</span>
+                         </div>
+                    </div>
+                </div>
+            `;
+            main.innerHTML += colsHtml;
+
+            // Render Insights
+            data.insights.forEach(i => {
+                side.innerHTML += `
+                    <div class="insight-card">
+                        <span class="insight-tag">${i.tag}</span>
+                        ${i.text}
+                        <br><a href="#" style="color:var(--accent); font-weight:700; text-decoration:none; margin-top:8px; display:inline-block;">Execute Action →</a>
+                    </div>
+                `;
+            });
+        }
+
+        render();
+    </script>
+</body>
+</html>

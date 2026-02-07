@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ContractNest - Global Hub</title>
+    <style>
+        :root {
+            --brand: #0F172A;
+            --accent: #4F46E5;
+            --seller-theme: #4F46E5;
+            --buyer-theme: #0EA5E9;
+            --partner-theme: #7C3AED;
+            --bg: #F1F5F9;
+            --card: #FFFFFF;
+            --border: #E2E8F0;
+            --text-main: #1E293B;
+            --text-muted: #64748B;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+        /* --- GLOBAL NAVIGATION & METAMORPHOSIS SWITCHER --- */
+        header {
+            background: var(--brand); color: white; padding: 0 24px; height: 64px;
+            display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+        }
+
+        .perspective-switcher {
+            display: flex; background: rgba(255,255,255,0.1); padding: 4px; border-radius: 12px; gap: 4px;
+        }
+
+        .role-btn {
+            padding: 8px 16px; border-radius: 8px; border: none; background: transparent;
+            color: white; font-size: 13px; font-weight: 600; cursor: pointer; transition: 0.2s;
+        }
+
+        .role-btn.active { background: var(--accent); }
+        .role-btn.buyer:hover { background: var(--buyer-theme); }
+
+        /* --- MAIN LAYOUT --- */
+        .main-wrapper { display: flex; flex: 1; overflow: hidden; }
+        .content-area { flex: 1; overflow-y: auto; padding: 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+
+        /* --- GLOBAL STATS (Portfolio Pulse) --- */
+        .portfolio-grid { grid-column: span 2; display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+        .stat-card { background: var(--card); padding: 20px; border-radius: 16px; border: 1px solid var(--border); }
+        .stat-val { font-size: 24px; font-weight: 700; display: block; margin: 4px 0; }
+        .stat-lbl { font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 700; }
+
+        /* --- UNIVERSAL TIMELINE --- */
+        .section-box { background: var(--card); border-radius: 16px; border: 1px solid var(--border); display: flex; flex-direction: column; }
+        .section-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; }
+        .section-header h2 { font-size: 14px; text-transform: uppercase; color: var(--text-muted); }
+
+        .event-row {
+            padding: 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px;
+            transition: 0.2s; cursor: pointer;
+        }
+        .event-row:hover { background: #F8FAFC; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .overdue { background: #EF4444; }
+        .upcoming { background: #22C55E; }
+
+        /* --- CONTEXTUAL SIDEBAR (VaNi) --- */
+        .sidebar-vani {
+            width: 320px; background: white; border-left: 1px solid var(--border);
+            display: flex; flex-direction: column; flex-shrink: 0;
+        }
+        .vani-header { padding: 20px; background: #F8FAFC; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+        .vani-avatar { width: 32px; height: 32px; background: var(--accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; }
+        
+        .insight-card {
+            margin: 16px; padding: 16px; border-radius: 12px; border: 1px solid #E0E7FF; background: #F5F7FF;
+            font-size: 13px; line-height: 1.5; color: #3730A3;
+        }
+        .insight-card b { display: block; margin-bottom: 4px; }
+        .action-link { margin-top: 10px; display: inline-block; font-weight: 700; color: var(--accent); text-decoration: none; cursor: pointer; }
+
+        .audit-mini { flex: 1; padding: 20px; overflow-y: auto; }
+        .audit-mini h3 { font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 16px; }
+        .audit-item { font-size: 12px; margin-bottom: 12px; padding-left: 12px; border-left: 2px solid var(--border); }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div style="display:flex; align-items:center; gap:20px;">
+            <h1 style="font-size: 20px; letter-spacing: -0.5px;">ContractNest</h1>
+            <div class="perspective-switcher">
+                <button class="role-btn active">Revenue (Seller)</button>
+                <button class="role-btn buyer">Expense (Buyer)</button>
+                <button class="role-btn">Partners</button>
+            </div>
+        </div>
+        <div style="display:flex; gap:15px; font-size:13px;">
+            <span>Global Portfolio: <b>12 Active Contracts</b></span>
+        </div>
+    </header>
+
+    <div class="main-wrapper">
+        <div class="content-area">
+            
+            <div class="portfolio-grid">
+                <div class="stat-card">
+                    <span class="stat-lbl">Portfolio Value</span>
+                    <span class="stat-val">₹72.4L</span>
+                    <span style="font-size:11px; color:var(--green);"></span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-lbl">Total Receivable</span>
+                    <span class="stat-val" style="color:#EF4444;">₹16,743</span>
+                    <span style="font-size:11px; color:var(--text-muted);"></span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-lbl">SLA Compliance</span>
+                    <span class="stat-val">88%</span>
+                    <span style="font-size:11px; color:var(--text-muted);"></span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-lbl">Pending Actions</span>
+                    <span class="stat-val">04</span>
+                    <span style="font-size:11px; color:var(--text-muted);"></span>
+                </div>
+            </div>
+
+            <div class="section-box">
+                <div class="section-header">
+                    <h2>Universal Operations Timeline</h2>
+                    <span style="font-size:11px; color:var(--accent); font-weight:700;"></span>
+                </div>
+                <div class="scroll-list">
+                    <div class="event-row">
+                        <div class="status-dot overdue"></div>
+                        <div style="flex:1;">
+                            <span style="font-size:13px; font-weight:700;">Equipment Calibration</span>
+                            <p style="font-size:11px; color:var(--text-muted);">Acme Industries • 3 Days Overdue</p>
+                        </div>
+                        <span style="font-size:12px; font-weight:600;">₹65,268</span>
+                    </div>
+                    <div class="event-row">
+                        <div class="status-dot upcoming"></div>
+                        <div style="flex:1;">
+                            <span style="font-size:13px; font-weight:700;">General Service</span>
+                            <p style="font-size:11px; color:var(--text-muted);">Vikuna Tech • Scheduled: Today</p>
+                        </div>
+                        <span style="font-size:12px; font-weight:600;">₹5,936</span>
+                    </div>
+                    <div class="event-row">
+                        <div class="status-dot upcoming" style="background:var(--accent);"></div>
+                        <div style="flex:1;">
+                            <span style="font-size:13px; font-weight:700;">EMI Installment 1/2</span>
+                            <p style="font-size:11px; color:var(--text-muted);">CN-1036 • Due: Tomorrow</p>
+                        </div>
+                        <span style="font-size:12px; font-weight:600;">₹8,371.5</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-box">
+                <div class="section-header">
+                    <h2>Contracts Awaiting Action</h2>
+                    <span style="font-size:11px; color:var(--accent); font-weight:700;"></span>
+                </div>
+                <div class="scroll-list">
+                    <div class="event-row">
+                        <span style="font-size:11px; padding:2px 6px; background:#FEF3C7; color:#92400E; border-radius:4px; font-weight:700;">PENDING ACCEPT</span>
+                        <div style="flex:1;">
+                            <span style="font-size:13px; font-weight:700;">3rd Contract (CN-1038)</span>
+                            <p style="font-size:11px; color:var(--text-muted);">Created Feb 6, 2026</p>
+                        </div>
+                        <span class="action-link">Send Link →</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <aside class="sidebar-vani">
+            <div class="vani-header">
+                <div class="vani-avatar">V</div>
+                <span style="font-size: 14px; font-weight: 700;">VaNi Assistant</span>
+            </div>
+            
+            <div class="insight-card">
+                <b>Operation Insight</b>
+                VaNi detected "Equipment Calibration" is overdue for 3 days. Would you like me to notify the staff?
+                <br><span class="action-link">Yes, Nudge Staff</span>
+            </div>
+
+            <div class="insight-card" style="background:#ECFDF5; border-color:#A7F3D0; color:#065F46;">
+                <b>Finance Insight</b>
+                "Vikuna Contract" (CN-1036) is now active. Shall I generate the first EMI invoice?
+                <br><span class="action-link" style="color:#059669;">Generate Invoice</span>
+            </div>
+
+            <div class="audit-mini">
+                <h3>Global Audit Log</h3>
+                <div class="audit-item">
+                    <b>CN-1036</b>: Status changed to <i>Active</i> <br>
+                    <small>1d ago • By Vikuna Tech</small>
+                </div>
+                <div class="audit-item">
+                    <b>CN-1038</b>: Status changed to <i>Pending Accept</i> <br>
+                    <small>1d ago • By System</small>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+</body>
+</html>
