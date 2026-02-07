@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Buyer Acceptance — Secure Confirmation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --brand: #0F172A;
+            --accent: #4F46E5;
+            --bg: #F1F5F9;
+            --card: #FFFFFF;
+            --border: #E2E8F0;
+            --text-main: #1E293B;
+            --text-muted: #64748B;
+            --green: #22C55E;
+            --blue: #0EA5E9;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text-main); height: 100vh; display: flex; align-items: center; justify-content: center; }
+
+        /* THE ACCEPTANCE COCKPIT */
+        .acceptance-container {
+            width: 800px; background: var(--card); border-radius: 20px; border: 1px solid var(--border);
+            box-shadow: 0 30px 60px -12px rgba(0,0,0,0.15); overflow: hidden; display: flex; flex-direction: column;
+        }
+
+        /* HEADER: The Context */
+        .header { padding: 24px 32px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .header-info h1 { font-size: 18px; font-weight: 800; }
+        .contract-id { font-size: 11px; font-weight: 700; color: var(--accent); background: #EEF2FF; padding: 2px 8px; border-radius: 4px; margin-top: 4px; display: inline-block; }
+
+        /* CONTENT: Proof & Price */
+        .content { display: grid; grid-template-columns: 1fr 300px; gap: 0; flex: 1; }
+        
+        /* LEFT: Evidence Audit */
+        .evidence-audit { padding: 32px; border-right: 1px solid var(--border); }
+        .section-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 700; margin-bottom: 16px; display: block; }
+        .photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+        .photo-card { background: #F8FAFC; border: 1px solid var(--border); border-radius: 12px; height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 10px; color: var(--text-muted); }
+        .log-box { background: #F8FAFC; border-radius: 12px; padding: 16px; border-left: 4px solid var(--blue); }
+        .log-box p { font-size: 12px; line-height: 1.5; color: var(--text-main); }
+
+        /* RIGHT: Settlement */
+        .settlement-panel { padding: 32px; background: #FAFBFD; }
+        .cost-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; }
+        .cost-total { border-top: 1px solid var(--border); padding-top: 12px; margin-top: 12px; display: flex; justify-content: space-between; font-weight: 800; font-size: 20px; }
+        
+        .dispute-link { font-size: 12px; color: var(--text-muted); text-align: center; display: block; margin-top: 20px; text-decoration: none; }
+        .dispute-link:hover { color: #EF4444; }
+
+        /* FOOTER ACTIONS */
+        .footer { padding: 24px 32px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .vani-assurance { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-muted); }
+        .vani-dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; }
+
+        .btn-group { display: flex; gap: 12px; }
+        .btn { padding: 12px 24px; border-radius: 10px; font-size: 13px; font-weight: 700; border: none; cursor: pointer; transition: 0.2s; }
+        .btn-secondary { background: #F1F5F9; color: var(--text-main); }
+        .btn-primary { background: var(--brand); color: white; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2); }
+        .btn-primary:hover { transform: translateY(-1px); }
+    </style>
+</head>
+<body>
+
+    <div class="acceptance-container">
+        <div class="header">
+            <div class="header-info">
+                <h1>Approve Service & Release Payment</h1>
+                <span class="contract-id">CONTRACT CN-1036 • VIKUNA TECH</span>
+            </div>
+            <div style="text-align: right;">
+                <p style="font-size: 10px; color: var(--text-muted);">DUE DATE</p>
+                <p style="font-size: 13px; font-weight: 700;">Feb 14, 2026</p>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="evidence-audit">
+                <span class="section-label">Service Evidence</span>
+                <div class="photo-grid">
+                    <div class="photo-card"><span>📷 Pre-service</span></div>
+                    <div class="photo-card"><span>📷 Post-service</span></div>
+                </div>
+
+                <span class="section-label">Technician Log</span>
+                <div class="log-box">
+                    <p><b>J. Sharma:</b> "Calibration of HVAC Unit-04 completed. Pressure levels restored to 120 PSI. Regulatory certification uploaded to vault."</p>
+                </div>
+            </div>
+
+            <div class="settlement-panel">
+                <span class="section-label">Settlement</span>
+                <div class="cost-row">
+                    <span>Base Service Fee</span>
+                    <span>₹14,189.00</span>
+                </div>
+                <div class="cost-row">
+                    <span>SGST (9%)</span>
+                    <span>₹1,277.00</span>
+                </div>
+                <div class="cost-row">
+                    <span>CGST (9%)</span>
+                    <span>₹1,277.00</span>
+                </div>
+                
+                <div class="cost-total">
+                    <span>Total</span>
+                    <span>₹16,743.00</span>
+                </div>
+
+                <a href="#" class="dispute-link">Request clarification or dispute work</a>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="vani-assurance">
+                <div class="vani-dot"></div>
+                <span>VaNi: Evidence & Compliance verified ✓</span>
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-secondary">Review Documents</button>
+                <button class="btn btn-primary" onclick="alert('Payment Released!')">Approve & Pay Now</button>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

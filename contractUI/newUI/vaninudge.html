@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>VaNi Orchestrator — Nudge Sequence</title>
+    <style>
+        :root {
+            --vani-glow: #6366F1;
+            --vani-bg: #0F172A;
+            --vani-card: #1E293B;
+            --border: #334155;
+            --text-dim: #94A3B8;
+            --whatsapp: #25D366;
+        }
+
+        body { font-family: 'Inter', sans-serif; background: var(--vani-bg); color: #fff; margin: 0; display: flex; align-items: center; justify-content: center; height: 100vh; }
+
+        .nudge-container {
+            width: 700px; background: var(--vani-card); border-radius: 20px; border: 1px solid var(--border);
+            overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+        }
+
+        /* HEADER: The Intent */
+        .nudge-header { padding: 24px; border-bottom: 1px solid var(--border); background: rgba(99, 102, 241, 0.05); }
+        .logic-path { font-size: 10px; text-transform: uppercase; color: var(--vani-glow); font-weight: 800; letter-spacing: 1px; }
+        .nudge-title { font-size: 18px; margin-top: 8px; font-weight: 700; }
+
+        .nudge-body { display: grid; grid-template-columns: 1.2fr 1fr; gap: 0; }
+
+        /* LEFT: THE SEQUENCE FLOW */
+        .sequence-flow { padding: 24px; border-right: 1px solid var(--border); }
+        .step { position: relative; padding-left: 30px; margin-bottom: 24px; border-left: 2px dashed var(--border); }
+        .step.active { border-left: 2px solid var(--vani-glow); }
+        .step-dot { position: absolute; left: -7px; top: 0; width: 12px; height: 12px; border-radius: 50%; background: var(--border); }
+        .step.active .step-dot { background: var(--vani-glow); box-shadow: 0 0 10px var(--vani-glow); }
+        
+        .step-time { font-size: 10px; color: var(--text-dim); }
+        .step-desc { font-size: 13px; font-weight: 600; margin: 4px 0; }
+        .step-channel { font-size: 11px; color: var(--vani-dim); display: flex; align-items: center; gap: 5px; }
+
+        /* RIGHT: PREVIEW PANEL */
+        .preview-panel { padding: 24px; background: #161E2E; }
+        .phone-mockup { 
+            background: #fff; color: #000; border-radius: 18px; padding: 12px; height: 280px;
+            display: flex; flex-direction: column; box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+        }
+        .msg-bubble { background: #E7FFDB; padding: 10px; border-radius: 8px; font-size: 12px; line-height: 1.4; align-self: flex-start; max-width: 90%; position: relative; }
+        .msg-bubble::after { content: ''; position: absolute; left: -8px; top: 10px; border: 8px solid transparent; border-right-color: #E7FFDB; }
+
+        /* FOOTER ACTIONS */
+        .nudge-footer { padding: 20px 24px; background: #0F172A; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .btn-pause { background: transparent; border: 1px solid var(--border); color: #fff; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
+        .btn-launch { background: var(--vani-glow); color: white; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 700; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="nudge-container">
+        <div class="nudge-header">
+            <span class="logic-path">Sequence Strategy: Soft Recovery</span>
+            <div class="nudge-title">Payment Nudge for INV-0016 (Vikuna Tech)</div>
+        </div>
+
+        <div class="nudge-body">
+            <div class="sequence-flow">
+                <div class="step">
+                    <span class="step-time">Completed · Feb 6</span>
+                    <div class="step-desc">Invoice Generated</div>
+                    <div class="step-channel">System Action</div>
+                </div>
+
+                <div class="step active">
+                    <span class="step-time">Immediate Action</span>
+                    <div class="step-desc">Friendly Payment Reminder</div>
+                    <div class="step-channel"><span style="color:var(--whatsapp)">●</span> WhatsApp Business</div>
+                </div>
+
+                <div class="step">
+                    <span class="step-time">T+48 Hours</span>
+                    <div class="step-desc">Formal Email Escalation</div>
+                    <div class="step-channel">✉️ Accounts Payable Email</div>
+                </div>
+
+                <div class="step">
+                    <span class="step-time">T+72 Hours</span>
+                    <div class="step-desc">Seller Intervention</div>
+                    <div class="step-channel">⚠️ Human Handover Trigger</div>
+                </div>
+            </div>
+
+            <div class="preview-panel">
+                <span class="logic-path" style="display:block; margin-bottom:15px; color:var(--text-dim);">WHATSAPP PREVIEW</span>
+                <div class="phone-mockup">
+                    <div style="font-size: 10px; text-align:center; margin-bottom:10px; color:#999;">Today, 8:26 PM</div>
+                    <div class="msg-bubble">
+                        Hi <b>Vikuna Team</b>, VaNi here! 👋 <br><br>
+                        I noticed your calibration service for <b>HVAC Unit-04</b> was completed yesterday. <br><br>
+                        The invoice for <b>₹16,743</b> is ready. Would you like to clear this now? 
+                        <br><br>
+                        <span style="color:var(--vani-glow); font-weight:700;">[Pay via Secure Link]</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="nudge-footer">
+            <span style="font-size: 11px; color: var(--text-dim);">VaNi Confidence: <b>92%</b> based on past 3 payments.</span>
+            <div style="display:flex; gap:12px;">
+                <button class="btn-pause">Edit Content</button>
+                <button class="btn-launch">Execute Sequence</button>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

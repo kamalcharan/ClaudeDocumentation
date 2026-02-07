@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ContractNest — Final Audit Report</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --paper-bg: #FFFFFF;
+            --sidebar-bg: #F8FAFC;
+            --text-main: #0F172A;
+            --text-muted: #64748B;
+            --accent: #4F46E5;
+            --border: #E2E8F0;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background: #94A3B8; display: flex; justify-content: center; padding: 40px 0; color: var(--text-main); }
+
+        /* THE PAPER */
+        .paper-view {
+            width: 850px; background: var(--paper-bg); padding: 60px;
+            box-shadow: 0 0 40px rgba(0,0,0,0.2); position: relative;
+        }
+
+        /* WATERMARK */
+        .watermark {
+            position: absolute; top: 40px; right: 60px; font-size: 10px;
+            font-weight: 800; color: var(--accent); border: 2px solid var(--accent);
+            padding: 4px 10px; border-radius: 4px; opacity: 0.6; transform: rotate(5deg);
+        }
+
+        /* REPORT HEADER */
+        .report-header { border-bottom: 2px solid var(--text-main); padding-bottom: 30px; margin-bottom: 40px; display: flex; justify-content: space-between; align-items: flex-end; }
+        .logo { font-size: 20px; font-weight: 800; }
+        .report-meta { text-align: right; font-size: 12px; color: var(--text-muted); }
+
+        /* GRID SECTIONS */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 40px; }
+        h3 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
+        
+        .info-pair { margin-bottom: 10px; font-size: 13px; }
+        .info-pair b { display: block; font-size: 10px; color: var(--text-muted); text-transform: uppercase; }
+
+        /* AUDIT TRAIL */
+        .audit-trail { width: 100%; border-collapse: collapse; margin-bottom: 40px; }
+        .audit-trail th { text-align: left; font-size: 10px; text-transform: uppercase; color: var(--text-muted); padding: 10px; border-bottom: 1px solid var(--border); }
+        .audit-trail td { padding: 12px 10px; font-size: 12px; border-bottom: 1px solid #F1F5F9; }
+        .mono { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+
+        /* EVIDENCE SECTION */
+        .evidence-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 40px; }
+        .evidence-item { border: 1px solid var(--border); border-radius: 8px; padding: 10px; font-size: 10px; text-align: center; }
+        .img-placeholder { height: 80px; background: #F8FAFC; border-radius: 4px; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+
+        /* TOTALS */
+        .totals-box { margin-left: auto; width: 300px; border-top: 2px solid var(--text-main); padding-top: 15px; }
+        .total-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
+        .total-final { font-size: 18px; font-weight: 800; margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); }
+
+        /* FLOATING ACTION BAR */
+        .action-bar { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--brand); padding: 12px 24px; border-radius: 50px; display: flex; gap: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .action-btn { background: transparent; border: none; color: white; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+    </style>
+</head>
+<body>
+
+    <div class="watermark">AUDIT VERIFIED BY VANI</div>
+
+    <div class="paper-view">
+        <header class="report-header">
+            <div class="logo">ContractNest <span style="font-weight:400; color:var(--text-muted);">Audit Report</span></div>
+            <div class="report-meta">
+                <b>REF: CN-1036-AUDIT</b><br>
+                Generated: Feb 7, 2026<br>
+                Status: Finalized & Paid
+            </div>
+        </header>
+
+        <div class="grid-2">
+            <div>
+                <h3>Contracting Parties</h3>
+                <div class="info-pair"><b>Seller</b>SecureServe Professional Services</div>
+                <div class="info-pair"><b>Buyer</b>Vikuna Technologies Ltd.</div>
+            </div>
+            <div>
+                <h3>Service Summary</h3>
+                <div class="info-pair"><b>LTC Scope</b>Annual HVAC Maintenance & Calibration</div>
+                <div class="info-pair"><b>Cycle</b>Q4 Fulfillment (Feb 2026)</div>
+            </div>
+        </div>
+
+        <h3>Execution Audit Trail</h3>
+        <table class="audit-trail">
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Actor</th>
+                    <th>Event Description</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="mono">2026-02-06 10:15</td>
+                    <td>VaNi</td>
+                    <td>Auto-scheduled Q4 Calibration Event</td>
+                    <td><span style="color:var(--accent);">●</span> PROCESSED</td>
+                </tr>
+                <tr>
+                    <td class="mono">2026-02-07 14:22</td>
+                    <td>J. Sharma</td>
+                    <td>Service Completed: HVAC Unit-04 (Flat 402)</td>
+                    <td><span style="color:var(--green);">●</span> SUCCESS</td>
+                </tr>
+                <tr>
+                    <td class="mono">2026-02-07 15:45</td>
+                    <td>VaNi</td>
+                    <td>Evidence Verified & Compliance Match</td>
+                    <td><span style="color:var(--green);">●</span> VERIFIED</td>
+                </tr>
+                <tr>
+                    <td class="mono">2026-02-07 20:26</td>
+                    <td>Buyer (Admin)</td>
+                    <td>Final Acceptance & Payment Release</td>
+                    <td><span style="color:var(--accent);">●</span> SETTLED</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Regulatory Evidence Archive</h3>
+        <div class="evidence-summary">
+            <div class="evidence-item">
+                <div class="img-placeholder">📸</div>
+                <b>PRE-SERVICE</b><br>Unit-04 Entry State
+            </div>
+            <div class="evidence-item">
+                <div class="img-placeholder">📸</div>
+                <b>POST-SERVICE</b><br>Unit-04 Final State
+            </div>
+            <div class="evidence-item">
+                <div class="img-placeholder">📄</div>
+                <b>CERTIFICATE</b><br>CAL-REF-992.pdf
+            </div>
+        </div>
+
+        <div class="totals-box">
+            <h3>Settlement</h3>
+            <div class="total-row"><span>Service Fee</span> <span>₹14,189.00</span></div>
+            <div class="total-row"><span>Tax (GST 18%)</span> <span>₹2,554.00</span></div>
+            <div class="total-final"><span>Total Paid</span> <span>₹16,743.00</span></div>
+        </div>
+
+        <div style="margin-top: 60px; font-size: 10px; color: var(--text-muted); text-align: center; border-top: 1px solid var(--border); padding-top: 20px;">
+            This document is a digital twin representation of Contract CN-1036. <br>
+            Cryptographic Hash: 8f2e...b91a | Verified by ContractNest Orchestrator v3.0
+        </div>
+    </div>
+
+    <div class="action-bar">
+        <button class="action-btn">📥 Download PDF</button>
+        <div style="width:1px; height:20px; background:rgba(255,255,255,0.2);"></div>
+        <button class="action-btn">✉️ Email to Auditor</button>
+        <div style="width:1px; height:20px; background:rgba(255,255,255,0.2);"></div>
+        <button class="action-btn" style="color:var(--accent-light);">Done</button>
+    </div>
+
+</body>
+</html>

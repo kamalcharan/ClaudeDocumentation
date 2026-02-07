@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>VaNi Perspective — Orchestrator Workspace</title>
+    <style>
+        :root {
+            --vani-glow: #6366F1;
+            --vani-bg: #0F172A;
+            --vani-card: #1E293B;
+            --vani-text: #E2E8F0;
+            --vani-dim: #94A3B8;
+            --logic-green: #22C55E;
+            --logic-amber: #F59E0B;
+            --logic-red: #EF4444;
+        }
+
+        body { font-family: 'Inter', sans-serif; background: var(--vani-bg); color: var(--vani-text); margin: 0; display: flex; height: 100vh; }
+        
+        /* LEFT: THE COGNITIVE STACK */
+        .logic-stack { width: 350px; border-right: 1px solid #334155; display: flex; flex-direction: column; }
+        .stack-header { padding: 20px; border-bottom: 1px solid #334155; }
+        .logic-item { padding: 15px 20px; border-bottom: 1px solid #334155; font-size: 12px; }
+        .confidence-bar { height: 4px; background: #334155; border-radius: 2px; margin-top: 8px; overflow: hidden; }
+        .confidence-fill { height: 100%; background: var(--vani-glow); }
+
+        /* CENTER: THE MULTI-MIRROR (What she's watching) */
+        .orchestration-hub { flex: 1; padding: 24px; overflow-y: auto; }
+        .mirror-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .mirror-card { background: var(--vani-card); border-radius: 12px; padding: 16px; border: 1px solid #334155; }
+        .mirror-title { font-size: 10px; text-transform: uppercase; color: var(--vani-dim); margin-bottom: 12px; display: flex; justify-content: space-between; }
+        
+        /* LOG ENTRIES */
+        .log-line { font-family: 'JetBrains Mono', monospace; font-size: 11px; margin-bottom: 8px; color: #94A3B8; }
+        .log-line b { color: var(--vani-glow); }
+        .log-line.active { color: #fff; border-left: 2px solid var(--vani-glow); padding-left: 8px; }
+
+        /* RIGHT: INTERVENTION PANEL */
+        .intervention-panel { width: 300px; background: #0F172A; padding: 20px; }
+        .alert-card { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--logic-red); padding: 15px; border-radius: 10px; margin-bottom: 15px; }
+        .btn-intervention { width: 100%; padding: 10px; background: var(--vani-glow); border: none; color: white; border-radius: 6px; font-weight: 700; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="logic-stack">
+        <div class="stack-header">
+            <h1 style="font-size: 14px;">VaNi Neural Stack</h1>
+            <p style="font-size: 10px; color: var(--vani-dim);">Active Orchestrations: 124</p>
+        </div>
+        <div class="logic-item">
+            <b>SLA Pattern Analysis</b>
+            <div class="confidence-bar"><div class="confidence-fill" style="width: 94%;"></div></div>
+            <p style="font-size: 10px; margin-top:5px;">Predicting 2 delays in AC Service for Sector B.</p>
+        </div>
+        <div class="logic-item">
+            <b>Evidence Validation (OCR/Vision)</b>
+            <div class="confidence-bar"><div class="confidence-fill" style="width: 82%;"></div></div>
+            <p style="font-size: 10px; margin-top:5px;">Analyzing 14 recent photo uploads.</p>
+        </div>
+    </div>
+
+    <div class="orchestration-hub">
+        <div class="mirror-title" style="font-size: 18px; color: white; text-transform: none; margin-bottom: 30px;">
+            Real-time Orchestration: CN-1036 (Vikuna Tech)
+        </div>
+
+        <div class="mirror-grid">
+            <div class="mirror-card">
+                <div class="mirror-title">SELLER MIRROR <span>Live Telemetry</span></div>
+                <div class="log-line">Checking Staff: <b>J. Sharma</b></div>
+                <div class="log-line">Status: On-site at Flat 402</div>
+                <div class="log-line active">Action: Waiting for Evidence Upload...</div>
+            </div>
+
+            <div class="mirror-card">
+                <div class="mirror-title">BUYER MIRROR <span>Transparency Monitor</span></div>
+                <div class="log-line">Last View: 2 mins ago</div>
+                <div class="log-line">AP Status: <b>₹8,371 Due</b></div>
+                <div class="log-line">Satisfaction: 4.8/5.0</div>
+            </div>
+
+            <div class="mirror-card" style="grid-column: span 2;">
+                <div class="mirror-title">FINANCIAL PIPELINE <span>Service to Cash</span></div>
+                <div class="log-line">Step 1: Calibration Work Verified ✓</div>
+                <div class="log-line">Step 2: Regulatory Evidence Matched ✓</div>
+                <div class="log-line active">Step 3: Auto-generating Invoice INV-0017... <b>[Status: Pending]</b></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="intervention-panel">
+        <h2 style="font-size: 12px; color: var(--vani-dim); margin-bottom: 20px;">INTERVENTIONS REQUIRED</h2>
+        
+        <div class="alert-card">
+            <b style="color: var(--logic-red); font-size: 11px;">EVIDENCE DISPUTE</b>
+            <p style="font-size: 12px; margin: 10px 0;">Buyer rejected photo for "Fire Pump Check". Confidence: 12%.</p>
+            <button class="btn-intervention">Handover to Seller</button>
+        </div>
+
+        <div class="alert-card" style="border-color: var(--logic-amber); background: rgba(245, 158, 11, 0.1);">
+            <b style="color: var(--logic-amber); font-size: 11px;">PAYMENT DELAY</b>
+            <p style="font-size: 12px; margin: 10px 0;">INV-0016 past due. Shall I escalate to WhatsApp Nudge?</p>
+            <button class="btn-intervention" style="background: var(--logic-amber);">Approve Nudge</button>
+        </div>
+    </div>
+
+</body>
+</html>
