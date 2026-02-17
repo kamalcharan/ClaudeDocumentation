@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contract Asset Selection UX</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .asset-card { transition: all 0.3s ease; border: 2px solid transparent; }
+        .asset-card.selected { border-color: #ef4444; background-color: #fef2f2; }
+        .attachment-option:hover { border-color: #ef4444; color: #ef4444; }
+    </style>
+</head>
+<body class="bg-gray-50 p-8 font-sans">
+
+    <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+        <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+            <div>
+                <h2 class="text-xl font-bold text-gray-800">Select Client Assets</h2>
+                <p class="text-sm text-gray-500">Define the scope of this service contract.</p>
+            </div>
+            <div class="flex space-x-1">
+                <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                <div class="w-8 h-2 rounded-full bg-red-500"></div>
+                <div class="w-2 h-2 rounded-full bg-gray-200"></div>
+            </div>
+        </div>
+
+        <div class="p-6">
+            <h3 class="text-lg font-semibold mb-4">What does this contract cover?</h3>
+            
+            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-6">
+                <div class="flex items-center mb-4">
+                    <div class="p-2 bg-blue-100 text-blue-600 rounded-md mr-3">
+                        <i class="fas fa-microscope"></i>
+                    </div>
+                    <span class="font-medium text-gray-700">Diagnostic Imaging</span>
+                </div>
+                
+                <div class="flex flex-wrap gap-3">
+                    <button class="px-4 py-2 rounded-full border-2 border-red-500 bg-red-50 text-red-600 font-medium text-sm flex items-center">
+                        <i class="fas fa-check mr-2"></i> MRI Scanner
+                    </button>
+                    <button class="px-4 py-2 rounded-full border-2 border-gray-200 bg-white text-gray-600 hover:border-gray-300 text-sm">
+                        CT Scanner
+                    </button>
+                    <button class="px-4 py-2 rounded-full border-2 border-gray-200 bg-white text-gray-600 hover:border-gray-300 text-sm">
+                        X-Ray Machine
+                    </button>
+                </div>
+            </div>
+
+            <hr class="my-8 border-gray-100">
+
+            <h3 class="text-lg font-semibold mb-2">How will you identify the specific MRI Scanners?</h3>
+            <p class="text-sm text-gray-500 mb-6">Choose how to provide serial numbers and asset IDs for the <b>MRI Scanner</b> category.</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="attachment-option border-2 border-gray-200 rounded-xl p-4 cursor-pointer flex items-start space-x-4 hover:bg-red-50">
+                    <div class="text-red-500 text-xl pt-1"><i class="fas fa-list-ul"></i></div>
+                    <div>
+                        <div class="font-bold text-gray-800">Select Existing</div>
+                        <div class="text-xs text-gray-500">Pick from 1 registered equipment in client database.</div>
+                    </div>
+                </div>
+
+                <div class="attachment-option border-2 border-gray-200 rounded-xl p-4 cursor-pointer flex items-start space-x-4 hover:bg-red-50">
+                    <div class="text-red-500 text-xl pt-1"><i class="fas fa-plus-square"></i></div>
+                    <div>
+                        <div class="font-bold text-gray-800">Add & Attach New</div>
+                        <div class="text-xs text-gray-500">Enter details manually for a new asset.</div>
+                    </div>
+                </div>
+
+                <div class="attachment-option border-2 border-gray-200 rounded-xl p-4 cursor-pointer flex items-start space-x-4 hover:bg-red-50">
+                    <div class="text-red-500 text-xl pt-1"><i class="fas fa-user-edit"></i></div>
+                    <div>
+                        <div class="font-bold text-gray-800">Buyer Will Add</div>
+                        <div class="text-xs text-gray-500">Buyer will be prompted to enter details later.</div>
+                    </div>
+                </div>
+
+                <div class="attachment-option border-2 border-gray-200 rounded-xl p-4 cursor-pointer flex items-start space-x-4 hover:bg-red-50">
+                    <div class="text-red-500 text-xl pt-1"><i class="fas fa-clock"></i></div>
+                    <div>
+                        <div class="font-bold text-gray-800">Attach Later</div>
+                        <div class="text-xs text-gray-500">Skip for now; contract can be drafted without it.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-gray-50 p-6 flex justify-between items-center border-t border-gray-200">
+            <button class="px-6 py-2 text-gray-500 font-medium hover:text-gray-700">Cancel</button>
+            <div class="flex items-center space-x-6">
+                <div class="text-right">
+                    <span class="text-xs text-gray-400 block uppercase tracking-wider">Estimated Total</span>
+                    <span class="text-xl font-bold text-gray-800">₹ 0</span>
+                </div>
+                <div class="flex space-x-3">
+                    <button class="px-6 py-2 border border-gray-300 rounded-lg font-medium text-gray-600 hover:bg-white">Back</button>
+                    <button class="px-8 py-2 bg-red-500 text-white rounded-lg font-bold shadow-lg shadow-red-200 hover:bg-red-600">Continue</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
