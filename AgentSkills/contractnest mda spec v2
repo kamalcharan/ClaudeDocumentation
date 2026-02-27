@@ -1,0 +1,721 @@
+# ContractNest Master Data Agent — Integration Spec v2
+
+## 1. What This Does
+
+When a tenant onboards to ContractNest, they go through industry + persona selection. Based on these choices, the Master Data Agent automatically seeds their workspace with domain-specific data so they don't start from a blank slate.
+
+**Three inputs drive everything:**
+
+| Field | Table | Purpose |
+|-------|-------|---------|
+| `profile_type` | `t_tenant_profiles` | `seller` or `buyer` — the branching flag |
+| `industry_id` | `t_tenant_profiles` | Who am I — determines ecosystem |
+| `served_industries` | `t_tenant_served_industries` | Who I serve / buy from |
+
+**Two personas, two seed paths:**
+
+- **SELLER** (e.g., harshaenterprises — FM company doing AC/HVAC + real estate services)
+  - Seed focus: Service Catalog, Service×Equipment Block Matrix, Contract Templates
+  - They create contracts to sell to clients
+
+- **BUYER** (e.g., Pulse Hospitals — healthcare organization)
+  - Seed focus: Equipment Registry, Facility Registry, Asset categorization
+  - They create RFPs to procure services, maintain asset registries
+
+**All seed data is inserted with `is_live = false`** (test environment). The tenant reviews, edits, removes what's irrelevant, then publishes to live.
+
+---
+
+## 2. Existing Schema — What We Have
+
+### Master Tables (read-only, platform-wide)
+
+| Table | Records | Purpose |
+|-------|:-------:|---------|
+| `m_category_master` | 20 | Category groups: block types, pricing modes, contract nomenclature, asset types, etc. |
+| `m_category_details` | 111 | Sub-categories under each master: AMC/CMC/FMC nomenclatures, per_hour pricing, 24 asset types, etc. |
+| `m_catalog_industries` | 75 | Industry taxonomy — 27 top-level segments + 48 sub-segments. Has `parent_id`, `level`, `segment_type` |
+| `m_catalog_categories` | 385 | Service categories with `default_pricing_model`, `suggested_duration`, `common_variants` (jsonb) |
+| `m_catalog_category_industry_map` | ~385 | **Many-to-many map** — links categories to industries. Columns: `category_id`, `industry_id`, `is_primary`, `display_name`, `display_order`, `customizations` (jsonb), `is_active`. This is the key table for seller catalog seeding. |
+| `m_catalog_resource_templates` | 63 | Resource blueprints per industry covering **all resource types**: `team_staff`, `equipment`, `asset`, `consumable`. Columns: `id`, `industry_id`, `resource_type_id`, `name`, `description`, `sub_category`, `default_attributes` (jsonb — make_examples, maintenance_schedule, calibration, lifespan), `pricing_guidance` (jsonb — AMC %, hourly rates, market ranges), `popularity_score`, `is_recommended`, `is_active`, `sort_order`. **This is the key table for buyer registry seeding.** |
+| `m_catalog_resource_types` | 5 | Enum: team_staff, equipment, consumable, asset, partner |
+
+#### m_catalog_resource_templates — Current Data
+
+| industry_id | equipment | asset (facilities) | team_staff | consumable | Total |
+|:---|:---:|:---:|:---:|:---:|:---:|
+| `healthcare` | 7 (MRI, CT, X-Ray, Ultrasound, Ventilator, Defibrillator, Patient Monitor) | 3 (Hospital Ward, OT, Diagnostic Lab) | 2 (Doctor, Nurse) | 1 (Medical Supplies) | **13** |
+| `facility_management` | 9 (Elevator, HVAC, DG Set, UPS, Transformer, Fire Alarm, STP/WTP, CCTV, Generic) | 4 (Residential, Commercial, Mall, Industrial) | 2 (Facility Mgr, Technician) | 0 | **15** |
+| `manufacturing` | 6 (CNC, Compressor, Conveyor, Injection Moulding, Boiler, Generic) | 1 (Production Facility) | 2 (Production Eng, QC) | 0 | **9** |
+| `technology` | 5 (Server Rack, Network Switch, UPS, Precision AC, Generic) | 2 (Data Center, Server Room) | 2 (Developer, IT Support) | 0 | **9** |
+| `wellness` | 4 (Treadmill, Multi-Gym, Spa/Sauna, Generic) | 2 (Gym Floor, Swimming Pool) | 2 (Yoga Instructor, Trainer) | 0 | **8** |
+| `automotive` | 5 (Wheel Alignment, Vehicle Lift, Tyre Changer, Paint Booth, Diagnostic) | 0 | 2 (Technician, Service Advisor) | 1 (Auto Parts) | **8** |
+
+Each equipment record carries rich metadata in its jsonb columns:
+- `sub_category`: Domain grouping (e.g., "Diagnostic Imaging", "Power & Electrical", "HVAC Systems", "Vertical Transport")
+- `default_attributes`: `{"make_examples":["Siemens","GE"], "maintenance_schedule":"quarterly", "requires_calibration":true, "typical_lifespan_years":10}`
+- `pricing_guidance`: `{"typical_amc_percent_of_cost":8, "suggested_hourly_rate":180, "suggested_monthly_rate":5000, "market_range":{"min":100,"max":250}}`
+
+### Tenant Tables (where seed data gets written)
+
+| Table | `is_live` | `is_seed` | Purpose |
+|-------|:---------:|:---------:|---------|
+| `t_category_master` | ✅ | ❌ (needs adding) | Tenant copy of category groups |
+| `t_category_details` | ✅ | ❌ (needs adding) | Tenant copy of sub-categories |
+| `t_tenant_served_industries` | ❌ | ❌ | Industries the tenant serves/buys from |
+| `t_catalog_industries` | ❌ | ❌ | Tenant-scoped industry records |
+| `t_catalog_categories` | ❌ | ❌ (needs adding) | Tenant-scoped service categories |
+| `t_catalog_items` | ✅ | ❌ (needs adding) | Actual catalog items (services, products) |
+| `t_category_resources_master` | ✅ | ❌ (needs adding) | Tenant resource templates |
+| `cat_blocks` | ✅ | ✅ (exists) | Contract building blocks |
+| `cat_templates` | ✅ | ❌ (needs adding) | Contract templates (assemble blocks) |
+| `t_tenant_asset_registry` | ✅ | ❌ | Assets the tenant OWNS (buyer persona) |
+| `t_client_asset_registry` | ✅ | ❌ | Assets the tenant's CLIENTS own (seller persona) |
+| `m_event_status_config` | ❌ | ❌ (needs adding) | Status workflows (tenant-scoped despite m_ prefix) |
+
+---
+
+## 3. Schema Changes Required
+
+### 3.1 Add `is_seed` Column to Key Tables
+
+```sql
+-- Migration: add_is_seed_to_tenant_tables
+ALTER TABLE t_category_master ADD COLUMN IF NOT EXISTS is_seed boolean NOT NULL DEFAULT false;
+ALTER TABLE t_category_details ADD COLUMN IF NOT EXISTS is_seed boolean NOT NULL DEFAULT false;
+ALTER TABLE t_catalog_categories ADD COLUMN IF NOT EXISTS is_seed boolean NOT NULL DEFAULT false;
+ALTER TABLE t_catalog_items ADD COLUMN IF NOT EXISTS is_seed boolean NOT NULL DEFAULT false;
+ALTER TABLE t_category_resources_master ADD COLUMN IF NOT EXISTS is_seed boolean NOT NULL DEFAULT false;
+ALTER TABLE cat_templates ADD COLUMN IF NOT EXISTS is_seed boolean NOT NULL DEFAULT false;
+ALTER TABLE t_tenant_asset_registry ADD COLUMN IF NOT EXISTS is_seed boolean NOT NULL DEFAULT false;
+ALTER TABLE t_client_asset_registry ADD COLUMN IF NOT EXISTS is_seed boolean NOT NULL DEFAULT false;
+ALTER TABLE m_event_status_config ADD COLUMN IF NOT EXISTS is_seed boolean NOT NULL DEFAULT false;
+```
+
+### 3.2 New Master Table: `m_service_equipment_map` (ONLY new table needed)
+
+Neither `m_catalog_categories` (service categories per industry) nor `m_catalog_resource_templates` (equipment/staff blueprints) captures the **cross-relationship** between a specific service and an equipment type. This table fills that gap — it's the Service × Equipment matrix that drives the seller's block generation.
+
+`equipment_category` in this table maps to `m_catalog_resource_templates.sub_category` — that's the join key connecting services to equipment.
+
+```sql
+-- Migration: create_service_equipment_map
+CREATE TABLE m_service_equipment_map (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  industry_id varchar NOT NULL REFERENCES m_catalog_industries(id),
+  service_name varchar NOT NULL,           -- e.g., 'Preventive Maintenance', 'Deep Cleaning', 'Calibration'
+  service_code varchar NOT NULL,           -- e.g., 'pm', 'deep_cleaning', 'calibration'
+  equipment_category varchar NOT NULL,     -- maps to m_catalog_resource_templates.sub_category: 'HVAC Systems', 'Vertical Transport', etc.
+  equipment_types jsonb NOT NULL DEFAULT '[]',  -- specific types within category: ["split_ac","cassette_ac","vrf_vrv"]
+  block_type varchar NOT NULL DEFAULT 'service', -- maps to cat_block_type: service, spare, billing, checklist, text, document
+  config_template jsonb DEFAULT '{}',      -- default block config: frequency, SLA targets, response times, etc.
+  hsn_sac_code varchar,                    -- GST SAC code for this service type
+  pricing_guidance jsonb DEFAULT '{}',     -- suggested pricing model, ranges
+  is_active boolean NOT NULL DEFAULT true,
+  sort_order int DEFAULT 0,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_sem_industry ON m_service_equipment_map(industry_id);
+CREATE INDEX idx_sem_equipment_category ON m_service_equipment_map(equipment_category);
+CREATE INDEX idx_sem_service_code ON m_service_equipment_map(service_code);
+```
+
+**Example seed data — Facility Management:**
+
+```sql
+-- COOLING (equipment_category = 'HVAC Systems')
+INSERT INTO m_service_equipment_map (industry_id, service_name, service_code, equipment_category, equipment_types, block_type, config_template, hsn_sac_code) VALUES
+('facility_management', 'Preventive Maintenance', 'pm', 'HVAC Systems', '["split_ac","cassette_ac","vrf_vrv","ductable_ac","chiller","ahu"]', 'service', '{"frequency":"quarterly","visits_per_year":4,"scope":["filter_cleaning","coil_inspection","gas_pressure_check","electrical_check","drain_line_flush"]}', '998714'),
+('facility_management', 'Breakdown Repair', 'breakdown', 'HVAC Systems', '["split_ac","cassette_ac","vrf_vrv","ductable_ac","chiller","ahu"]', 'service', '{"response_time_hours":4,"resolution_time_hours":24,"coverage":"8am_to_8pm"}', '998714'),
+('facility_management', 'Deep Cleaning', 'deep_cleaning', 'HVAC Systems', '["split_ac","cassette_ac","vrf_vrv","ductable_ac"]', 'service', '{"frequency":"biannual","includes":["coil_chemical_wash","filter_deep_clean","drain_pan_cleaning","blower_cleaning"]}', '998714'),
+('facility_management', 'Gas Charging/Refilling', 'gas_charging', 'HVAC Systems', '["split_ac","cassette_ac","vrf_vrv"]', 'spare', '{"unit":"per_kg","refrigerant_types":["R22","R32","R410A"],"note":"excluded_in_amc_included_in_cmc"}', '998714'),
+('facility_management', 'Calibration', 'calibration', 'HVAC Systems', '["split_ac","cassette_ac","vrf_vrv","chiller"]', 'service', '{"frequency":"annual","parameters":["temperature_accuracy","thermostat_calibration"]}', '998714'),
+('facility_management', 'Installation & Commissioning', 'installation', 'HVAC Systems', '["split_ac","cassette_ac","vrf_vrv","ductable_ac"]', 'service', '{"includes":["mounting","copper_piping","electrical_wiring","vacuum_testing","gas_charging","trial_run"]}', '998714'),
+('facility_management', 'Compressor Replacement', 'compressor_replace', 'HVAC Systems', '["split_ac","cassette_ac"]', 'spare', '{"warranty_months":12,"note":"major_spare_excluded_in_amc"}', '998714'),
+
+-- VERTICAL TRANSPORT (equipment_category = 'Vertical Transport')
+('facility_management', 'Preventive Maintenance', 'pm', 'Vertical Transport', '["passenger_lift","goods_lift","escalator"]', 'service', '{"frequency":"monthly","visits_per_year":12,"scope":["door_mechanism","safety_gear","guide_rails","controller","oil_levels"]}', '998716'),
+('facility_management', 'Breakdown Repair', 'breakdown', 'Vertical Transport', '["passenger_lift","goods_lift","escalator"]', 'service', '{"response_time_hours":1,"resolution_time_hours":4,"coverage":"24x7"}', '998716'),
+('facility_management', 'Calibration', 'calibration', 'Vertical Transport', '["passenger_lift","goods_lift"]', 'service', '{"frequency":"annual","authority":"Chief Inspector of Lifts","parameters":["load_test","speed_governor","safety_gear_test"]}', '998716'),
+('facility_management', 'Safety Inspection', 'safety_inspection', 'Vertical Transport', '["passenger_lift","goods_lift","escalator"]', 'checklist', '{"frequency":"quarterly","items":["brake_test","overload_test","door_sensor","emergency_stop","intercom","pit_inspection","car_top_inspection"]}', '998716'),
+('facility_management', 'Rope/Belt Replacement', 'rope_replacement', 'Vertical Transport', '["passenger_lift","goods_lift"]', 'spare', '{"lifecycle_years":5}', '998716'),
+('facility_management', 'ARD Battery Replacement', 'ard_battery', 'Vertical Transport', '["passenger_lift","goods_lift"]', 'spare', '{"lifecycle_years":2,"purpose":"automatic_rescue_device"}', '998716'),
+
+-- POWER & ELECTRICAL (equipment_category = 'Power & Electrical')
+('facility_management', 'Preventive Maintenance', 'pm', 'Power & Electrical', '["dg_set","ups","transformer"]', 'service', '{"frequency":"quarterly","scope":["oil_check","filter_replacement","load_test","battery_check"]}', '998715'),
+('facility_management', 'Breakdown Repair', 'breakdown', 'Power & Electrical', '["dg_set","ups","transformer"]', 'service', '{"response_time_hours":2,"resolution_time_hours":8}', '998715'),
+('facility_management', 'Load Bank Testing', 'load_test', 'Power & Electrical', '["dg_set"]', 'service', '{"frequency":"annual","duration_hours":4}', '998715'),
+('facility_management', 'Oil Testing', 'oil_test', 'Power & Electrical', '["dg_set","transformer"]', 'service', '{"frequency":"biannual","parameters":["BDV","moisture","acidity","dissolved_gas_analysis"]}', '998715'),
+('facility_management', 'Battery Replacement', 'battery_replace', 'Power & Electrical', '["ups"]', 'spare', '{"lifecycle_years":3}', '998715'),
+
+-- FIRE & SAFETY (equipment_category = 'Fire & Safety')
+('facility_management', 'Preventive Maintenance', 'pm', 'Fire & Safety', '["fire_alarm","sprinkler","hydrant","fire_pump"]', 'service', '{"frequency":"quarterly","scope":["sensor_testing","panel_check","pump_run","valve_inspection"]}', '998716'),
+('facility_management', 'Refilling', 'refilling', 'Fire & Safety', '["fire_extinguisher"]', 'service', '{"frequency":"annual","types":["ABC","CO2","foam","water"]}', '998716'),
+('facility_management', 'Hydrostatic Testing', 'hydro_test', 'Fire & Safety', '["fire_extinguisher","hydrant"]', 'service', '{"frequency":"every_3_years","pressure_test_bar":25}', '998716'),
+('facility_management', 'Fire Drill Support', 'fire_drill', 'Fire & Safety', '["fire_alarm","sprinkler","hydrant"]', 'service', '{"frequency":"biannual","includes":["evacuation_drill","equipment_demo","staff_training"]}', '998716'),
+
+-- WATER TREATMENT (equipment_category = 'Water Treatment')
+('facility_management', 'Preventive Maintenance', 'pm', 'Water Treatment', '["stp","wtp","ro_plant"]', 'service', '{"frequency":"monthly","scope":["chemical_dosing","membrane_check","motor_inspection","effluent_quality"]}', '998716'),
+('facility_management', 'Breakdown Repair', 'breakdown', 'Water Treatment', '["stp","wtp","ro_plant"]', 'service', '{"response_time_hours":4,"resolution_time_hours":12}', '998716'),
+('facility_management', 'Water Quality Testing', 'water_quality', 'Water Treatment', '["stp","wtp","ro_plant"]', 'checklist', '{"frequency":"weekly","parameters":["pH","BOD","COD","TSS","TDS"]}', '998716'),
+('facility_management', 'Membrane Replacement', 'membrane_replace', 'Water Treatment', '["ro_plant"]', 'spare', '{"lifecycle_years":3}', '998716'),
+
+-- SECURITY & SURVEILLANCE (equipment_category = 'Security & Surveillance')
+('facility_management', 'Preventive Maintenance', 'pm', 'Security & Surveillance', '["cctv","access_control","boom_barrier"]', 'service', '{"frequency":"quarterly","scope":["camera_cleaning","nvr_check","cable_inspection","software_update"]}', '998716'),
+('facility_management', 'Breakdown Repair', 'breakdown', 'Security & Surveillance', '["cctv","access_control","boom_barrier"]', 'service', '{"response_time_hours":4,"resolution_time_hours":24}', '998716'),
+('facility_management', 'HDD/Storage Replacement', 'hdd_replace', 'Security & Surveillance', '["cctv"]', 'spare', '{"lifecycle_years":2,"retention_days":30}', '998716'),
+('facility_management', 'Camera Replacement', 'camera_replace', 'Security & Surveillance', '["cctv"]', 'spare', '{"lifecycle_years":5}', '998716');
+```
+
+---
+
+## 4. Seed Algorithm
+
+### 4.1 Common Steps (Both Personas)
+
+**Step A: Foundation — Copy Categories**
+
+```sql
+-- A1: Copy m_category_master → t_category_master
+INSERT INTO t_category_master (tenant_id, category_name, display_name, icon_name, sequence_no, is_active, is_live, is_seed)
+SELECT 
+  $tenant_id, m.category_name, m.display_name, m.icon_name, m.sequence_no, true, false, true
+FROM m_category_master m
+WHERE m.is_active = true
+AND NOT EXISTS (
+  SELECT 1 FROM t_category_master t 
+  WHERE t.tenant_id = $tenant_id AND t.category_name = m.category_name
+);
+
+-- A2: Copy m_category_details → t_category_details  
+INSERT INTO t_category_details (tenant_id, category_id, code, display_name, icon, sequence_no, is_active, is_live, is_seed)
+SELECT
+  $tenant_id, tcm.id, md.code, md.display_name, md.icon, md.sequence_no, true, false, true
+FROM m_category_details md
+JOIN m_category_master mcm ON md.category_id = mcm.id
+JOIN t_category_master tcm ON tcm.tenant_id = $tenant_id AND tcm.category_name = mcm.category_name
+WHERE md.is_active = true
+AND NOT EXISTS (
+  SELECT 1 FROM t_category_details td 
+  WHERE td.tenant_id = $tenant_id AND td.category_id = tcm.id AND td.code = md.code
+);
+```
+
+**Step B: Industry Records**
+
+```sql
+-- B1: Record served industries
+INSERT INTO t_tenant_served_industries (tenant_id, industry_id)
+SELECT $tenant_id, unnest($target_industries::varchar[])
+ON CONFLICT DO NOTHING;
+
+-- B2: Copy to tenant scope
+INSERT INTO t_catalog_industries (tenant_id, industry_code, name, icon, parent_industry_code, level, segment_type, is_active)
+SELECT 
+  $tenant_id, mi.id, mi.name, mi.icon, mi.parent_id, mi.level, mi.segment_type, true
+FROM m_catalog_industries mi
+WHERE mi.id = ANY($target_industries)
+AND NOT EXISTS (
+  SELECT 1 FROM t_catalog_industries ti 
+  WHERE ti.tenant_id = $tenant_id AND ti.industry_code = mi.id
+);
+```
+
+**Step C: Event Status Config**
+
+```sql
+INSERT INTO m_event_status_config (tenant_id, event_type, status_code, status_name, color, icon, is_initial, is_terminal, sort_order, is_seed)
+VALUES
+  ($tenant_id, 'service_visit', 'scheduled', 'Scheduled', '#3B82F6', 'Calendar', true, false, 1, true),
+  ($tenant_id, 'service_visit', 'assigned', 'Assigned', '#8B5CF6', 'UserCheck', false, false, 2, true),
+  ($tenant_id, 'service_visit', 'en_route', 'En Route', '#F59E0B', 'Navigation', false, false, 3, true),
+  ($tenant_id, 'service_visit', 'in_progress', 'In Progress', '#F97316', 'Wrench', false, false, 4, true),
+  ($tenant_id, 'service_visit', 'pending_parts', 'Pending Parts', '#EF4444', 'Package', false, false, 5, true),
+  ($tenant_id, 'service_visit', 'completed', 'Completed', '#10B981', 'CheckCircle', false, true, 6, true),
+  ($tenant_id, 'service_visit', 'cancelled', 'Cancelled', '#6B7280', 'XCircle', false, true, 7, true),
+  ($tenant_id, 'payment', 'pending', 'Pending', '#F59E0B', 'Clock', true, false, 1, true),
+  ($tenant_id, 'payment', 'invoiced', 'Invoiced', '#3B82F6', 'FileText', false, false, 2, true),
+  ($tenant_id, 'payment', 'partially_paid', 'Partially Paid', '#F97316', 'DollarSign', false, false, 3, true),
+  ($tenant_id, 'payment', 'paid', 'Paid', '#10B981', 'CheckCircle', false, true, 4, true),
+  ($tenant_id, 'payment', 'overdue', 'Overdue', '#EF4444', 'AlertCircle', false, true, 5, true),
+  ($tenant_id, 'inspection', 'scheduled', 'Scheduled', '#3B82F6', 'Calendar', true, false, 1, true),
+  ($tenant_id, 'inspection', 'in_progress', 'In Progress', '#F97316', 'ClipboardCheck', false, false, 2, true),
+  ($tenant_id, 'inspection', 'observation_raised', 'Observations Raised', '#EF4444', 'AlertTriangle', false, false, 3, true),
+  ($tenant_id, 'inspection', 'completed', 'Completed', '#10B981', 'CheckCircle', false, true, 4, true)
+ON CONFLICT DO NOTHING;
+```
+
+---
+
+### 4.2 SELLER Path (`t_tenant_profiles.profile_type = 'seller'`)
+
+**Step S1: Seed Service Categories** (from `m_catalog_category_industry_map`)
+
+```sql
+INSERT INTO t_catalog_categories (
+  tenant_id, industry_id, category_code, name, description, icon,
+  default_pricing_model, suggested_duration, common_variants,
+  master_category_id, is_custom, is_active, sort_order
+)
+SELECT 
+  $tenant_id, tci.id, mc.id,
+  COALESCE(mcim.display_name, mc.name),
+  mc.description, mc.icon,
+  mc.default_pricing_model, mc.suggested_duration, mc.common_variants,
+  mc.id, false, true, mcim.display_order
+FROM m_catalog_category_industry_map mcim
+JOIN m_catalog_categories mc ON mcim.category_id = mc.id
+JOIN t_catalog_industries tci ON tci.tenant_id = $tenant_id AND tci.industry_code = mcim.industry_id
+WHERE mcim.industry_id = ANY($served_industries)
+AND mcim.is_active = true AND mc.is_active = true
+AND NOT EXISTS (
+  SELECT 1 FROM t_catalog_categories tc 
+  WHERE tc.tenant_id = $tenant_id AND tc.category_code = mc.id AND tc.industry_id = tci.id
+);
+```
+
+**Step S2: Seed Resource Templates** (from `m_catalog_resource_templates`)
+
+```sql
+INSERT INTO t_category_resources_master (
+  tenant_id, resource_type_id, name, industry_id, sub_category,
+  description, default_attributes, pricing_guidance,
+  is_active, is_live, is_seed
+)
+SELECT
+  $tenant_id, mrt.resource_type_id, mrt.name, mrt.industry_id, mrt.sub_category,
+  mrt.description, mrt.default_attributes, mrt.pricing_guidance,
+  true, false, true
+FROM m_catalog_resource_templates mrt
+WHERE mrt.industry_id = ANY($served_industries)
+AND mrt.is_active = true
+AND NOT EXISTS (
+  SELECT 1 FROM t_category_resources_master tr
+  WHERE tr.tenant_id = $tenant_id AND tr.name = mrt.name AND tr.resource_type_id = mrt.resource_type_id
+);
+```
+
+**Step S3: Generate Block Matrix** (from `m_service_equipment_map`)
+
+```sql
+CREATE OR REPLACE FUNCTION seed_seller_blocks(p_tenant_id uuid, p_served_industries varchar[])
+RETURNS integer AS $$
+DECLARE
+  v_map_row RECORD;
+  v_equip_type text;
+  v_equip_label text;
+  v_block_type_id uuid;
+  v_count integer := 0;
+BEGIN
+  FOR v_map_row IN
+    SELECT sem.*
+    FROM m_service_equipment_map sem
+    WHERE sem.industry_id = ANY(p_served_industries)
+    AND sem.is_active = true
+    ORDER BY sem.industry_id, sem.equipment_category, sem.sort_order
+  LOOP
+    SELECT td.id INTO v_block_type_id
+    FROM t_category_details td
+    JOIN t_category_master tm ON td.category_id = tm.id
+    WHERE tm.tenant_id = p_tenant_id 
+    AND tm.category_name = 'cat_block_type'
+    AND td.code = v_map_row.block_type
+    LIMIT 1;
+
+    FOR v_equip_type IN SELECT jsonb_array_elements_text(v_map_row.equipment_types)
+    LOOP
+      v_equip_label := initcap(replace(v_equip_type, '_', ' '));
+      
+      INSERT INTO cat_blocks (
+        tenant_id, block_type_id, 
+        name, display_name, description,
+        category, config, hsn_sac_code,
+        tags, is_active, is_live, is_seed, sequence_no
+      )
+      VALUES (
+        p_tenant_id, v_block_type_id,
+        v_equip_type || '_' || v_map_row.service_code,
+        v_equip_label || ' - ' || v_map_row.service_name,
+        v_map_row.service_name || ' for ' || v_equip_label,
+        v_map_row.equipment_category,
+        v_map_row.config_template,
+        v_map_row.hsn_sac_code,
+        jsonb_build_array(v_map_row.industry_id, v_map_row.equipment_category, v_map_row.service_code, v_equip_type),
+        true, false, true, v_map_row.sort_order
+      )
+      ON CONFLICT DO NOTHING;
+      
+      v_count := v_count + 1;
+    END LOOP;
+  END LOOP;
+  
+  RETURN v_count;
+END;
+$$ LANGUAGE plpgsql;
+```
+
+**Step S4: Seed Client Asset Types** (from `m_catalog_resource_templates` → `t_client_asset_registry`)
+
+```sql
+INSERT INTO t_client_asset_registry (
+  tenant_id, resource_type_id, name, code, description,
+  criticality, status, condition,
+  specifications, tags, is_active, is_live
+)
+SELECT
+  $tenant_id, mrt.resource_type_id, mrt.name,
+  lower(replace(mrt.name, ' ', '_')),
+  mrt.description,
+  COALESCE(mrt.default_attributes->>'criticality', 'medium'),
+  'template', 'good',
+  jsonb_build_object(
+    'make_examples', mrt.default_attributes->'make_examples',
+    'maintenance_schedule', mrt.default_attributes->>'maintenance_schedule',
+    'typical_lifespan_years', mrt.default_attributes->'typical_lifespan_years',
+    'typical_amc_pct', mrt.pricing_guidance->'typical_amc_percent_of_cost',
+    'industry', mrt.industry_id, 'sub_category', mrt.sub_category
+  ),
+  jsonb_build_array(mrt.industry_id, mrt.resource_type_id, mrt.sub_category),
+  true, false
+FROM m_catalog_resource_templates mrt
+WHERE mrt.industry_id = ANY($served_industries)
+AND mrt.resource_type_id IN ('equipment', 'asset')
+AND mrt.is_active = true
+AND NOT EXISTS (
+  SELECT 1 FROM t_client_asset_registry car
+  WHERE car.tenant_id = $tenant_id AND car.code = lower(replace(mrt.name, ' ', '_'))
+);
+```
+
+---
+
+### 4.3 BUYER Path (`t_tenant_profiles.profile_type = 'buyer'`)
+
+**Step B1: Seed Equipment + Facility Registry** (from `m_catalog_resource_templates` → `t_tenant_asset_registry`)
+
+```sql
+CREATE OR REPLACE FUNCTION seed_buyer_registry(p_tenant_id uuid, p_industry_id varchar)
+RETURNS jsonb AS $$
+DECLARE
+  v_equip_count integer := 0;
+  v_facility_count integer := 0;
+  v_cross_count integer := 0;
+BEGIN
+  -- OWN INDUSTRY: Seed equipment
+  INSERT INTO t_tenant_asset_registry (
+    tenant_id, resource_type_id, name, code, description,
+    criticality, status, condition, specifications, tags, is_active, is_live
+  )
+  SELECT
+    p_tenant_id, 'equipment', mrt.name,
+    lower(replace(mrt.name, ' ', '_')), mrt.description,
+    COALESCE(
+      CASE 
+        WHEN (mrt.pricing_guidance->>'typical_amc_percent_of_cost')::numeric >= 8 THEN 'critical'
+        WHEN (mrt.pricing_guidance->>'typical_amc_percent_of_cost')::numeric >= 5 THEN 'high'
+        ELSE 'medium'
+      END, 'medium'),
+    'active', 'good',
+    jsonb_build_object(
+      'sub_category', mrt.sub_category,
+      'make_examples', mrt.default_attributes->'make_examples',
+      'maintenance_schedule', mrt.default_attributes->>'maintenance_schedule',
+      'requires_calibration', mrt.default_attributes->'requires_calibration',
+      'typical_lifespan_years', mrt.default_attributes->'typical_lifespan_years',
+      'typical_amc_pct', mrt.pricing_guidance->'typical_amc_percent_of_cost',
+      'suggested_monthly_rate', mrt.pricing_guidance->'suggested_monthly_rate'
+    ),
+    jsonb_build_array(p_industry_id, 'equipment', mrt.sub_category),
+    true, false
+  FROM m_catalog_resource_templates mrt
+  WHERE mrt.industry_id = p_industry_id AND mrt.resource_type_id = 'equipment'
+  AND mrt.is_active = true AND mrt.sub_category IS NOT NULL
+  AND NOT EXISTS (
+    SELECT 1 FROM t_tenant_asset_registry tar
+    WHERE tar.tenant_id = p_tenant_id AND tar.code = lower(replace(mrt.name, ' ', '_'))
+  );
+  GET DIAGNOSTICS v_equip_count = ROW_COUNT;
+
+  -- OWN INDUSTRY: Seed facilities/assets
+  INSERT INTO t_tenant_asset_registry (
+    tenant_id, resource_type_id, name, code, description,
+    criticality, status, condition, specifications, tags, is_active, is_live
+  )
+  SELECT
+    p_tenant_id, 'asset', mrt.name,
+    lower(replace(mrt.name, ' ', '_')), mrt.description,
+    'high', 'active', 'good',
+    jsonb_build_object(
+      'sub_category', mrt.sub_category,
+      'typical_area_sqft', mrt.default_attributes->'typical_area_sqft',
+      'capacity', mrt.default_attributes->'capacity'
+    ),
+    jsonb_build_array(p_industry_id, 'facility', mrt.sub_category),
+    true, false
+  FROM m_catalog_resource_templates mrt
+  WHERE mrt.industry_id = p_industry_id AND mrt.resource_type_id = 'asset'
+  AND mrt.is_active = true
+  AND NOT EXISTS (
+    SELECT 1 FROM t_tenant_asset_registry tar
+    WHERE tar.tenant_id = p_tenant_id AND tar.code = lower(replace(mrt.name, ' ', '_'))
+  );
+  GET DIAGNOSTICS v_facility_count = ROW_COUNT;
+
+  -- CROSS-DOMAIN: Every buyer needs facility_management equipment
+  -- (Hospitals need DG Sets, Elevators, HVAC, Fire systems, etc.)
+  INSERT INTO t_tenant_asset_registry (
+    tenant_id, resource_type_id, name, code, description,
+    criticality, status, condition, specifications, tags, is_active, is_live
+  )
+  SELECT
+    p_tenant_id, 'equipment', mrt.name,
+    lower(replace(mrt.name, ' ', '_')), mrt.description,
+    COALESCE(
+      CASE 
+        WHEN (mrt.pricing_guidance->>'typical_amc_percent_of_cost')::numeric >= 8 THEN 'critical'
+        WHEN (mrt.pricing_guidance->>'typical_amc_percent_of_cost')::numeric >= 5 THEN 'high'
+        ELSE 'medium'
+      END, 'medium'),
+    'active', 'good',
+    jsonb_build_object(
+      'sub_category', mrt.sub_category,
+      'source_industry', mrt.industry_id,
+      'make_examples', mrt.default_attributes->'make_examples',
+      'maintenance_schedule', mrt.default_attributes->>'maintenance_schedule',
+      'typical_amc_pct', mrt.pricing_guidance->'typical_amc_percent_of_cost'
+    ),
+    jsonb_build_array(p_industry_id, 'cross_domain', mrt.industry_id, mrt.sub_category),
+    true, false
+  FROM m_catalog_resource_templates mrt
+  WHERE mrt.industry_id = 'facility_management'
+  AND mrt.resource_type_id = 'equipment'
+  AND mrt.is_active = true AND mrt.sub_category IS NOT NULL
+  AND NOT EXISTS (
+    SELECT 1 FROM t_tenant_asset_registry tar
+    WHERE tar.tenant_id = p_tenant_id AND tar.code = lower(replace(mrt.name, ' ', '_'))
+  );
+  GET DIAGNOSTICS v_cross_count = ROW_COUNT;
+
+  RETURN jsonb_build_object(
+    'equipment', v_equip_count, 
+    'facilities', v_facility_count, 
+    'cross_domain', v_cross_count
+  );
+END;
+$$ LANGUAGE plpgsql;
+```
+
+**Step B2: Seed Vendor Categories + Procurement Categories**
+
+```sql
+-- Vendor industries the buyer will engage
+INSERT INTO t_tenant_served_industries (tenant_id, industry_id)
+SELECT $tenant_id, industry_id
+FROM (VALUES ('facility_management'), ('technology')) AS v(industry_id)
+WHERE NOT EXISTS (
+  SELECT 1 FROM t_tenant_served_industries tsi
+  WHERE tsi.tenant_id = $tenant_id AND tsi.industry_id = v.industry_id
+);
+
+-- Service categories for procurement (primary categories for their industry)
+INSERT INTO t_catalog_categories (
+  tenant_id, industry_id, category_code, name, description, icon,
+  default_pricing_model, suggested_duration, common_variants,
+  master_category_id, is_custom, is_active, sort_order
+)
+SELECT 
+  $tenant_id, tci.id, mc.id,
+  COALESCE(mcim.display_name, mc.name),
+  mc.description, mc.icon,
+  mc.default_pricing_model, mc.suggested_duration, mc.common_variants,
+  mc.id, false, true, mcim.display_order
+FROM m_catalog_category_industry_map mcim
+JOIN m_catalog_categories mc ON mcim.category_id = mc.id
+JOIN t_catalog_industries tci ON tci.tenant_id = $tenant_id AND tci.industry_code = mcim.industry_id
+WHERE mcim.industry_id = $industry_id
+AND mcim.is_primary = true
+AND mcim.is_active = true AND mc.is_active = true
+AND NOT EXISTS (
+  SELECT 1 FROM t_catalog_categories tc 
+  WHERE tc.tenant_id = $tenant_id AND tc.category_code = mc.id
+);
+```
+
+---
+
+## 5. Edge Function — API Contract
+
+### Endpoint
+`POST /functions/v1/seed-master-data`
+
+### Request
+```typescript
+interface SeedRequest {
+  tenant_id: string;
+  user_id: string;
+  profile_type?: 'seller' | 'buyer';       // default: read from t_tenant_profiles
+  industry_id?: string;                     // default: read from t_tenant_profiles
+  target_industries?: string[];             // default: read from t_tenant_served_industries
+  nomenclatures?: string[];                 // seller only
+  options?: {
+    skip_categories?: boolean;
+    skip_catalog?: boolean;
+    skip_blocks?: boolean;
+    skip_events?: boolean;
+    dry_run?: boolean;
+  };
+}
+```
+
+### Response
+```typescript
+interface SeedResponse {
+  success: boolean;
+  tenant_id: string;
+  profile_type: 'seller' | 'buyer';
+  industry_id: string;
+  served_industries: string[];
+  seeded: {
+    category_masters: number;
+    category_details: number;
+    catalog_industries: number;
+    event_statuses: number;
+    // Seller
+    catalog_categories?: number;
+    resource_templates?: number;
+    service_equipment_blocks?: number;
+    client_asset_types?: number;
+    // Buyer
+    equipment_registry?: number;
+    facility_registry?: number;
+    cross_domain_equipment?: number;
+    procurement_categories?: number;
+  };
+  errors?: string[];
+}
+```
+
+### Flow
+```
+Request → Verify tenant → Read profile_type, industry_id, served_industries from DB
+  ↓
+Common: Step A (categories) → Step B (industries) → Step C (event statuses)
+  ↓
+Branch:
+  SELLER → S1 (catalog categories) → S2 (resources) → S3 (block matrix) → S4 (client assets)
+  BUYER  → B1 (equipment + facility registry) → B2 (vendor + procurement categories)
+  ↓
+Return counts
+```
+
+---
+
+## 6. Database Functions Summary
+
+| Function | Source Table | Target Table | Persona |
+|----------|------------|-------------|---------|
+| `seed_category_masters(p_tenant_id)` | `m_category_master` | `t_category_master` | Both |
+| `seed_category_details(p_tenant_id)` | `m_category_details` via `m_category_master` → `t_category_master` | `t_category_details` | Both |
+| `seed_seller_blocks(p_tenant_id, p_served_industries[])` | `m_service_equipment_map` | `cat_blocks` | Seller |
+| `seed_buyer_registry(p_tenant_id, p_industry_id)` | `m_catalog_resource_templates` | `t_tenant_asset_registry` | Buyer |
+
+All other seeding uses direct SQL in the Edge Function.
+
+---
+
+## 7. Master Data to Populate
+
+### 7.1 `m_service_equipment_map` — NEW, Needs Population
+
+| Industry | Equipment Categories (= `m_catalog_resource_templates.sub_category`) | Est. Rows |
+|----------|----------------------------------------------------------------------|:---------:|
+| `facility_management` | HVAC Systems, Vertical Transport, Power & Electrical, Fire & Safety, Water Treatment, Security & Surveillance | **~35** |
+| `healthcare` | Diagnostic Imaging, Life Support, Patient Monitoring | **~20** |
+| `manufacturing` | CNC & Machining, Pneumatics & Hydraulics, Material Handling, Thermal Systems, Moulding & Forming | **~20** |
+| `technology` | Server & Compute, Networking, Power & Cooling | **~12** |
+| `wellness` | Fitness Equipment, Spa & Relaxation | **~10** |
+| `automotive` | Workshop Equipment, Diagnostic Tools | **~10** |
+
+### 7.2 Existing Tables — Data Gaps
+
+- **`m_catalog_resource_templates`** — missing FM staff roles: HVAC Technician, Electrician, Plumber, Security Guard, Housekeeping Staff, Gardener, Helper, Pest Control Tech
+- **`m_catalog_industries`** — `technology_general` used by Vikuna doesn't exist; needs cleanup or alias
+
+---
+
+## 8. Frontend Integration
+
+### 8.1 Onboarding Trigger
+Call after: profile_type → industry_id → served_industries → (seller: nomenclatures) selection
+
+### 8.2 Test → Live Toggle
+```sql
+-- Bulk go-live
+UPDATE cat_blocks SET is_live = true WHERE tenant_id = $1 AND is_seed = true AND is_active = true;
+UPDATE t_category_master SET is_live = true WHERE tenant_id = $1 AND is_seed = true AND is_active = true;
+-- (repeat for all seeded tables)
+```
+
+### 8.3 Re-seed
+Call with new industry. Idempotent inserts prevent duplicates.
+
+---
+
+## 9. Implementation Order
+
+**Phase 1: Schema**
+1. Migration: Add `is_seed` to 9 tables
+2. Migration: Create `m_service_equipment_map`
+3. Populate `m_service_equipment_map` for `facility_management`
+4. Add missing FM staff to `m_catalog_resource_templates`
+
+**Phase 2: DB Functions**
+5. Create `seed_category_masters()` + `seed_category_details()`
+6. Create `seed_seller_blocks()`
+7. Create `seed_buyer_registry()`
+
+**Phase 3: Edge Function**
+8. Deploy `seed-master-data` with persona branching
+9. Test: harshaenterprises (seller, FM)
+10. Test: new buyer tenant (healthcare)
+
+**Phase 4: Frontend**
+11. Wire onboarding → seed endpoint
+12. Test/live toggle UI
+13. Re-seed for adding industries
+
+---
+
+## 10. Validation Queries
+
+```sql
+-- Seed summary
+SELECT 'category_masters' as layer, COUNT(*) as total, 
+  COUNT(*) FILTER (WHERE is_seed) as seeded, COUNT(*) FILTER (WHERE NOT is_live) as in_test
+FROM t_category_master WHERE tenant_id = $1
+UNION ALL SELECT 'category_details', COUNT(*), COUNT(*) FILTER (WHERE is_seed), COUNT(*) FILTER (WHERE NOT is_live)
+FROM t_category_details WHERE tenant_id = $1
+UNION ALL SELECT 'catalog_categories', COUNT(*), 0, 0
+FROM t_catalog_categories WHERE tenant_id = $1
+UNION ALL SELECT 'resources', COUNT(*), COUNT(*) FILTER (WHERE is_seed), COUNT(*) FILTER (WHERE NOT is_live)
+FROM t_category_resources_master WHERE tenant_id = $1
+UNION ALL SELECT 'blocks', COUNT(*), COUNT(*) FILTER (WHERE is_seed), COUNT(*) FILTER (WHERE NOT is_live)
+FROM cat_blocks WHERE tenant_id = $1
+UNION ALL SELECT 'equipment', COUNT(*), 0, COUNT(*) FILTER (WHERE NOT is_live)
+FROM t_tenant_asset_registry WHERE tenant_id = $1
+UNION ALL SELECT 'event_statuses', COUNT(*), COUNT(*) FILTER (WHERE is_seed), 0
+FROM m_event_status_config WHERE tenant_id = $1;
+
+-- Seller: Block matrix by equipment category
+SELECT category, COUNT(*) as blocks,
+  COUNT(DISTINCT (tags->>2)) as services, COUNT(DISTINCT (tags->>3)) as equipment_types
+FROM cat_blocks WHERE tenant_id = $1 AND is_seed = true
+GROUP BY category ORDER BY blocks DESC;
+
+-- Buyer: Equipment by domain
+SELECT specifications->>'sub_category' as domain, COUNT(*) as items,
+  COUNT(*) FILTER (WHERE criticality = 'critical') as critical
+FROM t_tenant_asset_registry WHERE tenant_id = $1 AND resource_type_id = 'equipment'
+GROUP BY specifications->>'sub_category' ORDER BY items DESC;
+```
