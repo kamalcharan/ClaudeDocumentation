@@ -109,63 +109,61 @@ Cross-industry sharing — one category can appear in multiple industries.
 | display_order | integer | | Sort within this industry |
 | customizations | jsonb | | Industry-specific overrides |
 
-### m_catalog_resource_templates (239 active rows)
-Resource blueprints. **Normalized with scope classification** — items can belong to multiple industries.
+### m_catalog_resource_templates (239 rows)
+Resource blueprints. Normalized — templates can be universal, cross-industry, or industry-specific.
 
 | Column | Type | Key | Description |
 |--------|------|-----|-------------|
 | id | uuid | PK | |
-| industry_id | varchar | FK, **NULLABLE** | Legacy single-industry link (kept for backward compat) |
+| industry_id | varchar | FK, **NULLABLE** | Legacy column. NULL for universal/cross-industry items |
 | resource_type_id | varchar | FK → m_catalog_resource_types | `team_staff`, `equipment`, `consumable`, `asset`, `partner` |
-| name | varchar | | "Registered Nurse", "CT Scanner", "Fire Extinguisher" |
+| name | varchar | | "Registered Nurse", "CT Scanner" |
 | description | text | | |
-| sub_category | varchar | | "Diagnostic Imaging", "Fire & Safety", "IT & Computing" |
-| default_attributes | jsonb | | `{"certifications": [...], "types": [...]}` |
-| pricing_guidance | jsonb | | `{"suggested_hourly_rate": 75, "market_range": {...}}` |
-| popularity_score | integer | | 1-100 for sorting |
-| is_recommended | boolean | | Show as suggested |
-| is_active | boolean | | Soft delete |
-| sort_order | integer | | Display ordering |
-| **scope** | **varchar(20)** | | **`universal` / `cross_industry` / `industry_specific`** |
+| sub_category | varchar | | "Diagnostic Imaging", "Life Support" |
+| scope | varchar(20) | CHECK | `'universal'` \| `'cross_industry'` \| `'industry_specific'` (default: `'industry_specific'`) |
+| default_attributes | jsonb | | `{"certifications": ["nursing_license"], "experience_level": "intermediate"}` |
+| pricing_guidance | jsonb | | `{"suggested_hourly_rate": 75, "market_range": {"min": 50, "max": 100}}` |
+| popularity_score | integer | | 1–100 for sorting |
+| is_recommended | boolean | | Show in onboarding suggestions |
+| is_active | boolean | | Default true |
 
-**Scope classification:**
-- `universal` (19 items) — Every industry needs: Fire Extinguisher, AC, Laptop, CCTV, Security Guard, Housekeeping, Electrician, Plumber, Cleaning Supplies, etc.
-- `cross_industry` (6 items) — Multiple industries: Elevator/Lift, HVAC System, DG Set, UPS System, Transformer, STP/WTP
-- `industry_specific` (214 items) — Unique to one industry: MRI Scanner (healthcare), Tower Crane (construction), Tractor (agriculture)
+**Scope breakdown:** 19 universal + 6 cross-industry + 214 industry-specific = 239 total
 
-### m_catalog_resource_template_industries (296 rows) — NEW
-Many-to-many junction linking templates to industries. Eliminates duplication.
+### m_catalog_resource_template_industries (296 rows)
+Many-to-many junction linking templates to industries.
 
 | Column | Type | Key | Description |
 |--------|------|-----|-------------|
 | template_id | uuid | PK, FK → m_catalog_resource_templates | |
-| industry_id | varchar | PK, FK → m_catalog_industries | |
-| is_primary | boolean | | True = template's "home" industry |
-| relevance_score | integer | | 1-100 (how relevant to this industry) |
-| industry_specific_attributes | jsonb | | Per-industry overrides (e.g., `{"variant": "Data Center UPS"}`) |
+| industry_id | varchar(50) | PK, FK → m_catalog_industries | |
+| is_primary | boolean | | True if this is the template's "home" industry |
+| relevance_score | integer | | 1–100, higher = more relevant to this industry |
+| industry_specific_attributes | jsonb | | Override attributes per industry context |
 | created_at | timestamptz | | |
 
-**Indexes:** idx_rti_industry, idx_rti_template, idx_rti_primary
+**Indexes:** `idx_rti_industry`, `idx_rti_template`, `idx_rti_primary`
 
-### v_resource_templates_by_industry (VIEW) — NEW
-Convenience view. **Use this for all resource template queries.**
+### v_resource_templates_by_industry (view)
+**Canonical query interface** for resource templates. UNION of explicit junction links + universal templates (auto-included for every level-0 industry via CROSS JOIN).
 
 ```sql
--- Returns all templates for an industry:
--- 1. Explicitly linked (cross_industry + industry_specific) via junction
--- 2. Universal items via CROSS JOIN (auto-included)
-SELECT * FROM v_resource_templates_by_industry WHERE linked_industry_id = 'healthcare';
--- Returns ~39 rows for healthcare (14 specific + 6 cross-industry + 19 universal)
+-- Usage:
+SELECT * FROM v_resource_templates_by_industry
+WHERE linked_industry_id = 'healthcare';
+-- Returns: ~39 rows (14 specific + 6 cross-industry + 19 universal)
 ```
 
-| Column | Source | Description |
-|--------|--------|-------------|
-| id, name, description, resource_type_id, sub_category | resource_templates | Template data |
-| scope | resource_templates | universal/cross_industry/industry_specific |
-| linked_industry_id | junction or CROSS JOIN | The industry this row applies to |
-| is_primary | junction | Is this the template's home industry? |
-| relevance_score | junction | Relevance ranking |
-| industry_specific_attributes | junction | Per-industry overrides |
+| Column | Type | Source |
+|--------|------|--------|
+| id, name, description, resource_type_id, sub_category | — | m_catalog_resource_templates |
+| default_attributes, pricing_guidance | jsonb | m_catalog_resource_templates |
+| popularity_score, is_recommended, is_active, scope | — | m_catalog_resource_templates |
+| linked_industry_id | varchar | junction or CROSS JOIN |
+| is_primary | boolean | junction (false for universal) |
+| relevance_score | integer | junction (50 default for universal) |
+| industry_specific_attributes | jsonb | junction ({} for universal) |
+
+**Always use this view instead of querying `m_catalog_resource_templates` directly.**
 
 ### m_catalog_resource_types (5 rows)
 | id (varchar) | name | pricing_model | requires_human | has_capacity |
@@ -227,6 +225,14 @@ Which industries a tenant serves (their customers' industries).
 ### t_tenant_industry_segments (0 rows)
 Sub-segments within served industries.
 
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid | PK |
+| tenant_id | uuid | FK |
+| industry_id | varchar | FK |
+| sub_segment_id | varchar | FK |
+| is_primary | boolean | |
+
 ### t_category_master (101 rows)
 Tenant's copy of category groups. Mirrors `m_category_master` structure + `tenant_id` + `is_live`.
 
@@ -234,7 +240,7 @@ Tenant's copy of category groups. Mirrors `m_category_master` structure + `tenan
 Tenant's copy of sub-categories. Mirrors `m_category_details` + `tenant_id` + `is_live`.
 
 ### t_category_resources_master (78 rows)
-Tenant's resource definitions. **Seeded from `v_resource_templates_by_industry`.**
+Tenant's resource definitions.
 
 | Column | Type | Description |
 |--------|------|-------------|
@@ -243,17 +249,56 @@ Tenant's resource definitions. **Seeded from `v_resource_templates_by_industry`.
 | resource_type_id | varchar | FK → m_catalog_resource_types |
 | name | varchar | |
 | display_name | varchar | |
-| description | text | |
 | sub_category | varchar | |
-| tags | jsonb | Includes `{"source": "seed", "default_attributes": {...}}` |
-| is_active | boolean | |
-| is_live | boolean | |
+| contact_id | uuid | FK → t_contacts (for staff) |
+| tags | jsonb | |
+| form_settings | jsonb | |
 
-### t_catalog_industries, t_catalog_categories, t_catalog_items
-Tenant-scoped copies of master catalog data. See api-spec.md for seeding templates.
+### t_catalog_industries (0 rows)
+Tenant's copy of industries.
 
-### t_catalog_resources
-Tenant's actual resource instances.
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid | PK |
+| tenant_id | uuid | FK |
+| industry_code | varchar | Maps to `m_catalog_industries.id` |
+| master_industry_id | varchar | FK |
+| is_custom | boolean | |
+
+### t_catalog_categories (0 rows)
+Tenant's copy of service categories.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid | PK |
+| tenant_id | uuid | FK |
+| industry_id | uuid | FK → t_catalog_industries |
+| category_code | varchar | Maps to `m_catalog_categories.id` |
+| master_category_id | varchar | FK |
+| is_custom | boolean | |
+
+### t_catalog_items (8 rows)
+Actual service items in tenant's catalog.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid | PK |
+| tenant_id | uuid | FK |
+| name | varchar | Service name |
+| type | varchar | `service` (default) |
+| industry_id | varchar | |
+| category_id | varchar | |
+| is_live | boolean | Published? |
+| price_attributes | jsonb | `{base_price, pricing_model, ...}` |
+| tax_config | jsonb | |
+| service_attributes | jsonb | `{duration_minutes, delivery_mode, ...}` |
+| resource_requirements | jsonb | |
+| specifications | jsonb | |
+| variant_attributes | jsonb | For variant items |
+| search_vector | tsvector | Full-text search |
+
+### t_catalog_resources (0 rows)
+Tenant's actual resources (people, machines).
 
 | Column | Type | Description |
 |--------|------|-------------|
@@ -265,6 +310,12 @@ Tenant's actual resource instances.
 | working_hours | jsonb | |
 | skills | jsonb | |
 | hourly_cost / daily_cost | numeric | |
+
+### t_catalog_resource_pricing (0 rows)
+Rate cards for resources.
+
+### t_catalog_service_resources (2 rows)
+Service ↔ resource mapping.
 
 ### t_client_asset_registry (10 rows)
 Client-owned assets under contracts.
@@ -279,8 +330,16 @@ Client-owned assets under contracts.
 | name | varchar | |
 | code | varchar | Asset code |
 | status | varchar | `active`, `inactive`, `decommissioned` |
+| condition | varchar | `excellent`, `good`, `fair`, `poor` |
+| criticality | varchar | `high`, `medium`, `low` |
 | make / model / serial_number | varchar | |
+| purchase_date / warranty_expiry | date | |
+| area_sqft | numeric | For property assets |
 | specifications | jsonb | |
+| tags | jsonb | |
+
+### t_tenant_asset_registry (0 rows)
+Tenant's own assets. Same structure as `t_client_asset_registry` but for the tenant's equipment.
 
 ---
 
@@ -301,17 +360,66 @@ Reusable contract building blocks.
 | base_price | numeric | |
 | price_type_id | uuid | FK → m_category_details (cat_price_type) |
 | tax_rate | numeric | Default 18% |
+| hsn_sac_code | varchar | Indian tax code |
+| resource_pricing | jsonb | Resource-based pricing config |
+| variant_pricing | jsonb | Variant-based pricing config |
 | is_seed | boolean | `true` = system-generated |
 | is_live | boolean | Published |
+| is_admin | boolean | Admin-only |
+| version | integer | |
 
 ### cat_templates (1 row)
 Contract templates assembled from blocks.
 
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid | PK |
+| tenant_id | uuid | FK |
+| name | varchar | |
+| category | varchar | |
+| blocks | jsonb | Array of block references with positions |
+| industry_tags | jsonb | `["healthcare", "facility_management"]` |
+| is_public | boolean | Available to other tenants |
+| is_system | boolean | Platform-provided |
+| discount_config | jsonb | `{"allowed": true, "max_percent": 20}` |
+| subtotal / total | numeric | |
+
 ### t_contracts (86 rows)
-Live contracts with nomenclature, buyer/seller, status, duration, computed events.
+Live contracts.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid | PK |
+| tenant_id | uuid | FK |
+| contract_number | varchar | Auto-generated |
+| record_type | varchar | `contract`, `quotation`, `proposal` |
+| contract_type | varchar | `client`, `vendor` |
+| nomenclature_id | uuid | FK → t_category_details (contract nomenclature) |
+| nomenclature_code | text | `amc`, `fmc` |
+| nomenclature_name | text | "AMC", "FMC" |
+| template_id | uuid | FK → cat_templates |
+| buyer_id / seller_id | uuid | FK → t_contacts |
+| status | varchar | `draft`, `sent`, `accepted`, `active`, `completed` |
+| duration_value | integer | |
+| duration_unit | varchar | `months`, `years` |
+| currency | varchar | Default `INR` |
+| total_value / tax_total / grand_total | numeric | |
+| equipment_details | jsonb | Asset summary |
+| computed_events | jsonb | Auto-generated schedule |
 
 ### t_contract_blocks (125 rows)
 Blocks within a specific contract.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| contract_id | uuid | FK → t_contracts |
+| source_type | varchar | `flyby`, `catalog`, `template` |
+| source_block_id | uuid | FK → cat_blocks |
+| block_name | varchar | |
+| category_id / category_name | varchar | |
+| unit_price / quantity / total_price | numeric | |
+| billing_cycle | varchar | |
+| custom_fields | jsonb | |
 
 ---
 
@@ -319,6 +427,16 @@ Blocks within a specific contract.
 
 ### m_event_status_config (1976 rows)
 Status definitions per event type. **Tenant-scoped** despite `m_` prefix.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| tenant_id | uuid | FK |
+| event_type | text | `service_visit`, `breakdown_call`, `inspection`, `payment` |
+| status_code | text | `scheduled`, `in_progress`, `completed`, `cancelled` |
+| display_name | text | |
+| is_initial | boolean | Starting status |
+| is_terminal | boolean | End status |
+| source | text | `system`, `seed` |
 
 ### m_event_status_transitions (2888 rows)
 Allowed transitions between statuses. Also tenant-scoped.
@@ -328,15 +446,15 @@ Allowed transitions between statuses. Also tenant-scoped.
 ## Relationships
 
 ```
-m_catalog_industries (27 top-level + 48 sub-segments)
-  └─→ m_catalog_categories (385 categories)
-       └─→ m_catalog_category_industry_map (507 cross-industry links)
-  └─→ m_catalog_resource_templates (239 active, scope-classified)
-       └─→ m_catalog_resource_template_industries (296 junction rows)
-       └─→ v_resource_templates_by_industry (convenience view)
-  
+m_catalog_industries (system)
+  └─→ m_catalog_categories (system, per industry)
+       └─→ m_catalog_category_industry_map (cross-industry links)
+  └─→ m_catalog_resource_template_industries (junction, many-to-many)
+       └─→ m_catalog_resource_templates (resource blueprints, scope: universal/cross/specific)
+            └─→ v_resource_templates_by_industry (canonical view for queries)
+
   Onboarding copies to:
-  
+
   t_tenant_served_industries (tenant selections)
   t_catalog_industries (tenant copy)
     └─→ t_catalog_categories (tenant copy)
@@ -344,6 +462,8 @@ m_catalog_industries (27 top-level + 48 sub-segments)
               └─→ t_catalog_service_resources (resource needs)
          └─→ t_catalog_resources (actual resources)
               └─→ t_catalog_resource_pricing (rate cards)
+
+  v_resource_templates_by_industry → t_category_resources_master (tenant resources)
 
 m_category_master → t_category_master (tenant copy)
 m_category_details → t_category_details (tenant copy)
@@ -362,14 +482,33 @@ cat_blocks (reusable blocks) → cat_templates (assembled templates)
 | amc | AMC | equipment, maintenance, annual | Healthcare, Manufacturing, IT |
 | cmc | CMC | comprehensive, maintenance | Healthcare, Manufacturing |
 | camc | CAMC | comprehensive, annual, government | Government, PSU |
+| pmc | PMC | preventive, maintenance | All |
+| bmc | BMC | breakdown, on_call | All |
+| warranty_ext | Warranty Extension | warranty, post_oem | All |
 | fmc | FMC | facility, management | Real Estate, Commercial |
 | om | O&M | operations, infrastructure | Energy, Infrastructure |
 | manpower | Manpower | staffing, labor | All |
+| service_package | Service Package | bundled, sessions | Healthcare, Wellness |
+| care_plan | Care Plan | healthcare, wellness | Healthcare |
+| subscription_service | Subscription | recurring, access | Technology, SaaS |
+| consultation | Consultation | consulting, advisory | Professional Services |
+| training_contract | Training | education, workshop | Education, Corporate |
+| project_service | Project-Based | milestone, deliverable | Technology, Construction |
 | sla | SLA | performance, uptime | Technology, Telecom |
-| (and 14 more — see industry-seed-patterns.md for full list) |
+| rate_contract | Rate Contract | usage, on_demand | All |
+| retainer | Retainer | availability, fixed_fee | Professional Services |
+| per_call | Per-Call | on_demand, per_visit | Home Services |
+| turnkey | Turnkey | project, end_to_end | Construction, Infrastructure |
+| bot_boot | BOT/BOOT | build_operate_transfer | Infrastructure |
+
+### Block Types (8)
+service, spare, billing, text, video, image, checklist, document
+
+### Pricing Modes (4)
+independent, resource_based, variant_based, multi_resource
+
+### Price Types (5)
+per_session, per_hour, per_day, per_unit, fixed
 
 ### Resource Types (5)
 team_staff, equipment, consumable, asset, partner
-
-### Resource Template Scopes (3)
-universal (19), cross_industry (6), industry_specific (214)
