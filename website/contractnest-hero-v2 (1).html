@@ -1,0 +1,4232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ContractNest — Run Both Sides of Your Business</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg:        #0D0F14;
+    --surface:   #13161D;
+    --surface2:  #1C2030;
+    --border:    rgba(255,255,255,0.07);
+    --border2:   rgba(255,255,255,0.12);
+    --amber:     #F5A623;
+    --amber-dim: rgba(245,166,35,0.12);
+    --green:     #2ECC71;
+    --green-dim: rgba(46,204,113,0.10);
+    --red:       #E74C3C;
+    --text:      #E8E6E0;
+    --muted:     #7A8099;
+    --faint:     #3A3F52;
+  }
+
+  html { font-size: 16px; scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  /* SCROLL PROGRESS */
+  .scroll-progress {
+    position: fixed;
+    top: 0; left: 0;
+    height: 2px;
+    background: var(--amber);
+    z-index: 1000;
+    width: 0%;
+    transition: width 0.1s linear;
+  }
+
+  nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 56px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(13,15,20,0.92);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    transition: box-shadow 0.3s, padding 0.3s;
+  }
+
+  nav.scrolled {
+    box-shadow: 0 4px 32px rgba(0,0,0,0.4);
+    padding-top: 14px;
+    padding-bottom: 14px;
+    border-bottom-color: var(--border2);
+  }
+
+  /* NAV LINKS */
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .nav-link {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    transition: color 0.2s, background 0.2s;
+    white-space: nowrap;
+  }
+
+  .nav-link:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+  .nav-link.active { color: var(--amber); }
+
+  /* NAV CTA */
+  .nav-cta-btn {
+    background: var(--amber);
+    color: #0D0F14;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s;
+  }
+
+  .nav-cta-btn:hover { background: #FFB733; }
+
+  /* HAMBURGER */
+  .nav-hamburger {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+  }
+
+  .nav-hamburger span {
+    display: block;
+    width: 22px; height: 1.5px;
+    background: var(--text);
+    transition: all 0.3s;
+  }
+
+  .nav-hamburger.open span:nth-child(1) { transform: translateY(6.5px) rotate(45deg); }
+  .nav-hamburger.open span:nth-child(2) { opacity: 0; }
+  .nav-hamburger.open span:nth-child(3) { transform: translateY(-6.5px) rotate(-45deg); }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.5rem;
+    letter-spacing: 0.1em;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-dot {
+    width: 8px; height: 8px;
+    background: var(--amber);
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.75); }
+  }
+
+  .nav-pill {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--amber-dim);
+    border: 1px solid rgba(245,166,35,0.25);
+    color: var(--amber);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.08em;
+    padding: 6px 14px;
+    border-radius: 100px;
+  }
+
+  .nav-pill .dot {
+    width: 6px; height: 6px;
+    background: var(--amber);
+    border-radius: 50%;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  /* HERO */
+  .hero {
+    position: relative;
+    z-index: 2;
+    padding: 80px 56px 64px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    top: 0; right: -40px;
+    width: 480px;
+    height: 100%;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: linear-gradient(to left, rgba(0,0,0,0.25) 0%, transparent 65%);
+    pointer-events: none;
+  }
+
+  .hero-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 32px;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.1s;
+  }
+
+  .eyebrow-line { width: 32px; height: 1px; background: var(--amber); }
+
+  .eyebrow-text {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.16em;
+    color: var(--amber);
+    text-transform: uppercase;
+  }
+
+  h1.hero-headline {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(3.8rem, 8vw, 7.5rem);
+    line-height: 0.92;
+    letter-spacing: 0.02em;
+    opacity: 0;
+    animation: fadeUp 0.7s ease forwards 0.2s;
+  }
+
+  h1.hero-headline .l1 { display: block; color: var(--text); }
+  h1.hero-headline .l2 { display: block; color: var(--amber); }
+  h1.hero-headline .l3 { display: block; color: var(--text); opacity: 0.22; }
+
+  .hero-sub {
+    margin-top: 28px;
+    max-width: 560px;
+    font-size: 1.1rem;
+    font-weight: 300;
+    line-height: 1.7;
+    color: var(--muted);
+    opacity: 0;
+    animation: fadeUp 0.7s ease forwards 0.35s;
+  }
+
+  .hero-sub strong { color: var(--text); font-weight: 500; }
+
+  .proof-strip {
+    display: flex;
+    margin-top: 36px;
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    overflow: hidden;
+    max-width: 580px;
+    opacity: 0;
+    animation: fadeUp 0.7s ease forwards 0.45s;
+  }
+
+  .proof-item {
+    flex: 1;
+    padding: 16px 20px;
+    background: var(--surface);
+    border-right: 1px solid var(--border2);
+  }
+
+  .proof-item:last-child { border-right: none; }
+
+  .proof-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.64rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+
+  .proof-label.rev { color: var(--green); }
+  .proof-label.cost { color: var(--amber); }
+
+  .proof-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.45; }
+  .proof-desc strong { color: var(--text); font-weight: 500; }
+
+  .cta-block {
+    margin-top: 36px;
+    max-width: 480px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    opacity: 0;
+    animation: fadeUp 0.7s ease forwards 0.55s;
+  }
+
+  .cta-row { display: flex; gap: 10px; }
+
+  .cta-row input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    padding: 14px 18px;
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .cta-row input:focus { border-color: var(--amber); }
+  .cta-row input::placeholder { color: var(--faint); }
+
+  .btn-join {
+    background: var(--amber);
+    color: #0D0F14;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 600;
+    padding: 14px 22px;
+    border-radius: 8px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s, transform 0.15s;
+  }
+
+  .btn-join:hover { background: #FFB733; transform: translateY(-1px); }
+
+  .cta-note {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--faint);
+    letter-spacing: 0.04em;
+  }
+
+  .cta-note em { color: var(--amber); font-style: normal; }
+
+  .success-banner {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    background: var(--green-dim);
+    border: 1px solid rgba(46,204,113,0.2);
+    border-radius: 8px;
+    color: var(--green);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.82rem;
+  }
+
+  /* STATS */
+  .stats-row {
+    display: flex;
+    margin-top: 60px;
+    padding-top: 36px;
+    border-top: 1px solid var(--border);
+    opacity: 0;
+    animation: fadeUp 0.7s ease forwards 0.7s;
+  }
+
+  .stat {
+    flex: 1;
+    padding-right: 28px;
+    margin-right: 28px;
+    border-right: 1px solid var(--border);
+  }
+
+  .stat:last-child { border-right: none; margin-right: 0; padding-right: 0; }
+
+  .stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.5rem;
+    line-height: 1;
+    color: var(--text);
+  }
+
+  .stat-num sup { font-size: 1.3rem; color: var(--amber); }
+  .stat-lbl { font-size: 0.76rem; color: var(--muted); margin-top: 5px; line-height: 1.4; }
+
+  /* TICKER */
+  .ticker-wrap {
+    position: relative;
+    z-index: 2;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    padding: 13px 0;
+    overflow: hidden;
+  }
+
+  .ticker-track {
+    display: flex;
+    width: max-content;
+    animation: scroll 30s linear infinite;
+  }
+
+  .t-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 0 30px;
+    border-right: 1px solid var(--border);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .t-item .d {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--amber);
+    flex-shrink: 0;
+  }
+
+  @keyframes scroll {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+
+  /* CARDS */
+  .cards {
+    position: relative;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 56px 56px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 36px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.25s;
+  }
+
+  .card:hover { border-color: var(--border2); }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+  }
+
+  .card.rev::before { background: var(--green); }
+  .card.cost::before { background: var(--amber); }
+
+  .card-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.63rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 18px;
+  }
+
+  .card.rev .card-tag {
+    background: var(--green-dim);
+    color: var(--green);
+    border: 1px solid rgba(46,204,113,0.2);
+  }
+
+  .card.cost .card-tag {
+    background: var(--amber-dim);
+    color: var(--amber);
+    border: 1px solid rgba(245,166,35,0.2);
+  }
+
+  .card-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.9rem;
+    letter-spacing: 0.04em;
+    margin-bottom: 10px;
+  }
+
+  .card-body { font-size: 0.86rem; color: var(--muted); line-height: 1.65; }
+
+  .card-list {
+    margin-top: 18px;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .card-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 0.83rem;
+    color: var(--muted);
+  }
+
+  .card.rev .card-list li::before { content: '→'; color: var(--green); flex-shrink: 0; }
+  .card.cost .card-list li::before { content: '→'; color: var(--amber); flex-shrink: 0; }
+
+  /* FOOTER */
+  footer {
+    position: relative;
+    z-index: 2;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .footer-inner {
+    display: grid;
+    grid-template-columns: 1.2fr 2fr;
+    gap: 48px;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 56px 56px 40px;
+  }
+
+  .footer-tagline {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-bottom: 8px;
+    font-style: italic;
+  }
+
+  .footer-by {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.06em;
+    color: var(--faint);
+  }
+
+  .footer-by strong { color: var(--muted); }
+
+  .footer-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.4fr;
+    gap: 32px;
+  }
+
+  .footer-col { display: flex; flex-direction: column; gap: 10px; }
+
+  .footer-col-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 4px;
+  }
+
+  .footer-link {
+    font-size: 0.8rem;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+    line-height: 1.4;
+  }
+
+  .footer-link:hover { color: var(--text); }
+
+  .footer-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 56px;
+    border-top: 1px solid var(--border);
+  }
+
+  .footer-copy {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--faint);
+    letter-spacing: 0.06em;
+  }
+
+  /* MOBILE NAV */
+  @media (max-width: 900px) {
+    nav { padding: 16px 24px; }
+    .nav-links {
+      display: none;
+      position: fixed;
+      top: 61px; left: 0; right: 0;
+      background: rgba(13,15,20,0.98);
+      backdrop-filter: blur(20px);
+      flex-direction: column;
+      padding: 24px;
+      gap: 4px;
+      border-bottom: 1px solid var(--border2);
+      z-index: 99;
+    }
+    .nav-links.open { display: flex; }
+    .nav-link { padding: 12px 16px; font-size: 0.82rem; border-radius: 8px; }
+    .nav-cta-btn { display: none; }
+    .nav-hamburger { display: flex; }
+    .footer-inner { grid-template-columns: 1fr; gap: 32px; padding: 40px 24px 24px; }
+    .footer-cols { grid-template-columns: 1fr 1fr; }
+    .footer-bottom { flex-direction: column; gap: 8px; padding: 16px 24px; text-align: center; }
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* =====================
+     PROBLEM SECTION
+  ===================== */
+  .problem {
+    position: relative;
+    z-index: 2;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 80px 56px;
+  }
+
+  .problem-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 40px;
+  }
+
+  .problem-eyebrow .eyebrow-line { width: 32px; height: 1px; background: var(--red); }
+  .problem-eyebrow .eyebrow-text { color: var(--red); }
+
+  .problem-headline {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2.4rem, 5vw, 4.2rem);
+    line-height: 0.95;
+    letter-spacing: 0.02em;
+    max-width: 700px;
+    margin-bottom: 16px;
+  }
+
+  .problem-headline .dim { opacity: 0.28; }
+
+  .problem-sub {
+    font-size: 1rem;
+    color: var(--muted);
+    max-width: 520px;
+    line-height: 1.65;
+    margin-bottom: 56px;
+    font-weight: 300;
+  }
+
+  /* CHAOS vs CONTRACTNEST split */
+  .problem-split {
+    display: grid;
+    grid-template-columns: 1fr 80px 1fr;
+    gap: 0;
+    align-items: start;
+  }
+
+  /* CHAOS SIDE */
+  .chaos-side {
+    background: rgba(231,76,60,0.04);
+    border: 1px solid rgba(231,76,60,0.15);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .chaos-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid rgba(231,76,60,0.15);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(231,76,60,0.06);
+  }
+
+  .chaos-header-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--red);
+  }
+
+  .chaos-header-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--red);
+    opacity: 0.7;
+    margin-left: auto;
+  }
+
+  .chaos-items {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .chaos-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    background: rgba(231,76,60,0.05);
+    border: 1px solid rgba(231,76,60,0.1);
+    border-radius: 7px;
+    transition: border-color 0.2s;
+  }
+
+  .chaos-item:hover { border-color: rgba(231,76,60,0.25); }
+
+  .chaos-icon {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    margin-top: 1px;
+    opacity: 0.8;
+  }
+
+  .chaos-text {
+    flex: 1;
+  }
+
+  .chaos-title {
+    font-size: 0.84rem;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+
+  .chaos-desc {
+    font-size: 0.76rem;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+
+  .chaos-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    color: var(--red);
+    background: rgba(231,76,60,0.1);
+    padding: 2px 7px;
+    border-radius: 3px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    align-self: flex-start;
+    margin-top: 2px;
+  }
+
+  /* ARROW DIVIDER */
+  .problem-divider {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-top: 48px;
+    gap: 8px;
+  }
+
+  .divider-arrow {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.8rem;
+    color: var(--amber);
+    line-height: 1;
+  }
+
+  .divider-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--amber);
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+  }
+
+  /* NEST SIDE */
+  .nest-side {
+    background: rgba(46,204,113,0.04);
+    border: 1px solid rgba(46,204,113,0.15);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .nest-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid rgba(46,204,113,0.15);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(46,204,113,0.06);
+  }
+
+  .nest-header-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--green);
+  }
+
+  .nest-header-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    margin-left: auto;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  .nest-items {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .nest-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 14px 16px;
+    background: rgba(46,204,113,0.04);
+    border: 1px solid rgba(46,204,113,0.1);
+    border-radius: 7px;
+    transition: border-color 0.2s;
+  }
+
+  .nest-item:hover { border-color: rgba(46,204,113,0.25); }
+
+  .nest-icon {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .nest-title {
+    font-size: 0.84rem;
+    font-weight: 500;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+
+  .nest-desc {
+    font-size: 0.76rem;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+
+  .nest-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.08em;
+    color: var(--green);
+    background: rgba(46,204,113,0.1);
+    padding: 2px 7px;
+    border-radius: 3px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    align-self: flex-start;
+    margin-top: 2px;
+  }
+
+  /* SCENARIO TABS */
+  .scenario-block {
+    margin-top: 64px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .scenario-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    overflow-x: auto;
+  }
+
+  .s-tab {
+    padding: 12px 22px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    cursor: pointer;
+    border-right: 1px solid var(--border);
+    white-space: nowrap;
+    transition: color 0.2s, background 0.2s;
+    border-bottom: 2px solid transparent;
+    user-select: none;
+  }
+
+  .s-tab:hover { color: var(--text); }
+
+  .s-tab.active {
+    color: var(--amber);
+    border-bottom-color: var(--amber);
+    background: var(--amber-dim);
+  }
+
+  .scenario-content { display: none; padding: 32px 36px; }
+  .scenario-content.active { display: block; }
+
+  .scenario-story {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  .story-before, .story-after {
+    padding: 20px 24px;
+    border-radius: 8px;
+  }
+
+  .story-before {
+    background: rgba(231,76,60,0.05);
+    border: 1px solid rgba(231,76,60,0.12);
+  }
+
+  .story-after {
+    background: rgba(46,204,113,0.05);
+    border: 1px solid rgba(46,204,113,0.12);
+  }
+
+  .story-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .story-before .story-label { color: var(--red); }
+  .story-after .story-label { color: var(--green); }
+
+  .story-text {
+    font-size: 0.85rem;
+    color: var(--muted);
+    line-height: 1.7;
+    font-style: italic;
+  }
+
+  .story-text strong { color: var(--text); font-style: normal; font-weight: 500; }
+
+  /* =====================
+     DUAL PERSPECTIVE SECTION
+  ===================== */
+  .dual-perspective {
+    position: relative;
+    z-index: 2;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 80px 56px;
+  }
+
+  .dp-eyebrow { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; }
+  .dp-eyebrow .eyebrow-line { width: 32px; height: 1px; background: var(--amber); }
+  .dp-eyebrow .eyebrow-text { color: var(--amber); }
+
+  .dp-headline {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2.4rem, 5vw, 4.2rem);
+    line-height: 0.95;
+    letter-spacing: 0.02em;
+    margin-bottom: 14px;
+  }
+
+  .dp-sub {
+    font-size: 1rem; color: var(--muted); font-weight: 300;
+    line-height: 1.65; max-width: 560px; margin-bottom: 48px;
+  }
+  .dp-sub strong { color: var(--text); font-weight: 500; }
+
+  .dp-toggle {
+    display: inline-flex; background: var(--surface);
+    border: 1px solid var(--border2); border-radius: 10px;
+    padding: 4px; margin-bottom: 36px; gap: 4px;
+  }
+
+  .dp-toggle-btn {
+    font-family: 'DM Mono', monospace; font-size: 0.68rem;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 10px 20px; border-radius: 7px; border: none;
+    cursor: pointer; transition: all 0.25s;
+    background: transparent; color: var(--muted); white-space: nowrap;
+  }
+  .dp-toggle-btn.active { background: var(--amber); color: #0D0F14; font-weight: 600; }
+
+  .dp-view { display: none; }
+  .dp-view.active { display: block; }
+
+  .dp-dashboard {
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: 14px; overflow: hidden;
+  }
+
+  .dp-dash-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 24px; background: var(--surface2);
+    border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 12px;
+  }
+
+  .dp-dash-title {
+    font-family: 'DM Mono', monospace; font-size: 0.68rem;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--amber);
+  }
+
+  .dp-dash-meta { display: flex; align-items: center; gap: 16px; }
+
+  .dp-dash-meta-item {
+    display: flex; align-items: center; gap: 6px;
+    font-family: 'DM Mono', monospace; font-size: 0.65rem; color: var(--muted);
+  }
+
+  .dp-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .dp-dot.green { background: var(--green); }
+  .dp-dot.amber { background: var(--amber); animation: pulse 1.5s ease-in-out infinite; }
+  .dp-dot.red   { background: var(--red); }
+
+  .dp-coverage-stats {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .dp-cstat {
+    padding: 20px 24px; border-right: 1px solid var(--border); transition: background 0.2s;
+  }
+  .dp-cstat:last-child { border-right: none; }
+  .dp-cstat:hover { background: var(--surface2); }
+
+  .dp-cstat-num {
+    font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; line-height: 1; margin-bottom: 4px;
+  }
+  .dp-cstat-num.green { color: var(--green); }
+  .dp-cstat-num.amber { color: var(--amber); }
+  .dp-cstat-num.red   { color: var(--red); }
+  .dp-cstat-num.white { color: var(--text); }
+  .dp-cstat-label { font-size: 0.74rem; color: var(--muted); line-height: 1.4; }
+
+  .dp-asset-table { padding: 24px; }
+
+  .dp-table-header {
+    display: grid; grid-template-columns: 2fr 1.4fr 1.2fr 1fr 1.2fr 1fr;
+    gap: 12px; padding: 8px 12px; margin-bottom: 6px;
+  }
+
+  .dp-th {
+    font-family: 'DM Mono', monospace; font-size: 0.6rem;
+    letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint);
+  }
+
+  .dp-table-row {
+    display: grid; grid-template-columns: 2fr 1.4fr 1.2fr 1fr 1.2fr 1fr;
+    gap: 12px; padding: 12px 12px; border-radius: 7px;
+    margin-bottom: 4px; transition: background 0.2s; align-items: center;
+  }
+  .dp-table-row:hover { background: var(--surface2); }
+  .dp-td { font-size: 0.8rem; color: var(--muted); }
+  .dp-td.asset-name { color: var(--text); font-weight: 500; }
+
+  .dp-coverage-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-family: 'DM Mono', monospace; font-size: 0.6rem;
+    letter-spacing: 0.08em; padding: 3px 9px; border-radius: 4px; white-space: nowrap;
+  }
+  .dp-coverage-pill.covered { background: var(--green-dim); color: var(--green); border: 1px solid rgba(46,204,113,0.2); }
+  .dp-coverage-pill.expiring { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245,166,35,0.2); }
+  .dp-coverage-pill.uncovered { background: rgba(231,76,60,0.08); color: var(--red); border: 1px solid rgba(231,76,60,0.2); }
+
+  .dp-insight-bar {
+    margin: 0 24px 24px; padding: 14px 18px;
+    background: rgba(245,166,35,0.05); border: 1px dashed rgba(245,166,35,0.25);
+    border-radius: 8px; display: flex; align-items: flex-start; gap: 12px;
+  }
+  .dp-insight-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 1px; }
+  .dp-insight-text { font-size: 0.8rem; color: var(--muted); line-height: 1.6; }
+  .dp-insight-text strong { color: var(--amber); }
+
+  .dp-contract-view { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+  .dp-contract-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden; transition: border-color 0.2s, transform 0.2s;
+  }
+  .dp-contract-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+
+  .dp-cc-header {
+    padding: 14px 18px; background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .dp-cc-name { font-size: 0.86rem; font-weight: 600; color: var(--text); }
+
+  .dp-cc-status {
+    font-family: 'DM Mono', monospace; font-size: 0.58rem;
+    letter-spacing: 0.1em; padding: 3px 8px; border-radius: 3px;
+  }
+  .dp-cc-status.active { background: var(--green-dim); color: var(--green); border: 1px solid rgba(46,204,113,0.2); }
+  .dp-cc-status.renewing { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245,166,35,0.2); }
+
+  .dp-cc-body { padding: 16px 18px; }
+  .dp-cc-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 0.76rem;
+  }
+  .dp-cc-row:last-child { border-bottom: none; }
+  .dp-cc-row-label { color: var(--muted); }
+  .dp-cc-row-value { color: var(--text); font-weight: 500; font-family: 'DM Mono', monospace; font-size: 0.72rem; }
+  .dp-cc-row-value.green { color: var(--green); }
+  .dp-cc-row-value.amber { color: var(--amber); }
+
+  .dp-cc-assets { margin: 10px 18px 14px; padding: 10px 14px; background: var(--bg); border-radius: 6px; border: 1px solid var(--border); }
+  .dp-cc-assets-label { font-family: 'DM Mono', monospace; font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); margin-bottom: 6px; }
+  .dp-cc-asset-list { display: flex; flex-wrap: wrap; gap: 5px; }
+  .dp-cc-asset-tag { font-size: 0.7rem; color: var(--muted); background: var(--surface); border: 1px solid var(--border); padding: 2px 8px; border-radius: 3px; }
+
+  .dp-bridge {
+    margin-top: 40px; display: grid;
+    grid-template-columns: 1fr 60px 1fr; align-items: center; gap: 0;
+  }
+  .dp-bridge-side { padding: 24px 28px; border-radius: 10px; }
+  .dp-bridge-side.hospital { background: rgba(52,152,219,0.06); border: 1px solid rgba(52,152,219,0.15); }
+  .dp-bridge-side.amc { background: rgba(46,204,113,0.05); border: 1px solid rgba(46,204,113,0.15); }
+  .dp-bridge-label { font-family: 'DM Mono', monospace; font-size: 0.62rem; letter-spacing: 0.14em; text-transform: uppercase; margin-bottom: 8px; }
+  .dp-bridge-label.hospital { color: #5DADE2; }
+  .dp-bridge-label.amc { color: var(--green); }
+  .dp-bridge-q { font-size: 0.92rem; font-weight: 600; color: var(--text); margin-bottom: 6px; line-height: 1.35; }
+  .dp-bridge-a { font-size: 0.8rem; color: var(--muted); line-height: 1.55; }
+  .dp-bridge-a .hl { color: var(--amber); font-weight: 500; }
+
+  .dp-bridge-arrow { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
+  .dp-bridge-arrow-icon { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; color: var(--amber); line-height: 1; }
+  .dp-bridge-arrow-label { font-family: 'DM Mono', monospace; font-size: 0.55rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--amber); writing-mode: vertical-rl; transform: rotate(180deg); }
+
+  @media (max-width: 900px) {
+    .dual-perspective { padding: 48px 24px; }
+    .dp-coverage-stats { grid-template-columns: 1fr 1fr; }
+    .dp-table-header, .dp-table-row { grid-template-columns: 2fr 1fr 1fr; }
+    .dp-th:nth-child(n+4), .dp-td:nth-child(n+4) { display: none; }
+    .dp-contract-view { grid-template-columns: 1fr; }
+    .dp-bridge { grid-template-columns: 1fr; gap: 12px; }
+    .dp-bridge-arrow { display: none; }
+  }
+
+  /* =====================
+     PLAYGROUND SECTION
+  ===================== */
+  .playground {
+    position: relative;
+    z-index: 2;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 80px 56px;
+  }
+
+  .pg-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 40px;
+  }
+
+  .pg-eyebrow .eyebrow-line { width: 32px; height: 1px; background: var(--amber); }
+  .pg-eyebrow .eyebrow-text { color: var(--amber); }
+
+  .pg-headline {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2.4rem, 5vw, 4rem);
+    line-height: 0.95;
+    letter-spacing: 0.02em;
+    margin-bottom: 12px;
+  }
+
+  .pg-sub {
+    font-size: 1rem;
+    color: var(--muted);
+    font-weight: 300;
+    line-height: 1.6;
+    max-width: 500px;
+    margin-bottom: 48px;
+  }
+
+  /* STEP PROGRESS */
+  .pg-steps {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 40px;
+  }
+
+  .pg-step {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+  }
+
+  .pg-step-num {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: 1.5px solid var(--faint);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--muted);
+    transition: all 0.3s;
+    flex-shrink: 0;
+  }
+
+  .pg-step-label {
+    font-size: 0.8rem;
+    color: var(--muted);
+    font-weight: 500;
+    transition: color 0.3s;
+    white-space: nowrap;
+  }
+
+  .pg-step.active .pg-step-num {
+    background: var(--amber);
+    border-color: var(--amber);
+    color: #0D0F14;
+  }
+
+  .pg-step.active .pg-step-label { color: var(--text); }
+
+  .pg-step.done .pg-step-num {
+    background: var(--green);
+    border-color: var(--green);
+    color: #0D0F14;
+  }
+
+  .pg-step.done .pg-step-label { color: var(--muted); }
+
+  .pg-step-line {
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+    margin: 0 12px;
+    min-width: 32px;
+    transition: background 0.3s;
+  }
+
+  .pg-step-line.done { background: var(--green); }
+
+  /* PANELS */
+  .pg-panel { display: none; }
+  .pg-panel.active { display: block; }
+
+  .pg-card {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .pg-card-header {
+    padding: 18px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface2);
+  }
+
+  .pg-card-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--amber);
+  }
+
+  .pg-card-hint {
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .pg-card-body { padding: 32px 28px; }
+
+  /* TEMPLATE GRID */
+  .tpl-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .tpl-card {
+    padding: 18px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--bg);
+  }
+
+  .tpl-card:hover { border-color: var(--amber); background: var(--amber-dim); }
+  .tpl-card.selected { border-color: var(--amber); background: var(--amber-dim); }
+
+  .tpl-icon { font-size: 1.6rem; margin-bottom: 8px; }
+  .tpl-name { font-size: 0.84rem; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .tpl-desc { font-size: 0.72rem; color: var(--muted); line-height: 1.4; }
+
+  .tpl-tag {
+    display: inline-block;
+    margin-top: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 3px;
+    background: var(--amber-dim);
+    color: var(--amber);
+    border: 1px solid rgba(245,166,35,0.2);
+  }
+
+  /* FORM FIELDS */
+  .pg-form { display: flex; flex-direction: column; gap: 18px; }
+
+  .pg-field { display: flex; flex-direction: column; gap: 6px; }
+
+  .pg-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .pg-input {
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    padding: 12px 16px;
+    border-radius: 7px;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+
+  .pg-input:focus { border-color: var(--amber); }
+  .pg-input::placeholder { color: var(--faint); }
+
+  .pg-input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  .pg-select {
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    padding: 12px 16px;
+    border-radius: 7px;
+    outline: none;
+    cursor: pointer;
+    width: 100%;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237A8099' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+  }
+
+  /* CONTRACT PREVIEW */
+  .contract-preview {
+    background: #fff;
+    border-radius: 8px;
+    padding: 36px 40px;
+    color: #1a1a2e;
+    font-family: 'DM Sans', sans-serif;
+    position: relative;
+    box-shadow: 0 4px 32px rgba(0,0,0,0.4);
+  }
+
+  .cp-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+    padding-bottom: 18px;
+    border-bottom: 2px solid #f0efe8;
+  }
+
+  .cp-logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.2rem;
+    letter-spacing: 0.1em;
+    color: #0D0F14;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .cp-logo-dot { width: 7px; height: 7px; background: #F5A623; border-radius: 50%; }
+
+  .cp-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: #fff8ec;
+    color: #c47d0a;
+    border: 1px solid #f5c87a;
+    padding: 4px 10px;
+    border-radius: 4px;
+  }
+
+  .cp-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.7rem;
+    letter-spacing: 0.04em;
+    color: #0D0F14;
+    margin-bottom: 4px;
+  }
+
+  .cp-subtitle { font-size: 0.78rem; color: #888; margin-bottom: 20px; }
+
+  .cp-parties {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .cp-party {
+    padding: 12px 14px;
+    border-radius: 6px;
+    background: #f8f7f2;
+  }
+
+  .cp-party-role {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #999;
+    margin-bottom: 4px;
+  }
+
+  .cp-party-name { font-size: 0.9rem; font-weight: 600; color: #1a1a2e; }
+
+  .cp-terms {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .cp-term {
+    padding: 10px 12px;
+    background: #f8f7f2;
+    border-radius: 6px;
+  }
+
+  .cp-term-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.56rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #bbb;
+    margin-bottom: 3px;
+  }
+
+  .cp-term-value { font-size: 0.82rem; font-weight: 600; color: #1a1a2e; }
+
+  .cp-milestones { margin-bottom: 20px; }
+
+  .cp-section-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #bbb;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #f0efe8;
+  }
+
+  .cp-milestone {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid #f8f7f2;
+    font-size: 0.8rem;
+    color: #444;
+  }
+
+  .cp-milestone-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #F5A623;
+    flex-shrink: 0;
+  }
+
+  .cp-milestone-name { flex: 1; }
+  .cp-milestone-freq { color: #999; font-size: 0.72rem; }
+
+  .cp-sla {
+    padding: 12px 14px;
+    background: #fff8ec;
+    border: 1px solid #f5c87a;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    font-size: 0.78rem;
+    color: #c47d0a;
+  }
+
+  .cp-signatures {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid #f0efe8;
+  }
+
+  .cp-sig {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .cp-sig-line {
+    height: 1px;
+    background: #ddd;
+    margin-bottom: 4px;
+  }
+
+  .cp-sig-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #bbb;
+  }
+
+  .cp-sig-name { font-size: 0.78rem; color: #888; }
+
+  .cp-watermark {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) rotate(-30deg);
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 5rem;
+    letter-spacing: 0.2em;
+    color: rgba(245,166,35,0.07);
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  /* NAV BUTTONS */
+  .pg-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 24px;
+  }
+
+  .btn-pg-back {
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.86rem;
+    padding: 11px 20px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-pg-back:hover { border-color: var(--text); color: var(--text); }
+
+  .btn-pg-next {
+    background: var(--amber);
+    color: #0D0F14;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.86rem;
+    font-weight: 600;
+    padding: 11px 24px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-pg-next:hover { background: #FFB733; transform: translateY(-1px); }
+  .btn-pg-next:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  /* SAVE GATE */
+  .pg-save-gate {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 28px 32px;
+    margin-top: 24px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .pg-save-text { flex: 1; }
+  .pg-save-title { font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
+  .pg-save-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
+
+  .pg-save-form { display: flex; gap: 10px; flex-shrink: 0; }
+
+  .pg-save-form input {
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    padding: 11px 16px;
+    border-radius: 7px;
+    outline: none;
+    width: 220px;
+    transition: border-color 0.2s;
+  }
+
+  .pg-save-form input:focus { border-color: var(--amber); }
+  .pg-save-form input::placeholder { color: var(--faint); }
+
+  .btn-save {
+    background: var(--amber);
+    color: #0D0F14;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.86rem;
+    font-weight: 600;
+    padding: 11px 20px;
+    border-radius: 7px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+
+  .btn-save:hover { background: #FFB733; }
+
+  .pg-saved-msg {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 20px;
+    background: var(--green-dim);
+    border: 1px solid rgba(46,204,113,0.2);
+    border-radius: 8px;
+    color: var(--green);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    margin-top: 16px;
+  }
+
+  /* =====================
+     VANI SECTION
+  ===================== */
+  .vani {
+    position: relative;
+    z-index: 2;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 80px 56px;
+  }
+
+  .vani-inner {
+    background: linear-gradient(135deg, #0D1520 0%, #0D0F14 60%);
+    border: 1px solid rgba(245,166,35,0.2);
+    border-radius: 16px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .vani-inner::before {
+    content: '';
+    position: absolute;
+    top: -80px; right: -80px;
+    width: 320px; height: 320px;
+    background: radial-gradient(circle, rgba(245,166,35,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .vani-inner::after {
+    content: '';
+    position: absolute;
+    bottom: -60px; left: -60px;
+    width: 240px; height: 240px;
+    background: radial-gradient(circle, rgba(46,204,113,0.05) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .vani-top {
+    padding: 48px 56px 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: start;
+    position: relative;
+    z-index: 1;
+  }
+
+  .vani-cs-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(245,166,35,0.1);
+    border: 1px solid rgba(245,166,35,0.3);
+    color: var(--amber);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 100px;
+    margin-bottom: 20px;
+  }
+
+  .vani-cs-badge .blink {
+    width: 6px; height: 6px;
+    background: var(--amber);
+    border-radius: 50%;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  .vani-headline {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2.8rem, 5vw, 4.5rem);
+    line-height: 0.92;
+    letter-spacing: 0.02em;
+    margin-bottom: 16px;
+  }
+
+  .vani-headline .accent { color: var(--amber); }
+
+  .vani-desc {
+    font-size: 1rem;
+    color: var(--muted);
+    font-weight: 300;
+    line-height: 1.7;
+    margin-bottom: 24px;
+    max-width: 420px;
+  }
+
+  .vani-desc strong { color: var(--text); font-weight: 500; }
+
+  .vani-waitlist {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    background: rgba(245,166,35,0.06);
+    border: 1px solid rgba(245,166,35,0.15);
+    border-radius: 8px;
+    max-width: 380px;
+  }
+
+  .vani-waitlist-icon { font-size: 1.2rem; }
+
+  .vani-waitlist-text { flex: 1; }
+  .vani-waitlist-title { font-size: 0.84rem; font-weight: 600; margin-bottom: 2px; }
+  .vani-waitlist-desc { font-size: 0.74rem; color: var(--muted); }
+
+  /* VANI CAPABILITY GRID */
+  .vani-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .vani-cap {
+    padding: 18px 20px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .vani-cap:hover {
+    border-color: rgba(245,166,35,0.2);
+    background: rgba(245,166,35,0.04);
+  }
+
+  .vani-cap-icon { font-size: 1.3rem; margin-bottom: 8px; }
+
+  .vani-cap-title {
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .vani-cap-desc {
+    font-size: 0.75rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .vani-cap-soon {
+    position: absolute;
+    top: 10px; right: 10px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--amber);
+    background: var(--amber-dim);
+    border: 1px solid rgba(245,166,35,0.2);
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+
+  /* VANI TERMINAL */
+  .vani-terminal {
+    margin: 40px 56px 48px;
+    background: #080A0F;
+    border: 1px solid rgba(245,166,35,0.15);
+    border-radius: 10px;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
+  }
+
+  .vani-terminal-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 18px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    background: rgba(255,255,255,0.02);
+  }
+
+  .term-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .term-dot.r { background: #FF5F57; }
+  .term-dot.y { background: #FFBD2E; }
+  .term-dot.g { background: #28CA42; }
+
+  .term-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-left: 8px;
+  }
+
+  .vani-terminal-body {
+    padding: 20px 24px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    line-height: 2;
+  }
+
+  .term-line { display: flex; gap: 12px; align-items: flex-start; }
+  .term-prompt { color: var(--amber); flex-shrink: 0; }
+  .term-cmd { color: #E8E6E0; }
+  .term-out { color: var(--green); padding-left: 20px; }
+  .term-out.warn { color: #F5A623; }
+  .term-out.info { color: var(--muted); }
+  .term-cursor {
+    display: inline-block;
+    width: 8px; height: 14px;
+    background: var(--amber);
+    vertical-align: middle;
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  /* PLAYGROUND VANI NUDGE */
+  .pg-vani-nudge {
+    margin-top: 16px;
+    padding: 14px 18px;
+    background: rgba(245,166,35,0.06);
+    border: 1px dashed rgba(245,166,35,0.25);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .pg-vani-nudge-icon { font-size: 1.2rem; }
+  .pg-vani-nudge-text { flex: 1; font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
+  .pg-vani-nudge-text strong { color: var(--amber); }
+
+  /* =====================
+     SOCIAL PROOF SECTION
+  ===================== */
+  .social-proof {
+    position: relative;
+    z-index: 2;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 80px 56px;
+  }
+
+  .sp-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 56px;
+  }
+
+  .sp-headline {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2.4rem, 5vw, 4rem);
+    line-height: 0.95;
+    letter-spacing: 0.02em;
+  }
+
+  .sp-counter {
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .sp-counter-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3.2rem;
+    line-height: 1;
+    color: var(--amber);
+  }
+
+  .sp-counter-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* TESTIMONIAL GRID */
+  .sp-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 64px;
+  }
+
+  .sp-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.25s, transform 0.25s;
+  }
+
+  .sp-card:hover {
+    border-color: var(--border2);
+    transform: translateY(-3px);
+  }
+
+  .sp-card::before {
+    content: '"';
+    position: absolute;
+    top: -10px; right: 20px;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 8rem;
+    color: rgba(245,166,35,0.06);
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  .sp-industry-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 4px;
+    width: fit-content;
+  }
+
+  .sp-industry-tag.hospital {
+    background: rgba(52,152,219,0.1);
+    color: #5DADE2;
+    border: 1px solid rgba(52,152,219,0.2);
+  }
+
+  .sp-industry-tag.wellness {
+    background: var(--green-dim);
+    color: var(--green);
+    border: 1px solid rgba(46,204,113,0.2);
+  }
+
+  .sp-industry-tag.oem {
+    background: rgba(155,89,182,0.1);
+    color: #A569BD;
+    border: 1px solid rgba(155,89,182,0.2);
+  }
+
+  .sp-quote {
+    font-size: 0.88rem;
+    color: var(--muted);
+    line-height: 1.75;
+    font-style: italic;
+    flex: 1;
+  }
+
+  .sp-quote strong { color: var(--text); font-style: normal; font-weight: 500; }
+  .sp-quote .highlight { color: var(--amber); font-style: normal; font-weight: 500; }
+  .sp-quote .highlight-green { color: var(--green); font-style: normal; font-weight: 500; }
+
+  .sp-author { border-top: 1px solid var(--border); padding-top: 16px; }
+
+  .sp-author-name {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+
+  .sp-author-role {
+    font-size: 0.74rem;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  /* METRIC PILL */
+  .sp-metric {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--green-dim);
+    border: 1px solid rgba(46,204,113,0.2);
+    color: var(--green);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    padding: 4px 10px;
+    border-radius: 4px;
+  }
+
+  .sp-metric.amber {
+    background: var(--amber-dim);
+    border-color: rgba(245,166,35,0.2);
+    color: var(--amber);
+  }
+
+  /* TRUST STATS */
+  .sp-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .sp-stat {
+    background: var(--surface);
+    padding: 28px 24px;
+    border-right: 1px solid var(--border);
+    transition: background 0.2s;
+  }
+
+  .sp-stat:last-child { border-right: none; }
+  .sp-stat:hover { background: var(--surface2); }
+
+  .sp-stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.4rem;
+    line-height: 1;
+    color: var(--amber);
+    margin-bottom: 6px;
+  }
+
+  .sp-stat-label {
+    font-size: 0.78rem;
+    color: var(--muted);
+    line-height: 1.45;
+  }
+
+  .sp-stat-label strong { color: var(--text); display: block; font-weight: 500; }
+
+  /* =====================
+     PRICING SECTION
+  ===================== */
+  .pricing {
+    position: relative;
+    z-index: 2;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 80px 56px;
+  }
+
+  .pricing-header {
+    margin-bottom: 16px;
+  }
+
+  .pricing-sub {
+    font-size: 1rem;
+    color: var(--muted);
+    font-weight: 300;
+    line-height: 1.6;
+    max-width: 520px;
+    margin-bottom: 48px;
+  }
+
+  .pricing-sub strong { color: var(--text); font-weight: 500; }
+
+  /* CREDIT EXPLAINER */
+  .credit-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 14px 20px;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+  }
+
+  .credit-bar-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--amber);
+    flex-shrink: 0;
+  }
+
+  .credit-bar-divider {
+    width: 1px; height: 16px;
+    background: var(--border2);
+    flex-shrink: 0;
+  }
+
+  .credit-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 5px 12px;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+
+  .credit-pill .dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--amber);
+    flex-shrink: 0;
+  }
+
+  .credit-pill strong { color: var(--text); font-weight: 500; }
+
+  /* PRICING CARDS */
+  .pricing-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.1fr 1fr;
+    gap: 16px;
+    align-items: start;
+  }
+
+  .p-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+    position: relative;
+    transition: border-color 0.25s, transform 0.25s;
+  }
+
+  .p-card:hover { border-color: var(--border2); transform: translateY(-3px); }
+
+  .p-card.featured {
+    border-color: rgba(245,166,35,0.35);
+    background: linear-gradient(160deg, rgba(245,166,35,0.06) 0%, var(--surface) 40%);
+  }
+
+  .p-card.featured:hover { border-color: rgba(245,166,35,0.5); }
+
+  .p-featured-bar {
+    background: var(--amber);
+    color: #0D0F14;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 6px;
+    font-weight: 600;
+  }
+
+  .p-card-top {
+    padding: 28px 28px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .p-tier {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .p-price {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    margin-bottom: 6px;
+  }
+
+  .p-price-symbol {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1.2rem;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  .p-price-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3.2rem;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    color: var(--text);
+  }
+
+  .p-card.featured .p-price-num { color: var(--amber); }
+
+  .p-price-period {
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-weight: 300;
+  }
+
+  .p-price-free {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 3.2rem;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    color: var(--green);
+  }
+
+  .p-tagline {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.5;
+    margin-top: 8px;
+  }
+
+  /* INCLUDED CREDITS */
+  .p-credits {
+    padding: 18px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .p-credit-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .p-credit-name {
+    font-size: 0.8rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .p-credit-name::before {
+    content: '';
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--faint);
+    flex-shrink: 0;
+  }
+
+  .p-card.featured .p-credit-name::before { background: var(--amber); }
+
+  .p-credit-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--text);
+    font-weight: 500;
+    text-align: right;
+  }
+
+  .p-credit-val.green { color: var(--green); }
+  .p-credit-val.amber { color: var(--amber); }
+
+  /* OVERAGE */
+  .p-overage {
+    padding: 14px 28px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.015);
+  }
+
+  .p-overage-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--faint);
+    margin-bottom: 8px;
+  }
+
+  .p-overage-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.76rem;
+    color: var(--muted);
+    padding: 3px 0;
+  }
+
+  .p-overage-price {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--text);
+  }
+
+  /* FEATURES */
+  .p-features {
+    padding: 18px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  .p-feature {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    font-size: 0.8rem;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  .p-feature-icon {
+    flex-shrink: 0;
+    font-size: 0.7rem;
+    margin-top: 2px;
+  }
+
+  .p-feature-icon.yes { color: var(--green); }
+  .p-feature-icon.no  { color: var(--faint); }
+  .p-feature-icon.soon { color: var(--amber); }
+
+  .p-feature.disabled { opacity: 0.45; }
+
+  /* CTA */
+  .p-card-cta {
+    padding: 20px 28px;
+    border-top: 1px solid var(--border);
+  }
+
+  .btn-p-cta {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.86rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    letter-spacing: 0.01em;
+  }
+
+  .btn-p-cta.outline {
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--text);
+  }
+
+  .btn-p-cta.outline:hover { border-color: var(--amber); color: var(--amber); }
+
+  .btn-p-cta.primary {
+    background: var(--amber);
+    color: #0D0F14;
+  }
+
+  .btn-p-cta.primary:hover { background: #FFB733; transform: translateY(-1px); }
+
+  /* UPGRADE NUDGE */
+  .upgrade-nudge {
+    margin-top: 28px;
+    padding: 16px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .upgrade-nudge-icon { font-size: 1.2rem; flex-shrink: 0; }
+
+  .upgrade-nudge-text {
+    font-size: 0.8rem;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .upgrade-nudge-text strong { color: var(--amber); }
+
+  /* =====================
+     FINAL CTA SECTION
+  ===================== */
+  .final-cta {
+    position: relative;
+    z-index: 2;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 56px 80px;
+  }
+
+  .final-cta-inner {
+    background: linear-gradient(135deg, rgba(245,166,35,0.08) 0%, rgba(13,15,20,0) 60%);
+    border: 1px solid rgba(245,166,35,0.2);
+    border-radius: 16px;
+    padding: 64px 56px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .final-cta-inner::before {
+    content: '';
+    position: absolute;
+    top: -100px; left: 50%;
+    transform: translateX(-50%);
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(245,166,35,0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .final-cta-headline {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(2.4rem, 5vw, 4rem);
+    line-height: 0.95;
+    letter-spacing: 0.02em;
+    margin-bottom: 14px;
+    position: relative;
+  }
+
+  .final-cta-sub {
+    font-size: 1rem;
+    color: var(--muted);
+    font-weight: 300;
+    line-height: 1.65;
+    max-width: 480px;
+    margin: 0 auto 36px;
+    position: relative;
+  }
+
+  .final-cta-form {
+    display: flex;
+    gap: 10px;
+    max-width: 440px;
+    margin: 0 auto 14px;
+    position: relative;
+  }
+
+  .final-cta-form input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    padding: 14px 18px;
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .final-cta-form input:focus { border-color: var(--amber); }
+  .final-cta-form input::placeholder { color: var(--faint); }
+
+  .final-cta-note {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--faint);
+    letter-spacing: 0.04em;
+    position: relative;
+  }
+
+  .final-cta-note em { color: var(--amber); font-style: normal; }
+
+  .final-success {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 20px;
+    background: var(--green-dim);
+    border: 1px solid rgba(46,204,113,0.2);
+    border-radius: 8px;
+    color: var(--green);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.82rem;
+    max-width: 440px;
+    margin: 0 auto;
+  }
+    .pg-save-form { flex-direction: column; width: 100%; }
+    .pg-save-form input { width: 100%; }
+    .pg-steps { overflow-x: auto; }
+    .vani-grid { grid-template-columns: 1fr; }
+    .sp-grid { grid-template-columns: 1fr; }
+    .sp-stats { grid-template-columns: 1fr 1fr; }
+    .vani { padding: 48px 24px; }
+    .social-proof { padding: 48px 24px; }
+    .pricing { padding: 48px 24px; }
+    .pricing-grid { grid-template-columns: 1fr; }
+    .credit-bar { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+
+<nav id="mainNav">
+  <div class="logo">
+    <div class="logo-dot"></div>
+    CONTRACTNEST
+  </div>
+  <div class="nav-links" id="navLinks">
+    <a href="#hero" class="nav-link active">Home</a>
+    <a href="#problem" class="nav-link">Problem</a>
+    <a href="#perspective" class="nav-link">How It Works</a>
+    <a href="#playground" class="nav-link">Try It</a>
+    <a href="#vani" class="nav-link">VaNi</a>
+    <a href="#proof" class="nav-link">Customers</a>
+    <a href="#pricing" class="nav-link">Pricing</a>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div class="nav-pill">
+      <div class="dot"></div>
+      CLOSED BETA
+    </div>
+    <button class="nav-cta-btn" onclick="document.getElementById('hero').scrollIntoView({behavior:'smooth'});setTimeout(()=>document.getElementById('emailInput').focus(),600);">
+      Join Waitlist
+    </button>
+    <button class="nav-hamburger" id="navHamburger" onclick="toggleMobileNav()">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+<div class="scroll-progress" id="scrollProgress"></div>
+
+<section class="hero" id="hero">
+  <div class="hero-eyebrow">
+    <div class="eyebrow-line"></div>
+    <span class="eyebrow-text">For businesses that sell services &amp; buy them</span>
+  </div>
+
+  <h1 class="hero-headline">
+    <span class="l1">YOUR CONTRACTS</span>
+    <span class="l2">RUN YOUR BUSINESS.</span>
+    <span class="l3">UNTIL THEY DON'T.</span>
+  </h1>
+
+  <p class="hero-sub">
+    Every business has two sides — <strong>revenue you're owed</strong> and <strong>costs you've committed to.</strong>
+    ContractNest puts both on one platform. Every promise tracked. Every SLA enforced. Every rupee accounted for.
+  </p>
+
+  <div class="proof-strip">
+    <div class="proof-item">
+      <div class="proof-label rev">↑ Revenue Side</div>
+      <div class="proof-desc">Create client contracts, track SLAs, <strong>collect on time.</strong></div>
+    </div>
+    <div class="proof-item">
+      <div class="proof-label cost">↓ Cost Side</div>
+      <div class="proof-desc">Manage vendors, verify work done, <strong>pay what's earned.</strong></div>
+    </div>
+  </div>
+
+  <div class="cta-block">
+    <div class="cta-row" id="ctaRow">
+      <input type="email" id="emailInput" placeholder="your@business.com" autocomplete="email" />
+      <button class="btn-join" onclick="handleJoin()">Get Early Access</button>
+    </div>
+    <div class="success-banner" id="successBanner">
+      ✓ &nbsp;You're on the list. We'll reach out before beta opens.
+    </div>
+    <div class="cta-note" id="ctaNote">
+      <em>90+</em> businesses already waitlisted &nbsp;·&nbsp; Free beta &nbsp;·&nbsp; No credit card
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat">
+      <div class="stat-num">₹700<sup>B+</sup></div>
+      <div class="stat-lbl">Annual service contracts market in India</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">65<sup>%</sup></div>
+      <div class="stat-lbl">Still managed on paper, Excel &amp; WhatsApp</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">50<sup>%+</sup></div>
+      <div class="stat-lbl">SLA events missed — nobody even tracks them</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">2<sup>hrs</sup></div>
+      <div class="stat-lbl">Lost daily per business to contract admin</div>
+    </div>
+  </div>
+</section>
+
+<div class="ticker-wrap">
+  <div class="ticker-track">
+    <div class="t-item"><span class="d"></span>Equipment Maintenance</div>
+    <div class="t-item"><span class="d"></span>Facility Management</div>
+    <div class="t-item"><span class="d"></span>IT Support Services</div>
+    <div class="t-item"><span class="d"></span>Healthcare AMC / CMC</div>
+    <div class="t-item"><span class="d"></span>Consulting &amp; CA Firms</div>
+    <div class="t-item"><span class="d"></span>Wellness Providers</div>
+    <div class="t-item"><span class="d"></span>Manufacturing OEM</div>
+    <div class="t-item"><span class="d"></span>Security Services</div>
+    <div class="t-item"><span class="d"></span>Elevator &amp; Lift AMC</div>
+    <div class="t-item"><span class="d"></span>HVAC Maintenance</div>
+    <div class="t-item"><span class="d"></span>Equipment Maintenance</div>
+    <div class="t-item"><span class="d"></span>Facility Management</div>
+    <div class="t-item"><span class="d"></span>IT Support Services</div>
+    <div class="t-item"><span class="d"></span>Healthcare AMC / CMC</div>
+    <div class="t-item"><span class="d"></span>Consulting &amp; CA Firms</div>
+    <div class="t-item"><span class="d"></span>Wellness Providers</div>
+    <div class="t-item"><span class="d"></span>Manufacturing OEM</div>
+    <div class="t-item"><span class="d"></span>Security Services</div>
+    <div class="t-item"><span class="d"></span>Elevator &amp; Lift AMC</div>
+    <div class="t-item"><span class="d"></span>HVAC Maintenance</div>
+  </div>
+</div>
+
+<!-- =====================
+     PROBLEM SECTION
+===================== -->
+<section class="problem" id="problem">
+
+  <div class="problem-eyebrow">
+    <div class="eyebrow-line"></div>
+    <span class="eyebrow-text">The Problem</span>
+  </div>
+
+  <h2 class="problem-headline">
+    YOUR BUSINESS RUNS ON COMMITMENTS.<br>
+    <span class="dim">RIGHT NOW, NONE OF THEM ARE TRACKABLE.</span>
+  </h2>
+
+  <p class="problem-sub">
+    You're managing AMCs, vendor visits, SLAs, invoices, and compliance — across WhatsApp, Excel sheets, email threads, and memory. Something always falls through.
+  </p>
+
+  <!-- CHAOS vs CONTRACTNEST -->
+  <div class="problem-split">
+
+    <!-- LEFT: CHAOS -->
+    <div class="chaos-side">
+      <div class="chaos-header">
+        <span class="chaos-header-label">Without ContractNest</span>
+        <div class="chaos-header-dot"></div>
+      </div>
+      <div class="chaos-items">
+        <div class="chaos-item">
+          <div class="chaos-icon">📱</div>
+          <div class="chaos-text">
+            <div class="chaos-title">WhatsApp is your contract system</div>
+            <div class="chaos-desc">Agreements buried in chat threads. No signatures. No proof. "I never agreed to that."</div>
+          </div>
+          <div class="chaos-tag">No record</div>
+        </div>
+        <div class="chaos-item">
+          <div class="chaos-icon">📊</div>
+          <div class="chaos-text">
+            <div class="chaos-title">Excel tracks your SLAs</div>
+            <div class="chaos-desc">Manual updates. Always outdated. Vendor says they came — you have no way to verify.</div>
+          </div>
+          <div class="chaos-tag">No proof</div>
+        </div>
+        <div class="chaos-item">
+          <div class="chaos-icon">🕐</div>
+          <div class="chaos-text">
+            <div class="chaos-title">You find out about missed visits late</div>
+            <div class="chaos-desc">By the time you know the PM was skipped, it's already a compliance issue or a breakdown.</div>
+          </div>
+          <div class="chaos-tag">Too late</div>
+        </div>
+        <div class="chaos-item">
+          <div class="chaos-icon">💸</div>
+          <div class="chaos-text">
+            <div class="chaos-title">Invoices land before the work does</div>
+            <div class="chaos-desc">No evidence, no milestone link. You pay anyway or get into a dispute nobody wins.</div>
+          </div>
+          <div class="chaos-tag">Pay blind</div>
+        </div>
+        <div class="chaos-item">
+          <div class="chaos-icon">📂</div>
+          <div class="chaos-text">
+            <div class="chaos-title">Compliance report takes 2 days</div>
+            <div class="chaos-desc">Chase 8 vendors on WhatsApp. Compile PDFs. Pray nothing's missing before the audit.</div>
+          </div>
+          <div class="chaos-tag">Manual hell</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIVIDER -->
+    <div class="problem-divider">
+      <div class="divider-arrow">→</div>
+      <div class="divider-label">ContractNest</div>
+    </div>
+
+    <!-- RIGHT: CONTRACTNEST -->
+    <div class="nest-side">
+      <div class="nest-header">
+        <span class="nest-header-label">With ContractNest</span>
+        <div class="nest-header-dot"></div>
+      </div>
+      <div class="nest-items">
+        <div class="nest-item">
+          <div class="nest-icon">✍️</div>
+          <div class="chaos-text">
+            <div class="nest-title">Digital contracts with e-signature</div>
+            <div class="nest-desc">Both parties sign. Terms locked. Every clause visible to every stakeholder, always.</div>
+          </div>
+          <div class="nest-tag">Signed</div>
+        </div>
+        <div class="nest-item">
+          <div class="nest-icon">📍</div>
+          <div class="chaos-text">
+            <div class="nest-title">SLA clock starts automatically</div>
+            <div class="nest-desc">Every scheduled visit, every response window — tracked in real time. Alerts before breach.</div>
+          </div>
+          <div class="nest-tag">Live tracking</div>
+        </div>
+        <div class="nest-item">
+          <div class="nest-icon">📸</div>
+          <div class="chaos-text">
+            <div class="nest-title">Vendors log their own work</div>
+            <div class="nest-desc">Photos, reports, certs — uploaded at site. You see proof before approving anything.</div>
+          </div>
+          <div class="nest-tag">Evidence</div>
+        </div>
+        <div class="nest-item">
+          <div class="nest-icon">⚡</div>
+          <div class="chaos-text">
+            <div class="nest-title">Invoice generated on completion</div>
+            <div class="nest-desc">Work done → evidence uploaded → invoice auto-raised. No disputes, no delays, no chasing.</div>
+          </div>
+          <div class="nest-tag">Auto</div>
+        </div>
+        <div class="nest-item">
+          <div class="nest-icon">📋</div>
+          <div class="chaos-text">
+            <div class="nest-title">Compliance report in one click</div>
+            <div class="nest-desc">Every visit, every cert, every SLA result — compiled and ready. Audit-ready always.</div>
+          </div>
+          <div class="nest-tag">Instant</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCENARIO TABS -->
+  <div class="scenario-block">
+    <div class="scenario-tabs">
+      <div class="s-tab active" onclick="switchTab(this, 'elevator')">Elevator AMC</div>
+      <div class="s-tab" onclick="switchTab(this, 'facility')">Facility Mgmt</div>
+      <div class="s-tab" onclick="switchTab(this, 'hospital')">Hospital CMC</div>
+      <div class="s-tab" onclick="switchTab(this, 'it')">IT Support</div>
+      <div class="s-tab" onclick="switchTab(this, 'wellness')">Wellness</div>
+    </div>
+
+    <div class="scenario-content active" id="tab-elevator">
+      <div class="scenario-story">
+        <div class="story-before">
+          <div class="story-label">Before</div>
+          <p class="story-text">
+            You have <strong>12 elevators</strong> across 3 buildings. The AMC vendor says they did the quarterly service — but did they? Your facility manager has a WhatsApp message that says "done ✓". That's it. No report. No photos. Last month's invoice was ₹45,000. You paid it. You don't actually know if all 12 were serviced.
+          </p>
+        </div>
+        <div class="story-after">
+          <div class="story-label">With ContractNest</div>
+          <p class="story-text">
+            Each elevator has its own maintenance schedule. The vendor's technician checks in at the site, uploads the service report and photos per unit. You get a notification: <strong>"Elevator #7 — Q2 service complete. Evidence attached."</strong> Invoice raised automatically. You approve after reviewing evidence. Done.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="scenario-content" id="tab-facility">
+      <div class="scenario-story">
+        <div class="story-before">
+          <div class="story-label">Before</div>
+          <p class="story-text">
+            You manage a <strong>tech park with 8 vendors</strong> — HVAC, housekeeping, security, pest control, landscaping, and more. Monthly report for your client takes <strong>2 full days</strong> of chasing vendors on WhatsApp, compiling PDFs, and hoping nothing's missing. Your client asks why the garden wasn't trimmed last Tuesday. You have no answer.
+          </p>
+        </div>
+        <div class="story-after">
+          <div class="story-label">With ContractNest</div>
+          <p class="story-text">
+            All 8 vendors have their own portal. They log every visit, upload every completion photo. Your dashboard shows <strong>HVAC: 3/4 visits done · Landscaping: MISSED Tuesday</strong>. Alert already sent to vendor. Monthly report? Auto-generated. One PDF. Client gets it automatically.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="scenario-content" id="tab-hospital">
+      <div class="scenario-story">
+        <div class="story-before">
+          <div class="story-label">Before</div>
+          <p class="story-text">
+            Apollo Hospital has <strong>₹7.6 crore in annual CMC contracts</strong> across 40+ devices. An MRI breaks down at 2 AM. You call the AMC vendor. They say they'll be there in 4 hours — the SLA. But did they meet it? Nobody's tracking. The biomedical team keeps a spreadsheet. It's 3 months out of date.
+          </p>
+        </div>
+        <div class="story-after">
+          <div class="story-label">With ContractNest</div>
+          <p class="story-text">
+            Breakdown logged → <strong>SLA clock starts automatically</strong>. Nearest certified technician gets auto-dispatch. They arrive, fix it, upload service report. SLA tracked: <strong>3 hrs 22 mins — within window</strong>. CFO opens dashboard: "99.2% uptime this quarter. 0 SLA breaches." Renewal? Automatic.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="scenario-content" id="tab-it">
+      <div class="scenario-story">
+        <div class="story-before">
+          <div class="story-label">Before</div>
+          <p class="story-text">
+            Your IT support contract says <strong>4-hour response, 8-hour resolution</strong>. A server goes down on Friday evening. You email support. They reply Saturday morning — 14 hours later. You have no written record of the SLA breach. When renewal comes, they quote the same price. You have no leverage. You pay it.
+          </p>
+        </div>
+        <div class="story-after">
+          <div class="story-label">With ContractNest</div>
+          <p class="story-text">
+            Every ticket logs against your contract's SLA terms automatically. Friday server down — <strong>SLA breach flagged at hour 5</strong>. Penalty clause triggered: 5% discount on next invoice. Vendor gets notified. You have a paper trail. At renewal, you walk in with <strong>3 SLA breach reports and full evidence.</strong>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="scenario-content" id="tab-wellness">
+      <div class="scenario-story">
+        <div class="story-before">
+          <div class="story-label">Before</div>
+          <p class="story-text">
+            You run a PCOD wellness program — <strong>3 months, ₹12,000 per client</strong>. 4 yoga sessions, 2 gynaec consults, 1 nutrition plan. You manage 30 clients. Scheduling is WhatsApp. Tracking is a notepad. Two clients say they didn't get their nutrition session. You're not sure if that's true. Renewals are a guessing game.
+          </p>
+        </div>
+        <div class="story-after">
+          <div class="story-label">With ContractNest</div>
+          <p class="story-text">
+            Every client has a live contract: <strong>4 yoga · 2 gynec · 1 nutrition</strong>. Each session logged when delivered. Client sees their own progress portal. You see every client's completion status at a glance. Renewal reminder sent automatically at week 10. <strong>Zero disputes. Zero memory required.</strong>
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<div class="cards">
+  <div class="card rev">
+    <div class="card-tag">Revenue Side</div>
+    <div class="card-title">Close Contracts. Get Paid.</div>
+    <p class="card-body">Send professional contracts, track every service milestone, auto-generate invoices, and prove every commitment was met.</p>
+    <ul class="card-list">
+      <li>Digital contracts with e-signature</li>
+      <li>SLA tracking with real-time alerts</li>
+      <li>Evidence collection — photos, reports, certs</li>
+      <li>Auto-invoice on milestone completion</li>
+      <li>AR tracking — know who owes what</li>
+    </ul>
+  </div>
+  <div class="card cost">
+    <div class="card-tag">Cost Side</div>
+    <div class="card-title">Pay for What's Done.</div>
+    <p class="card-body">Manage every vendor contract from one place. Know what was scheduled, what was done, and what's overdue — before you pay.</p>
+    <ul class="card-list">
+      <li>Vendor portals — they log their own work</li>
+      <li>Schedule adherence &amp; visit tracking</li>
+      <li>Work evidence required before payment</li>
+      <li>AP tracking — never double-pay</li>
+      <li>Compliance reports auto-generated</li>
+    </ul>
+  </div>
+</div>
+
+<!-- =====================
+     DUAL PERSPECTIVE SECTION
+===================== -->
+<section class="dual-perspective" id="perspective">
+
+  <div class="dp-eyebrow">
+    <div class="eyebrow-line"></div>
+    <span class="eyebrow-text">Two Sides. One Platform.</span>
+  </div>
+
+  <h2 class="dp-headline">SAME CONTRACT.<br>DIFFERENT LENS.</h2>
+
+  <p class="dp-sub">
+    A hospital thinks in <strong>assets — is this equipment covered?</strong>
+    An AMC company thinks in <strong>contracts — what's in scope?</strong>
+    ContractNest bridges both worlds. One platform. Two home screens. Zero gaps.
+  </p>
+
+  <!-- TOGGLE -->
+  <div class="dp-toggle">
+    <button class="dp-toggle-btn active" onclick="switchPerspective('hospital', this)">🏥 Hospital View — Asset Coverage</button>
+    <button class="dp-toggle-btn" onclick="switchPerspective('amc', this)">🔧 AMC Company View — Contract Pipeline</button>
+  </div>
+
+  <!-- HOSPITAL VIEW -->
+  <div class="dp-view active" id="dp-hospital">
+    <div class="dp-dashboard">
+      <div class="dp-dash-bar">
+        <div class="dp-dash-title">Asset Coverage Dashboard · Apollo Hospital — Hyderabad</div>
+        <div class="dp-dash-meta">
+          <div class="dp-dash-meta-item"><div class="dp-dot green"></div>31 Covered</div>
+          <div class="dp-dash-meta-item"><div class="dp-dot amber"></div>8 Expiring Soon</div>
+          <div class="dp-dash-meta-item"><div class="dp-dot red"></div>4 Uncovered</div>
+        </div>
+      </div>
+
+      <div class="dp-coverage-stats">
+        <div class="dp-cstat">
+          <div class="dp-cstat-num white">43</div>
+          <div class="dp-cstat-label">Total biomedical assets tracked</div>
+        </div>
+        <div class="dp-cstat">
+          <div class="dp-cstat-num green">31</div>
+          <div class="dp-cstat-label">Fully covered — active AMC/CMC</div>
+        </div>
+        <div class="dp-cstat">
+          <div class="dp-cstat-num amber">8</div>
+          <div class="dp-cstat-label">Coverage expiring in &lt;90 days</div>
+        </div>
+        <div class="dp-cstat">
+          <div class="dp-cstat-num red">4</div>
+          <div class="dp-cstat-label">No coverage — procurement alert sent</div>
+        </div>
+      </div>
+
+      <div class="dp-asset-table">
+        <div class="dp-table-header">
+          <div class="dp-th">Asset / Equipment</div>
+          <div class="dp-th">Dept / Location</div>
+          <div class="dp-th">Coverage Status</div>
+          <div class="dp-th">Contract</div>
+          <div class="dp-th">Expires</div>
+          <div class="dp-th">Last PM</div>
+        </div>
+
+        <div class="dp-table-row">
+          <div class="dp-td asset-name">🫁 GE Ventilator — Carescape R860</div>
+          <div class="dp-td">ICU · Bed 4</div>
+          <div class="dp-td"><span class="dp-coverage-pill covered">● Covered</span></div>
+          <div class="dp-td" style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);">CN-2024-0041</div>
+          <div class="dp-td">Mar 2026</div>
+          <div class="dp-td">12 Jan 2025</div>
+        </div>
+
+        <div class="dp-table-row">
+          <div class="dp-td asset-name">🧲 Siemens MRI — MAGNETOM Sola</div>
+          <div class="dp-td">Radiology · B2</div>
+          <div class="dp-td"><span class="dp-coverage-pill expiring">⚠ Expiring 47d</span></div>
+          <div class="dp-td" style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);">CN-2024-0012</div>
+          <div class="dp-td" style="color:var(--amber);">Apr 2025</div>
+          <div class="dp-td">03 Feb 2025</div>
+        </div>
+
+        <div class="dp-table-row">
+          <div class="dp-td asset-name">❤️ Philips Cardiac Monitor — IntelliVue</div>
+          <div class="dp-td">Cardiology · OPD</div>
+          <div class="dp-td"><span class="dp-coverage-pill covered">● Covered</span></div>
+          <div class="dp-td" style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);">CN-2024-0038</div>
+          <div class="dp-td">Dec 2025</div>
+          <div class="dp-td">28 Jan 2025</div>
+        </div>
+
+        <div class="dp-table-row">
+          <div class="dp-td asset-name">⚡ Nihon Kohden Defibrillator — TEC-8300</div>
+          <div class="dp-td">Emergency · OT-2</div>
+          <div class="dp-td"><span class="dp-coverage-pill uncovered">✕ No Coverage</span></div>
+          <div class="dp-td" style="color:var(--red);font-size:0.72rem;">—</div>
+          <div class="dp-td" style="color:var(--red);">Expired</div>
+          <div class="dp-td">Nov 2024</div>
+        </div>
+
+        <div class="dp-table-row">
+          <div class="dp-td asset-name">🔬 Roche Cobas — Chemistry Analyser</div>
+          <div class="dp-td">Lab · Ground Fl</div>
+          <div class="dp-td"><span class="dp-coverage-pill expiring">⚠ Expiring 63d</span></div>
+          <div class="dp-td" style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);">CN-2024-0019</div>
+          <div class="dp-td" style="color:var(--amber);">May 2025</div>
+          <div class="dp-td">15 Jan 2025</div>
+        </div>
+
+        <div class="dp-table-row">
+          <div class="dp-td asset-name">🩻 Fujifilm DR System — FDR Go Plus</div>
+          <div class="dp-td">Radiology · B1</div>
+          <div class="dp-td"><span class="dp-coverage-pill covered">● Covered</span></div>
+          <div class="dp-td" style="font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--muted);">CN-2024-0041</div>
+          <div class="dp-td">Mar 2026</div>
+          <div class="dp-td">18 Jan 2025</div>
+        </div>
+      </div>
+
+      <div class="dp-insight-bar">
+        <div class="dp-insight-icon">💡</div>
+        <div class="dp-insight-text">
+          <strong>ContractNest detected:</strong> Your Defibrillator in Emergency-OT2 has no active coverage. The Siemens MRI and Roche Analyser contracts expire in under 90 days — renewal RFPs have been auto-drafted and are ready to send. <strong>NABH calibration audit is in 38 days.</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="dp-bridge">
+      <div class="dp-bridge-side hospital">
+        <div class="dp-bridge-label hospital">🏥 Hospital Team Asks</div>
+        <div class="dp-bridge-q">"Is all our critical equipment covered right now?"</div>
+        <div class="dp-bridge-a">Biomedical engineers and admin teams see a <span class="hl">live coverage map</span> — not a contract list. Green, amber, red. Simple. No contract jargon needed.</div>
+      </div>
+      <div class="dp-bridge-arrow">
+        <div class="dp-bridge-arrow-icon">↔</div>
+        <div class="dp-bridge-arrow-label">Same Data</div>
+      </div>
+      <div class="dp-bridge-side amc">
+        <div class="dp-bridge-label amc">🔧 AMC Company Sees</div>
+        <div class="dp-bridge-q">"Which of our contracts are up for renewal this quarter?"</div>
+        <div class="dp-bridge-a">Service teams see their <span class="hl">contract pipeline with asset schedules</span> — visit logs, SLA clocks, renewal alerts. Same underlying data, different view.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AMC COMPANY VIEW -->
+  <div class="dp-view" id="dp-amc">
+    <div class="dp-contract-view">
+
+      <div class="dp-contract-card">
+        <div class="dp-cc-header">
+          <div class="dp-cc-name">Apollo Hospital — Hyderabad</div>
+          <div class="dp-cc-status active">Active</div>
+        </div>
+        <div class="dp-cc-body">
+          <div class="dp-cc-row">
+            <span class="dp-cc-row-label">Contract Value</span>
+            <span class="dp-cc-row-value green">₹7.6L / year</span>
+          </div>
+          <div class="dp-cc-row">
+            <span class="dp-cc-row-label">Assets Covered</span>
+            <span class="dp-cc-row-value">31 devices</span>
+          </div>
+          <div class="dp-cc-row">
+            <span class="dp-cc-row-label">Visits This Quarter</span>
+            <span class="dp-cc-row-value green">8 / 8 completed ✓</span>
+          </div>
+          <div class="dp-cc-row">
+            <span class="dp-cc-row-label">Open SLA Events</span>
+            <span class="dp-cc-row-value green">0 breaches</span>
+          </div>
+          <div class="dp-cc-row">
+            <span class="dp-cc-row-label">Renewal Due</span>
+            <span class="dp-cc-row-value amber">Mar 2026 — 13 months</span>
+          </div>
+        </div>
+        <div class="dp-cc-assets">
+          <div class="dp-cc-assets-label">Assets on this contract</div>
+          <div class="dp-cc-asset-list">
+            <span class="dp-cc-asset-tag">GE Ventilators ×3</span>
+            <span class="dp-cc-asset-tag">Philips Monitors ×8</span>
+            <span class="dp-cc-asset-tag">Fujifilm DR ×2</span>
+            <span class="dp-cc-asset-tag">Infusion Pumps ×12</span>
+            <span class="dp-cc-asset-tag">+6 more</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="dp-contract-card">
+        <div class="dp-cc-header">
+          <div class="dp-cc-name">Yashoda Hospital — Secunderabad</div>
+          <div class="dp-cc-status renewing">Renewal Due</div>
+        </div>
+        <div class="dp-cc-body">
+          <div class="dp-cc-row">
+            <span class="dp-cc-row-label">Contract Value</span>
+            <span class="dp-cc-row-value amber">₹4.2L / year</span>
+          </div>
+          <div class="dp-cc-row">
+            <span class="dp-cc-row-label">Assets Covered</span>
+            <span class="dp-cc-row-value">18 devices</span>
+          </div>
+          <div class="dp-cc-row">
+            <span class="dp-cc-row-label">Visits This Quarter</span>
+            <span class="dp-cc-row-value amber">5 / 6 — 1 pending</span>
+          </div>
+          <div class="dp-cc-row">
+            <span class="dp-cc-row-label">Open SLA Events</span>
+            <span class="dp-cc-row-value" style="color:var(--red);">1 breach — response delayed</span>
+          </div>
+          <div class="dp-cc-row">
+            <span class="dp-cc-row-label">Renewal Due</span>
+            <span class="dp-cc-row-value" style="color:var(--red);">Apr 2025 — 47 days</span>
+          </div>
+        </div>
+        <div class="dp-cc-assets">
+          <div class="dp-cc-assets-label">Assets on this contract</div>
+          <div class="dp-cc-asset-list">
+            <span class="dp-cc-asset-tag">Siemens MRI ×1</span>
+            <span class="dp-cc-asset-tag">Roche Analyser ×2</span>
+            <span class="dp-cc-asset-tag">ECG Machines ×4</span>
+            <span class="dp-cc-asset-tag">+11 more</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="dp-contract-card">
+        <div class="dp-cc-header">
+          <div class="dp-cc-name">KIMS Hospital — Secunderabad</div>
+          <div class="dp-cc-status active">Active</div>
+        </div>
+        <div class="dp-cc-body">
+          <div class="dp-cc-row">
+            <span class="dp-cc-row-label">Contract Value</span>
+            <span class="dp-cc-row-value green">₹2.8L / year</span>
+          </div>
+          <div class="dp-cc-row">
+            <span class="dp-cc-row-label">Assets Covered</span>
+            <span class="dp-cc-row-value">12 devices</span>
+          </div>
+          <div class="dp-cc-row">
+            <span class="dp-cc-row-label">Visits This Quarter</span>
+            <span class="dp-cc-row-value green">4 / 4 completed ✓</span>
+          </div>
+          <div class="dp-cc-row">
+            <span class="dp-cc-row-label">Open SLA Events</span>
+            <span class="dp-cc-row-value green">0 breaches</span>
+          </div>
+          <div class="dp-cc-row">
+            <span class="dp-cc-row-label">Renewal Due</span>
+            <span class="dp-cc-row-value">Nov 2025 — 8 months</span>
+          </div>
+        </div>
+        <div class="dp-cc-assets">
+          <div class="dp-cc-assets-label">Assets on this contract</div>
+          <div class="dp-cc-asset-list">
+            <span class="dp-cc-asset-tag">Patient Monitors ×6</span>
+            <span class="dp-cc-asset-tag">Defibrillators ×2</span>
+            <span class="dp-cc-asset-tag">Autoclave ×1</span>
+            <span class="dp-cc-asset-tag">+3 more</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="dp-contract-card">
+        <div class="dp-cc-header">
+          <div class="dp-cc-name">Care Hospital — Banjara Hills</div>
+          <div class="dp-cc-status renewing">Renewal Due</div>
+        </div>
+        <div class="dp-cc-body">
+          <div class="dp-cc-row">
+            <span class="dp-cc-row-label">Contract Value</span>
+            <span class="dp-cc-row-value amber">₹1.9L / year</span>
+          </div>
+          <div class="dp-cc-row">
+            <span class="dp-cc-row-label">Assets Covered</span>
+            <span class="dp-cc-row-value">9 devices</span>
+          </div>
+          <div class="dp-cc-row">
+            <span class="dp-cc-row-label">Visits This Quarter</span>
+            <span class="dp-cc-row-value green">3 / 3 completed ✓</span>
+          </div>
+          <div class="dp-cc-row">
+            <span class="dp-cc-row-label">Open SLA Events</span>
+            <span class="dp-cc-row-value green">0 breaches</span>
+          </div>
+          <div class="dp-cc-row">
+            <span class="dp-cc-row-label">Renewal Due</span>
+            <span class="dp-cc-row-value" style="color:var(--amber);">May 2025 — 63 days</span>
+          </div>
+        </div>
+        <div class="dp-cc-assets">
+          <div class="dp-cc-assets-label">Assets on this contract</div>
+          <div class="dp-cc-asset-list">
+            <span class="dp-cc-asset-tag">Roche Cobas ×1</span>
+            <span class="dp-cc-asset-tag">Ultrasound ×2</span>
+            <span class="dp-cc-asset-tag">OT Lights ×4</span>
+            <span class="dp-cc-asset-tag">+2 more</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="dp-bridge" style="margin-top:40px;">
+      <div class="dp-bridge-side amc">
+        <div class="dp-bridge-label amc">🔧 AMC Company Sees</div>
+        <div class="dp-bridge-q">"Yashoda renewal in 47 days — what's the right price?"</div>
+        <div class="dp-bridge-a">Service teams see <span class="hl">visit history, SLA performance, asset additions</span> — everything needed to price a competitive renewal proposal in minutes, not days.</div>
+      </div>
+      <div class="dp-bridge-arrow">
+        <div class="dp-bridge-arrow-icon">↔</div>
+        <div class="dp-bridge-arrow-label">Same Data</div>
+      </div>
+      <div class="dp-bridge-side hospital">
+        <div class="dp-bridge-label hospital">🏥 Hospital Receives</div>
+        <div class="dp-bridge-q">"Our MRI contract renewal just arrived — is the SLA stronger?"</div>
+        <div class="dp-bridge-a">Hospital procurement sees a <span class="hl">proposal built from their own asset data</span> — no scope gaps, no missing equipment, no back-and-forth. Ready to sign.</div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- =====================
+     PLAYGROUND SECTION
+===================== -->
+<section class="playground" id="playground">
+
+  <div class="pg-eyebrow">
+    <div class="eyebrow-line"></div>
+    <span class="eyebrow-text">Try It Now — No Sign Up Needed</span>
+  </div>
+
+  <h2 class="pg-headline">BUILD YOUR FIRST CONTRACT<br>IN 60 SECONDS</h2>
+  <p class="pg-sub">Pick a template, fill in the basics, and see your live contract. Save it to invite your vendor or client.</p>
+
+  <!-- STEP PROGRESS -->
+  <div class="pg-steps">
+    <div class="pg-step active" id="pstep-1">
+      <div class="pg-step-num">1</div>
+      <div class="pg-step-label">Pick Template</div>
+    </div>
+    <div class="pg-step-line" id="pline-1"></div>
+    <div class="pg-step" id="pstep-2">
+      <div class="pg-step-num">2</div>
+      <div class="pg-step-label">Fill Details</div>
+    </div>
+    <div class="pg-step-line" id="pline-2"></div>
+    <div class="pg-step" id="pstep-3">
+      <div class="pg-step-num">3</div>
+      <div class="pg-step-label">Preview Contract</div>
+    </div>
+    <div class="pg-step-line" id="pline-3"></div>
+    <div class="pg-step" id="pstep-4">
+      <div class="pg-step-num">4</div>
+      <div class="pg-step-label">Save &amp; Send</div>
+    </div>
+  </div>
+
+  <!-- STEP 1: TEMPLATE PICKER -->
+  <div class="pg-panel active" id="pg-panel-1">
+    <div class="pg-card">
+      <div class="pg-card-header">
+        <span class="pg-card-title">Step 1 — Choose a contract template</span>
+        <span class="pg-card-hint">6 templates available in beta</span>
+      </div>
+      <div class="pg-card-body">
+        <div class="tpl-grid" id="tplGrid">
+          <div class="tpl-card" onclick="selectTemplate(this,'Elevator AMC','Elevator & Lift','Annual maintenance contract for elevators with quarterly service visits and 4-hr emergency response','4 Quarterly Services + Emergency','₹85,000 / year','4 hr response · 8 hr resolution')">
+            <div class="tpl-icon">🛗</div>
+            <div class="tpl-name">Elevator AMC</div>
+            <div class="tpl-desc">Annual maintenance with quarterly visits & emergency response</div>
+            <div class="tpl-tag">AMC</div>
+          </div>
+          <div class="tpl-card" onclick="selectTemplate(this,'HVAC Maintenance','HVAC & Cooling','Comprehensive HVAC service contract with monthly filter checks and bi-annual deep service','Monthly Checks + 2 Deep Services','₹1,20,000 / year','24 hr response · same day resolution')">
+            <div class="tpl-icon">❄️</div>
+            <div class="tpl-name">HVAC Maintenance</div>
+            <div class="tpl-desc">Monthly filter checks, bi-annual deep service & emergency support</div>
+            <div class="tpl-tag">AMC</div>
+          </div>
+          <div class="tpl-card" onclick="selectTemplate(this,'IT Support Contract','IT Services','Managed IT support with helpdesk, monthly patching and quarterly infrastructure review','24/7 Helpdesk + Monthly Patching','₹2,50,000 / year','4 hr response · 8 hr resolution')">
+            <div class="tpl-icon">💻</div>
+            <div class="tpl-name">IT Support</div>
+            <div class="tpl-desc">24/7 helpdesk, monthly patching & quarterly infra review</div>
+            <div class="tpl-tag">Support</div>
+          </div>
+          <div class="tpl-card" onclick="selectTemplate(this,'Facility Management','Facility Services','Multi-vendor facility management covering housekeeping, security and maintenance','Daily Housekeeping + Security + Maintenance','₹4,50,000 / year','Same day response')">
+            <div class="tpl-icon">🏢</div>
+            <div class="tpl-name">Facility Management</div>
+            <div class="tpl-desc">Housekeeping, security & maintenance — all vendors, one contract</div>
+            <div class="tpl-tag">FM</div>
+          </div>
+          <div class="tpl-card" onclick="selectTemplate(this,'Wellness Program','Health & Wellness','3-month structured wellness program with yoga, nutrition and medical consultations','4 Yoga + 2 Consults + 1 Nutrition Plan','₹12,000 / client','Session completion tracking')">
+            <div class="tpl-icon">🧘</div>
+            <div class="tpl-name">Wellness Program</div>
+            <div class="tpl-desc">Structured 3-month program with session tracking & evidence</div>
+            <div class="tpl-tag">Healthcare</div>
+          </div>
+          <div class="tpl-card" onclick="selectTemplate(this,'Equipment CMC','Medical Equipment','Comprehensive maintenance contract for medical equipment with preventive maintenance and calibration','PM Visits + Calibration + 24/7 Emergency','₹24,000 / year / device','4 hr response · 99% uptime SLA')">
+            <div class="tpl-icon">🏥</div>
+            <div class="tpl-name">Equipment CMC</div>
+            <div class="tpl-desc">Medical equipment maintenance with PM visits & calibration certs</div>
+            <div class="tpl-tag">CMC</div>
+          </div>
+        </div>
+        <div class="pg-nav">
+          <span></span>
+          <button class="btn-pg-next" id="btnStep1Next" onclick="goStep(2)" disabled>
+            Continue with template →
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2: FILL DETAILS -->
+  <div class="pg-panel" id="pg-panel-2">
+    <div class="pg-card">
+      <div class="pg-card-header">
+        <span class="pg-card-title" id="step2Title">Step 2 — Fill contract details</span>
+        <span class="pg-card-hint">Takes about 30 seconds</span>
+      </div>
+      <div class="pg-card-body">
+        <div class="pg-form">
+          <div class="pg-input-row">
+            <div class="pg-field">
+              <label class="pg-label">Your Business Name</label>
+              <input class="pg-input" id="f-provider" type="text" placeholder="e.g. TechLift Services Pvt Ltd" oninput="updatePreview()" />
+            </div>
+            <div class="pg-field">
+              <label class="pg-label">Client / Vendor Name</label>
+              <input class="pg-input" id="f-client" type="text" placeholder="e.g. Prestige Tech Park" oninput="updatePreview()" />
+            </div>
+          </div>
+          <div class="pg-input-row">
+            <div class="pg-field">
+              <label class="pg-label">Contract Value</label>
+              <input class="pg-input" id="f-value" type="text" placeholder="e.g. ₹85,000" oninput="updatePreview()" />
+            </div>
+            <div class="pg-field">
+              <label class="pg-label">Contract Duration</label>
+              <select class="pg-select" id="f-duration" onchange="updatePreview()">
+                <option value="1 Year">1 Year</option>
+                <option value="6 Months">6 Months</option>
+                <option value="3 Months">3 Months</option>
+                <option value="2 Years">2 Years</option>
+              </select>
+            </div>
+          </div>
+          <div class="pg-input-row">
+            <div class="pg-field">
+              <label class="pg-label">Start Date</label>
+              <input class="pg-input" id="f-start" type="date" oninput="updatePreview()" />
+            </div>
+            <div class="pg-field">
+              <label class="pg-label">Payment Terms</label>
+              <select class="pg-select" id="f-payment" onchange="updatePreview()">
+                <option value="Quarterly">Quarterly</option>
+                <option value="Monthly">Monthly</option>
+                <option value="Annual Advance">Annual Advance</option>
+                <option value="Milestone-based">Milestone-based</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="pg-nav">
+          <button class="btn-pg-back" onclick="goStep(1)">← Back</button>
+          <button class="btn-pg-next" onclick="goStep(3)">Preview Contract →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3: CONTRACT PREVIEW -->
+  <div class="pg-panel" id="pg-panel-3">
+    <div class="pg-card">
+      <div class="pg-card-header">
+        <span class="pg-card-title">Step 3 — Your Contract Preview</span>
+        <span class="pg-card-hint">Live document — updates as you type</span>
+      </div>
+      <div class="pg-card-body">
+        <div class="contract-preview" id="contractPreview">
+          <div class="cp-watermark">DRAFT</div>
+          <div class="cp-header">
+            <div class="cp-logo"><div class="cp-logo-dot"></div>CONTRACTNEST</div>
+            <div class="cp-badge">DRAFT · NOT YET SIGNED</div>
+          </div>
+          <div class="cp-title" id="cp-title">Elevator AMC</div>
+          <div class="cp-subtitle" id="cp-subtitle">Annual Maintenance Contract — Elevator & Lift</div>
+          <div class="cp-parties">
+            <div class="cp-party">
+              <div class="cp-party-role">Service Provider</div>
+              <div class="cp-party-name" id="cp-provider">Your Business Name</div>
+            </div>
+            <div class="cp-party">
+              <div class="cp-party-role">Client</div>
+              <div class="cp-party-name" id="cp-client">Client Name</div>
+            </div>
+          </div>
+          <div class="cp-terms">
+            <div class="cp-term">
+              <div class="cp-term-label">Value</div>
+              <div class="cp-term-value" id="cp-value">₹85,000</div>
+            </div>
+            <div class="cp-term">
+              <div class="cp-term-label">Duration</div>
+              <div class="cp-term-value" id="cp-duration">1 Year</div>
+            </div>
+            <div class="cp-term">
+              <div class="cp-term-label">Start Date</div>
+              <div class="cp-term-value" id="cp-start">—</div>
+            </div>
+            <div class="cp-term">
+              <div class="cp-term-label">Payment</div>
+              <div class="cp-term-value" id="cp-payment">Quarterly</div>
+            </div>
+          </div>
+          <div class="cp-milestones">
+            <div class="cp-section-title">Service Milestones</div>
+            <div id="cp-milestones-list"></div>
+          </div>
+          <div class="cp-sla" id="cp-sla">⏱ SLA: 4 hr response · 8 hr resolution</div>
+          <div class="cp-signatures">
+            <div class="cp-sig">
+              <div class="cp-sig-line"></div>
+              <div class="cp-sig-label">Service Provider Signature</div>
+              <div class="cp-sig-name" id="cp-sig-provider">—</div>
+            </div>
+            <div class="cp-sig">
+              <div class="cp-sig-line"></div>
+              <div class="cp-sig-label">Client Signature</div>
+              <div class="cp-sig-name" id="cp-sig-client">—</div>
+            </div>
+          </div>
+        </div>
+        <div class="pg-nav">
+          <button class="btn-pg-back" onclick="goStep(2)">← Edit Details</button>
+          <button class="btn-pg-next" onclick="goStep(4)">Save &amp; Invite Vendor →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 4: SAVE GATE -->
+  <div class="pg-panel" id="pg-panel-4">
+    <div class="pg-card">
+      <div class="pg-card-header">
+        <span class="pg-card-title">Step 4 — Save your contract &amp; join beta</span>
+        <span class="pg-card-hint">Free during closed beta</span>
+      </div>
+      <div class="pg-card-body">
+
+        <!-- show contract summary -->
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:20px 24px;margin-bottom:24px;display:flex;align-items:center;gap:20px;">
+          <div style="font-size:2rem;">📄</div>
+          <div>
+            <div style="font-weight:600;font-size:0.95rem;margin-bottom:3px;" id="summary-title">Elevator AMC</div>
+            <div style="font-size:0.78rem;color:var(--muted);" id="summary-parties">—</div>
+            <div style="font-size:0.78rem;color:var(--amber);margin-top:4px;font-family:'DM Mono',monospace;" id="summary-value">₹85,000 · 1 Year · Quarterly</div>
+          </div>
+          <div style="margin-left:auto;">
+            <div style="font-family:'DM Mono',monospace;font-size:0.6rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--amber);background:var(--amber-dim);border:1px solid rgba(245,166,35,0.2);padding:4px 10px;border-radius:4px;">DRAFT</div>
+          </div>
+        </div>
+
+        <div class="pg-save-gate">
+          <div class="pg-save-text">
+            <div class="pg-save-title">Your contract is ready to send 🎉</div>
+            <div class="pg-save-desc">Enter your email to save this contract, invite your vendor/client to sign, and get early access to ContractNest beta.</div>
+          </div>
+          <div class="pg-save-form">
+            <input type="email" id="pg-email" placeholder="your@business.com" />
+            <button class="btn-save" onclick="handlePgSave()">Save &amp; Get Access</button>
+          </div>
+        </div>
+
+        <div class="pg-saved-msg" id="pgSavedMsg">
+          ✓ &nbsp;Contract saved! We'll send you beta access — your vendor invite link will be ready on day one.
+        </div>
+
+        <!-- VANI NUDGE -->
+        <div class="pg-vani-nudge" id="pgVaniNudge">
+          <div class="pg-vani-nudge-icon">🤖</div>
+          <div class="pg-vani-nudge-text">
+            <strong>Coming Soon — VaNi</strong> will automatically monitor this contract, alert you on SLA breaches, chase evidence from your vendor, and trigger invoices on completion. <strong>Your virtual contract ops employee.</strong>
+          </div>
+        </div>
+
+        <div class="pg-nav" style="margin-top:16px;">
+          <button class="btn-pg-back" onclick="goStep(3)">← Back to Preview</button>
+          <span style="font-size:0.75rem;color:var(--faint);font-family:'DM Mono',monospace;">90+ businesses on waitlist</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- =====================
+     VANI SECTION
+===================== -->
+<section class="vani" id="vani">
+  <div class="vani-inner">
+    <div class="vani-top">
+      <!-- LEFT: INTRO -->
+      <div>
+        <div class="vani-cs-badge">
+          <span class="blink"></span>
+          Coming Soon
+        </div>
+        <h2 class="vani-headline">MEET <span class="accent">VANI</span><br>YOUR CONTRACT<br>OPS EMPLOYEE</h2>
+        <p class="vani-desc">
+          VaNi is a <strong>virtual employee</strong> that sits inside ContractNest and runs your contract operations automatically — so you don't have to chase vendors, remember SLA deadlines, or manually raise invoices.
+        </p>
+        <div class="vani-waitlist">
+          <div class="vani-waitlist-icon">🌟</div>
+          <div class="vani-waitlist-text">
+            <div class="vani-waitlist-title">Early Access Priority</div>
+            <div class="vani-waitlist-desc">Waitlist members get VaNi access before public launch</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: CAPABILITIES -->
+      <div class="vani-grid">
+        <div class="vani-cap">
+          <div class="vani-cap-soon">Soon</div>
+          <div class="vani-cap-icon">⏰</div>
+          <div class="vani-cap-title">Auto-reminders</div>
+          <div class="vani-cap-desc">Sends scheduled service reminders to vendors before visits are due. No manual follow-up.</div>
+        </div>
+        <div class="vani-cap">
+          <div class="vani-cap-soon">Soon</div>
+          <div class="vani-cap-icon">🚨</div>
+          <div class="vani-cap-title">SLA breach alerts</div>
+          <div class="vani-cap-desc">Detects SLA violations in real time and escalates immediately — before a breach becomes a dispute.</div>
+        </div>
+        <div class="vani-cap">
+          <div class="vani-cap-soon">Soon</div>
+          <div class="vani-cap-icon">📸</div>
+          <div class="vani-cap-title">Evidence chasing</div>
+          <div class="vani-cap-desc">Automatically requests photos, reports and certs from vendors after each service visit.</div>
+        </div>
+        <div class="vani-cap">
+          <div class="vani-cap-soon">Soon</div>
+          <div class="vani-cap-icon">🧾</div>
+          <div class="vani-cap-title">Invoice triggers</div>
+          <div class="vani-cap-desc">Raises invoices automatically when milestones are completed and evidence is uploaded.</div>
+        </div>
+        <div class="vani-cap">
+          <div class="vani-cap-soon">Soon</div>
+          <div class="vani-cap-icon">🔄</div>
+          <div class="vani-cap-title">Renewal nudges</div>
+          <div class="vani-cap-desc">Flags contracts expiring in 30 days and drafts renewal proposals automatically.</div>
+        </div>
+        <div class="vani-cap">
+          <div class="vani-cap-soon">Soon</div>
+          <div class="vani-cap-icon">📊</div>
+          <div class="vani-cap-title">Compliance reports</div>
+          <div class="vani-cap-desc">Generates monthly compliance summaries per vendor — audit-ready, zero manual effort.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TERMINAL -->
+    <div class="vani-terminal">
+      <div class="vani-terminal-bar">
+        <div class="term-dot r"></div>
+        <div class="term-dot y"></div>
+        <div class="term-dot g"></div>
+        <div class="term-title">vani@contractnest ~ contract-monitor</div>
+      </div>
+      <div class="vani-terminal-body">
+        <div class="term-line"><span class="term-prompt">→</span><span class="term-cmd">monitoring: Elevator AMC · TechLift Services · Contract #CN-2024-0847</span></div>
+        <div class="term-line"><span class="term-out info">&nbsp;&nbsp;schedule: Q3 Preventive Maintenance due in 3 days</span></div>
+        <div class="term-line"><span class="term-out warn">&nbsp;&nbsp;⚠ vendor reminder sent via WhatsApp · awaiting confirmation</span></div>
+        <div class="term-line"><span class="term-out">&nbsp;&nbsp;✓ vendor confirmed visit: 15 March, 10:00 AM</span></div>
+        <div class="term-line"><span class="term-out info">&nbsp;&nbsp;SLA clock: active · response window: 4 hrs · resolution: 8 hrs</span></div>
+        <div class="term-line"><span class="term-out">&nbsp;&nbsp;✓ service completed · evidence uploaded: 3 photos + report PDF</span></div>
+        <div class="term-line"><span class="term-out">&nbsp;&nbsp;✓ invoice auto-raised: ₹21,250 · sent to client for approval</span></div>
+        <div class="term-line"><span class="term-prompt">→</span><span class="term-cmd">next: Q4 maintenance in 91 days &nbsp;<span class="term-cursor"></span></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =====================
+     SOCIAL PROOF SECTION
+===================== -->
+<section class="social-proof" id="proof">
+
+  <div class="sp-header">
+    <div>
+      <div class="hero-eyebrow" style="margin-bottom:16px;">
+        <div class="eyebrow-line"></div>
+        <span class="eyebrow-text">Early Customers</span>
+      </div>
+      <h2 class="sp-headline">REAL BUSINESSES.<br>REAL OUTCOMES.</h2>
+    </div>
+    <div class="sp-counter">
+      <div class="sp-counter-num">90+</div>
+      <div class="sp-counter-label">Businesses on waitlist</div>
+    </div>
+  </div>
+
+  <!-- TESTIMONIALS -->
+  <div class="sp-grid">
+
+    <!-- HOSPITAL -->
+    <div class="sp-card">
+      <div class="sp-industry-tag hospital">🏥 &nbsp;Healthcare</div>
+      <div class="sp-quote">
+        "We went from receipts in a drawer to knowing exactly which vendor is coming, when, and what they promised. Our <strong>OT scheduling improved</strong> — we now plan around service events instead of being surprised by them. <span class="highlight-green">SLA compliance jumped from 45% to 80% in two months.</span> The digital records are also building our foundation for NABH calibration compliance."
+      </div>
+      <div class="sp-author">
+        <div class="sp-author-name">Biomedical &amp; Admin Team</div>
+        <div class="sp-author-role">70-bed Hospital · Hyderabad</div>
+        <div class="sp-metric">↑ 45% → 80% SLA compliance in 60 days</div>
+      </div>
+    </div>
+
+    <!-- WELLNESS -->
+    <div class="sp-card">
+      <div class="sp-industry-tag wellness">🧘 &nbsp;Wellness</div>
+      <div class="sp-quote">
+        "We sold <strong>600 packages in 2 months</strong> and nearly drowned in our own success. We were calling customers who had already paid — because nobody had the same data. ContractNest organized our chaos. Now we know exactly what's promised, what's delivered, and what's owed. <span class="highlight">We're waiting for VaNi</span> — the day it can automatically chase session completions and send client reminders, we won't need a third ops hire."
+      </div>
+      <div class="sp-author">
+        <div class="sp-author-name">CMO</div>
+        <div class="sp-author-role">Wellness Startup · Hyderabad</div>
+        <div class="sp-metric amber">600 packages · AR now fully visible</div>
+      </div>
+    </div>
+
+    <!-- OEM -->
+    <div class="sp-card">
+      <div class="sp-industry-tag oem">⚙️ &nbsp;Manufacturing OEM</div>
+      <div class="sp-quote">
+        "We have <strong>400 machines in the field</strong> on subscription. Every one has a service schedule, a spare parts history, and an SLA attached to it. Before ContractNest, that lived across engineer WhatsApps and spreadsheets — invoicing was always chasing. Now <strong>subscriptions run cleanly, invoices go out on time</strong>, and every service visit is logged with evidence. When IoT tracking comes, this platform will close the loop completely."
+      </div>
+      <div class="sp-author">
+        <div class="sp-author-name">Operations Lead</div>
+        <div class="sp-author-role">Industrial Machinery OEM · India</div>
+        <div class="sp-metric">400 deployments · on-time invoicing</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- TRUST STATS -->
+  <div class="sp-stats">
+    <div class="sp-stat">
+      <div class="sp-stat-num">3</div>
+      <div class="sp-stat-label"><strong>Beta customers</strong> across Healthcare, Wellness &amp; Manufacturing</div>
+    </div>
+    <div class="sp-stat">
+      <div class="sp-stat-num">80%</div>
+      <div class="sp-stat-label"><strong>SLA compliance</strong> achieved by our hospital customer in 60 days</div>
+    </div>
+    <div class="sp-stat">
+      <div class="sp-stat-num">600+</div>
+      <div class="sp-stat-label"><strong>Service packages</strong> managed by our wellness customer in 2 months</div>
+    </div>
+    <div class="sp-stat">
+      <div class="sp-stat-num">400+</div>
+      <div class="sp-stat-label"><strong>Field deployments</strong> tracked by our OEM customer on subscription</div>
+    </div>
+  </div>
+
+</section>
+
+<!-- =====================
+     PRICING SECTION
+===================== -->
+<section class="pricing" id="pricing">
+
+  <div class="pricing-header">
+    <div class="hero-eyebrow" style="margin-bottom:16px;">
+      <div class="eyebrow-line"></div>
+      <span class="eyebrow-text">Pricing</span>
+    </div>
+    <h2 class="pg-headline">PAY FOR WHAT YOU USE.<br>NOT PER SEAT.</h2>
+  </div>
+
+  <p class="pricing-sub">
+    ContractNest runs on a <strong>credit system</strong> — not per-user licences. Your 2-person team and a 10-person team doing the same work pay the same. You only pay more when you do more.
+  </p>
+
+  <!-- CREDIT EXPLAINER BAR -->
+  <div class="credit-bar">
+    <div class="credit-bar-label">How credits work</div>
+    <div class="credit-bar-divider"></div>
+    <div class="credit-pill"><span class="dot"></span> 1 contract = <strong>1 credit</strong> · charged once</div>
+    <div class="credit-pill"><span class="dot"></span> 1 RFQ = <strong>1 RFQ credit</strong> · charged on creation</div>
+    <div class="credit-pill"><span class="dot"></span> Credits <strong>don't expire</strong> within billing month</div>
+    <div class="credit-pill"><span class="dot"></span> Overage billed at <strong>end of month</strong></div>
+  </div>
+
+  <!-- PRICING CARDS -->
+  <div class="pricing-grid">
+
+    <!-- FREE -->
+    <div class="p-card">
+      <div class="p-card-top">
+        <div class="p-tier">Free Tier</div>
+        <div class="p-price">
+          <div class="p-price-free">FREE</div>
+        </div>
+        <div class="p-tagline">Try ContractNest with your first 3 contracts. No card needed.</div>
+      </div>
+      <div class="p-credits">
+        <div class="p-credit-row">
+          <span class="p-credit-name">Contracts included</span>
+          <span class="p-credit-val green">3 contracts</span>
+        </div>
+        <div class="p-credit-row">
+          <span class="p-credit-name">RFQs included</span>
+          <span class="p-credit-val">—</span>
+        </div>
+      </div>
+      <div class="p-features">
+        <div class="p-feature"><span class="p-feature-icon yes">✓</span>Basic contract creation</div>
+        <div class="p-feature"><span class="p-feature-icon yes">✓</span>Track on system</div>
+        <div class="p-feature"><span class="p-feature-icon yes">✓</span>Basic text forms</div>
+        <div class="p-feature disabled"><span class="p-feature-icon no">✕</span>SLA alerts &amp; notifications</div>
+        <div class="p-feature disabled"><span class="p-feature-icon no">✕</span>Smart service forms</div>
+        <div class="p-feature disabled"><span class="p-feature-icon no">✕</span>AR / AP tracking</div>
+        <div class="p-feature disabled"><span class="p-feature-icon no">✕</span>RFQ creation</div>
+      </div>
+      <div class="p-card-cta">
+        <button class="btn-p-cta outline" onclick="document.getElementById('emailInput').scrollIntoView({behavior:'smooth'});document.getElementById('emailInput').focus();">
+          Start Free
+        </button>
+      </div>
+    </div>
+
+    <!-- SUBSCRIPTION — FEATURED -->
+    <div class="p-card featured">
+      <div class="p-featured-bar">Most Popular · Best Value</div>
+      <div class="p-card-top">
+        <div class="p-tier">Subscription</div>
+        <div class="p-price">
+          <span class="p-price-symbol">₹</span>
+          <span class="p-price-num">2,000</span>
+          <span class="p-price-period">/ month</span>
+        </div>
+        <div class="p-tagline">For businesses running contracts on both sides — revenue and cost.</div>
+      </div>
+      <div class="p-credits">
+        <div class="p-credit-row">
+          <span class="p-credit-name">Contracts included</span>
+          <span class="p-credit-val amber">8 contracts / month</span>
+        </div>
+        <div class="p-credit-row">
+          <span class="p-credit-name">RFQs included</span>
+          <span class="p-credit-val amber">5 RFQs / month</span>
+        </div>
+      </div>
+      <div class="p-overage">
+        <div class="p-overage-title">Overage rates</div>
+        <div class="p-overage-row">
+          <span>Additional contract</span>
+          <span class="p-overage-price">₹60 / contract</span>
+        </div>
+        <div class="p-overage-row">
+          <span>Additional RFQ</span>
+          <span class="p-overage-price">₹100 / RFQ</span>
+        </div>
+      </div>
+      <div class="p-features">
+        <div class="p-feature"><span class="p-feature-icon yes">✓</span>Everything in Free</div>
+        <div class="p-feature"><span class="p-feature-icon yes">✓</span>SLA alerts &amp; real-time notifications</div>
+        <div class="p-feature"><span class="p-feature-icon yes">✓</span>Smart service forms (calibration, OT clean, PM)</div>
+        <div class="p-feature"><span class="p-feature-icon yes">✓</span>Evidence collection — photos, reports, certs</div>
+        <div class="p-feature"><span class="p-feature-icon yes">✓</span>AR / AP tracking &amp; auto-invoicing</div>
+        <div class="p-feature"><span class="p-feature-icon yes">✓</span>RFQ creation &amp; vendor responses</div>
+        <div class="p-feature"><span class="p-feature-icon yes">✓</span>Compliance reports — audit ready</div>
+        <div class="p-feature"><span class="p-feature-icon soon">◎</span>VaNi AI ops agent <span style="font-size:0.68rem;color:var(--amber);font-family:'DM Mono',monospace;margin-left:4px;">soon</span></div>
+      </div>
+      <div class="p-card-cta">
+        <button class="btn-p-cta primary" onclick="document.getElementById('emailInput').scrollIntoView({behavior:'smooth'});document.getElementById('emailInput').focus();">
+          Join Beta — Get Early Access
+        </button>
+      </div>
+    </div>
+
+    <!-- PAY AS YOU GO -->
+    <div class="p-card">
+      <div class="p-card-top">
+        <div class="p-tier">Pay-as-you-go</div>
+        <div class="p-price">
+          <span class="p-price-symbol">₹</span>
+          <span class="p-price-num">150</span>
+          <span class="p-price-period">/ contract</span>
+        </div>
+        <div class="p-tagline">One-time contracts. No monthly commitment. Pay only when you create.</div>
+      </div>
+      <div class="p-credits">
+        <div class="p-credit-row">
+          <span class="p-credit-name">Contracts</span>
+          <span class="p-credit-val">₹150 each</span>
+        </div>
+        <div class="p-credit-row">
+          <span class="p-credit-name">RFQs</span>
+          <span class="p-credit-val">₹350 each</span>
+        </div>
+      </div>
+      <div class="p-features">
+        <div class="p-feature"><span class="p-feature-icon yes">✓</span>Digital contract creation</div>
+        <div class="p-feature"><span class="p-feature-icon yes">✓</span>Track on system</div>
+        <div class="p-feature"><span class="p-feature-icon yes">✓</span>Basic text forms &amp; evidence upload</div>
+        <div class="p-feature"><span class="p-feature-icon yes">✓</span>RFQ creation (₹350/RFQ)</div>
+        <div class="p-feature disabled"><span class="p-feature-icon no">✕</span>SLA alerts &amp; notifications</div>
+        <div class="p-feature disabled"><span class="p-feature-icon no">✕</span>Smart service forms</div>
+        <div class="p-feature disabled"><span class="p-feature-icon no">✕</span>AR / AP tracking</div>
+      </div>
+      <div class="p-card-cta">
+        <button class="btn-p-cta outline" onclick="document.getElementById('emailInput').scrollIntoView({behavior:'smooth'});document.getElementById('emailInput').focus();">
+          Get Early Access
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- UPGRADE NUDGE -->
+  <div class="upgrade-nudge">
+    <div class="upgrade-nudge-icon">💡</div>
+    <div class="upgrade-nudge-text">
+      On pay-as-you-go doing <strong>14+ contracts/month?</strong> Subscription saves you money from contract #9 onwards — and unlocks alerts, smart forms, and AR/AP tracking. <strong>The math works itself out.</strong>
+    </div>
+  </div>
+
+</section>
+
+<!-- =====================
+     FINAL CTA SECTION
+===================== -->
+<section class="final-cta">
+  <div class="final-cta-inner">
+    <h2 class="final-cta-headline">BETA OPENS SOON.<br>GET IN FIRST.</h2>
+    <p class="final-cta-sub">
+      Join 90+ businesses already on the waitlist. Free during closed beta. No credit card. VaNi access priority for early signups.
+    </p>
+    <div class="final-cta-form" id="finalCtaForm">
+      <input type="email" id="finalEmail" placeholder="your@business.com" autocomplete="email" />
+      <button class="btn-join" onclick="handleFinalCta()">Join Waitlist</button>
+    </div>
+    <div class="final-success" id="finalSuccess">
+      <span>✓ You're on the list</span>
+      <span style="font-size:0.72rem;color:var(--muted);">We'll reach out before beta opens. Check your inbox.</span>
+    </div>
+    <div class="final-cta-note" id="finalNote">
+      <em>Free beta</em> &nbsp;·&nbsp; No credit card &nbsp;·&nbsp; VaNi early access priority
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="logo" style="margin-bottom:10px;">
+        <div class="logo-dot"></div>
+        CONTRACTNEST
+      </div>
+      <div class="footer-tagline">Every promise tracked. Every rupee accounted for.</div>
+      <div class="footer-by">A product by <strong>Vikuna Technologies</strong> · Hyderabad</div>
+    </div>
+    <div class="footer-cols">
+      <div class="footer-col">
+        <div class="footer-col-title">Product</div>
+        <a href="#problem" class="footer-link">The Problem</a>
+        <a href="#playground" class="footer-link">Try It Free</a>
+        <a href="#vani" class="footer-link">VaNi — Coming Soon</a>
+        <a href="#pricing" class="footer-link">Pricing</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Company</div>
+        <a href="#" class="footer-link">About Vikuna</a>
+        <a href="#" class="footer-link">Contact Us</a>
+        <a href="#" class="footer-link">Privacy Policy</a>
+        <a href="#" class="footer-link">Terms of Service</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">Get Early Access</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px;">
+          <input type="email" id="footerEmail" placeholder="your@business.com"
+            style="background:var(--surface2);border:1px solid var(--border2);color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;padding:10px 14px;border-radius:6px;outline:none;width:100%;"
+            onfocus="this.style.borderColor='var(--amber)'" onblur="this.style.borderColor=''" />
+          <button onclick="handleFooterEmail()" style="background:var(--amber);color:#0D0F14;border:none;font-family:'DM Sans',sans-serif;font-size:0.82rem;font-weight:600;padding:10px;border-radius:6px;cursor:pointer;transition:background 0.2s;" onmouseover="this.style.background='#FFB733'" onmouseout="this.style.background='var(--amber)'">
+            Join Waitlist →
+          </button>
+          <div id="footerSuccess" style="display:none;font-family:'DM Mono',monospace;font-size:0.7rem;color:var(--green);">✓ You're on the list!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <div class="footer-copy">© 2025 CONTRACTNEST · VIKUNA TECHNOLOGIES · HYDERABAD, INDIA</div>
+    <div class="footer-copy" style="color:var(--faint);">Built with ♥ for businesses that keep their promises</div>
+  </div>
+</footer>
+
+<script>
+  function switchPerspective(view, btn) {
+    document.querySelectorAll('.dp-toggle-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.dp-view').forEach(v => v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('dp-' + view).classList.add('active');
+  }
+
+  function handleJoin() {
+    const input = document.getElementById('emailInput');
+    const email = input.value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      input.style.borderColor = '#E74C3C';
+      input.focus();
+      setTimeout(() => input.style.borderColor = '', 1600);
+      return;
+    }
+    document.getElementById('ctaRow').style.display = 'none';
+    document.getElementById('ctaNote').style.display = 'none';
+    const b = document.getElementById('successBanner');
+    b.style.display = 'flex';
+  }
+
+  document.getElementById('emailInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleJoin();
+  });
+
+  function switchTab(el, id) {
+    document.querySelectorAll('.s-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.scenario-content').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('tab-' + id).classList.add('active');
+  }
+
+  // =====================
+  // PLAYGROUND LOGIC
+  // =====================
+  let pgState = {
+    step: 1,
+    template: null,
+    tplName: '',
+    tplCategory: '',
+    tplDesc: '',
+    tplServices: '',
+    tplValue: '',
+    tplSla: ''
+  };
+
+  function selectTemplate(el, name, category, desc, services, value, sla) {
+    document.querySelectorAll('.tpl-card').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    pgState.tplName = name;
+    pgState.tplCategory = category;
+    pgState.tplDesc = desc;
+    pgState.tplServices = services;
+    pgState.tplValue = value;
+    pgState.tplSla = sla;
+    document.getElementById('btnStep1Next').disabled = false;
+    // Pre-fill value
+    document.getElementById('f-value').value = value;
+    updatePreview();
+  }
+
+  function goStep(n) {
+    // Update panels
+    document.querySelectorAll('.pg-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('pg-panel-' + n).classList.add('active');
+    // Update step indicators
+    for (let i = 1; i <= 4; i++) {
+      const s = document.getElementById('pstep-' + i);
+      s.classList.remove('active', 'done');
+      if (i < n) s.classList.add('done');
+      if (i === n) s.classList.add('active');
+    }
+    for (let i = 1; i <= 3; i++) {
+      const l = document.getElementById('pline-' + i);
+      l.classList.toggle('done', i < n);
+    }
+    pgState.step = n;
+    if (n === 3) renderPreview();
+    if (n === 4) renderSummary();
+    // Scroll to playground
+    document.querySelector('.playground').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function getMilestones() {
+    const map = {
+      'Elevator AMC': [
+        { name: 'Q1 Preventive Maintenance', freq: 'March' },
+        { name: 'Q2 Preventive Maintenance', freq: 'June' },
+        { name: 'Q3 Preventive Maintenance', freq: 'September' },
+        { name: 'Q4 Preventive Maintenance', freq: 'December' },
+        { name: 'Emergency Response (24/7)', freq: 'On-demand' }
+      ],
+      'HVAC Maintenance': [
+        { name: 'Monthly Filter Check & Clean', freq: 'Every month' },
+        { name: 'Mid-year Deep Service', freq: 'June' },
+        { name: 'Annual Deep Service', freq: 'December' },
+        { name: 'Emergency Breakdown Response', freq: 'On-demand' }
+      ],
+      'IT Support Contract': [
+        { name: '24/7 Helpdesk Support', freq: 'Ongoing' },
+        { name: 'Monthly Security Patching', freq: 'Every month' },
+        { name: 'Quarterly Infrastructure Review', freq: 'Every quarter' },
+        { name: 'Annual DR Drill', freq: 'Yearly' }
+      ],
+      'Facility Management': [
+        { name: 'Daily Housekeeping', freq: 'Every day' },
+        { name: 'Daily Security Coverage', freq: 'Every day' },
+        { name: 'Weekly Pest Control Inspection', freq: 'Every week' },
+        { name: 'Monthly Maintenance Audit', freq: 'Every month' }
+      ],
+      'Wellness Program': [
+        { name: 'Yoga Sessions (4 total)', freq: 'Bi-weekly' },
+        { name: 'Gynaecologist Consultation (2)', freq: 'Month 1 & 3' },
+        { name: 'Nutrition Plan', freq: 'Month 1' },
+        { name: 'Progress Review', freq: 'End of program' }
+      ],
+      'Equipment CMC': [
+        { name: 'Preventive Maintenance Visit', freq: 'Bi-annual' },
+        { name: 'Calibration & Certification', freq: 'Annual' },
+        { name: '24/7 Emergency Breakdown', freq: 'On-demand' },
+        { name: 'Spare Parts Management', freq: 'As required' }
+      ]
+    };
+    return map[pgState.tplName] || [];
+  }
+
+  function renderPreview() {
+    const provider = document.getElementById('f-provider').value || 'Your Business Name';
+    const client   = document.getElementById('f-client').value  || 'Client / Vendor Name';
+    const value    = document.getElementById('f-value').value   || pgState.tplValue || '—';
+    const duration = document.getElementById('f-duration').value;
+    const payment  = document.getElementById('f-payment').value;
+    const startRaw = document.getElementById('f-start').value;
+    const start    = startRaw ? new Date(startRaw).toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' }) : '—';
+
+    document.getElementById('cp-title').textContent    = pgState.tplName;
+    document.getElementById('cp-subtitle').textContent = pgState.tplCategory + ' — ' + pgState.tplDesc.substring(0, 60) + '...';
+    document.getElementById('cp-provider').textContent = provider;
+    document.getElementById('cp-client').textContent   = client;
+    document.getElementById('cp-value').textContent    = value;
+    document.getElementById('cp-duration').textContent = duration;
+    document.getElementById('cp-start').textContent    = start;
+    document.getElementById('cp-payment').textContent  = payment;
+    document.getElementById('cp-sla').textContent      = '⏱ SLA: ' + pgState.tplSla;
+    document.getElementById('cp-sig-provider').textContent = provider;
+    document.getElementById('cp-sig-client').textContent   = client;
+
+    // Milestones
+    const ml = document.getElementById('cp-milestones-list');
+    ml.innerHTML = getMilestones().map(m =>
+      `<div class="cp-milestone">
+        <div class="cp-milestone-dot"></div>
+        <div class="cp-milestone-name">${m.name}</div>
+        <div class="cp-milestone-freq">${m.freq}</div>
+      </div>`
+    ).join('');
+  }
+
+  function updatePreview() {
+    if (pgState.step === 3) renderPreview();
+  }
+
+  function renderSummary() {
+    const provider = document.getElementById('f-provider').value || 'Your Business';
+    const client   = document.getElementById('f-client').value  || 'Client';
+    const value    = document.getElementById('f-value').value   || pgState.tplValue;
+    const duration = document.getElementById('f-duration').value;
+    const payment  = document.getElementById('f-payment').value;
+    document.getElementById('summary-title').textContent   = pgState.tplName;
+    document.getElementById('summary-parties').textContent = provider + ' ↔ ' + client;
+    document.getElementById('summary-value').textContent   = value + ' · ' + duration + ' · ' + payment;
+  }
+
+  function handlePgSave() {
+    const input = document.getElementById('pg-email');
+    const email = input.value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      input.style.borderColor = '#E74C3C';
+      input.focus();
+      setTimeout(() => input.style.borderColor = '', 1600);
+      return;
+    }
+    document.querySelector('.pg-save-gate').style.display = 'none';
+    document.getElementById('pgSavedMsg').style.display = 'flex';
+    // Also mark hero email if empty
+    const heroEmail = document.getElementById('emailInput');
+    if (!heroEmail.value) heroEmail.value = email;
+  }
+
+  function handleFinalCta() {
+    const input = document.getElementById('finalEmail');
+    const email = input.value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      input.style.borderColor = '#E74C3C';
+      input.focus();
+      setTimeout(() => input.style.borderColor = '', 1600);
+      return;
+    }
+    document.getElementById('finalCtaForm').style.display = 'none';
+    document.getElementById('finalNote').style.display = 'none';
+    document.getElementById('finalSuccess').style.display = 'flex';
+    // sync to hero
+    const heroEmail = document.getElementById('emailInput');
+    if (!heroEmail.value) heroEmail.value = email;
+  }
+
+  document.getElementById('finalEmail').addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleFinalCta();
+  });
+
+  function handleFooterEmail() {
+    const input = document.getElementById('footerEmail');
+    const email = input.value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      input.style.borderColor = '#E74C3C';
+      input.focus();
+      setTimeout(() => input.style.borderColor = '', 1600);
+      return;
+    }
+    input.style.display = 'none';
+    input.nextElementSibling.style.display = 'none';
+    document.getElementById('footerSuccess').style.display = 'block';
+    const heroEmail = document.getElementById('emailInput');
+    if (!heroEmail.value) heroEmail.value = email;
+  }
+
+  document.getElementById('footerEmail').addEventListener('keydown', e => {
+    if (e.key === 'Enter') handleFooterEmail();
+  });
+
+  // STICKY NAV — scroll behaviour
+  const nav = document.getElementById('mainNav');
+  window.addEventListener('scroll', () => {
+    if (window.scrollY > 60) nav.classList.add('scrolled');
+    else nav.classList.remove('scrolled');
+  });
+
+  // SCROLL PROGRESS BAR
+  const progressBar = document.getElementById('scrollProgress');
+  window.addEventListener('scroll', () => {
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const progress = (window.scrollY / docHeight) * 100;
+    progressBar.style.width = progress + '%';
+  });
+
+  // ACTIVE NAV LINK
+  const sections = ['hero','problem','perspective','playground','vani','proof','pricing'];
+  const navLinks = document.querySelectorAll('.nav-link');
+
+  const sectionObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        navLinks.forEach(l => {
+          l.classList.remove('active');
+          if (l.getAttribute('href') === '#' + id) l.classList.add('active');
+        });
+      }
+    });
+  }, { threshold: 0.35 });
+
+  sections.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) sectionObserver.observe(el);
+  });
+
+  // SMOOTH SCROLL for nav links
+  navLinks.forEach(link => {
+    link.addEventListener('click', e => {
+      e.preventDefault();
+      const target = document.querySelector(link.getAttribute('href'));
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // close mobile nav
+      document.getElementById('navLinks').classList.remove('open');
+      document.getElementById('navHamburger').classList.remove('open');
+    });
+  });
+
+  // MOBILE NAV TOGGLE
+  function toggleMobileNav() {
+    const links = document.getElementById('navLinks');
+    const burger = document.getElementById('navHamburger');
+    links.classList.toggle('open');
+    burger.classList.toggle('open');
+  }
+
+  // SCROLL FADE-IN observer
+  const fadeObserver = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.opacity = '1';
+        e.target.style.transform = 'translateY(0)';
+        fadeObserver.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.08 });
+
+  document.querySelectorAll('.chaos-item, .nest-item, .scenario-block, .sp-card, .p-card, .vani-cap, .dp-contract-card, .dp-cstat, .dp-bridge-side').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(16px)';
+    el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+    fadeObserver.observe(el);
+  });
+
+  // Set today as default start date
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('f-start').value = today;
+
+</script>
+</body>
+</html>
