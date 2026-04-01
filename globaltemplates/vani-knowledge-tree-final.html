@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VaNi — Knowledge Tree Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#f7f5f2;--white:#fff;--surface:#faf9f7;--border:#e5e1db;--border-lt:#edeae4;
+  --text:#1a1816;--text-mid:#4a4540;--text-dim:#8a847a;--text-muted:#bab4a8;
+  --vani:#ff6b2b;--vani-dk:#e55a1f;--vani-glow:rgba(255,107,43,.08);--vani-border:rgba(255,107,43,.2);--vani-soft:#fff8f4;
+  --blue:#2563eb;--blue-bg:#f0f4ff;--blue-border:#bfdbfe;
+  --teal:#0d9488;--teal-bg:#f0fdfa;--teal-border:#99f6e4;
+  --green:#16a34a;--green-bg:#f0fdf4;--green-border:#bbf7d0;
+  --amber:#d97706;--amber-bg:#fffbeb;--amber-border:#fde68a;
+  --purple:#7c3aed;--purple-bg:#f5f3ff;
+  --red:#dc2626;--red-bg:#fef2f2;
+  --radius:12px;--shadow:0 2px 12px rgba(0,0,0,.04),0 1px 3px rgba(0,0,0,.03);
+  --shadow-md:0 4px 20px rgba(0,0,0,.06),0 1px 4px rgba(0,0,0,.04);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Outfit',sans-serif;-webkit-font-smoothing:antialiased}
+
+/* Header */
+.hdr{background:linear-gradient(135deg,#1a1816,#2a2520);padding:14px 36px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;border-bottom:1px solid rgba(255,107,43,.12)}
+.hdr .logo{display:flex;align-items:center;gap:9px}
+.hdr .v-mark{width:30px;height:30px;background:linear-gradient(135deg,var(--vani),#ff8f5a);border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;color:#fff;box-shadow:0 2px 10px rgba(255,107,43,.3)}
+.hdr .v-name{font-weight:800;font-size:17px;color:#f0ece6;letter-spacing:-.4px}
+.hdr .v-sub{font-size:11px;color:#6a6460;font-family:'IBM Plex Mono',monospace;margin-left:4px}
+.hdr .h-r{margin-left:auto;display:flex;align-items:center;gap:14px}
+.hdr .badge{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;padding:4px 11px;border-radius:18px;font-family:'IBM Plex Mono',monospace;background:rgba(255,107,43,.1);color:var(--vani);border:1px solid var(--vani-border)}
+
+/* Progress */
+.prog{background:var(--white);border-bottom:1px solid var(--border);padding:0 36px;display:flex;height:50px;overflow-x:auto}
+.prog .ps{flex:1;display:flex;align-items:center;gap:8px;padding:0 10px;font-size:12px;font-weight:500;color:var(--text-muted);cursor:pointer;border-bottom:3px solid transparent;transition:.2s;white-space:nowrap;min-width:0}
+.prog .ps.active{color:var(--vani);font-weight:700;border-bottom-color:var(--vani)}
+.prog .ps.done{color:var(--green);font-weight:600}
+.prog .ps .n{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;font-family:'IBM Plex Mono',monospace;background:var(--border-lt);color:var(--text-muted);flex-shrink:0}
+.prog .ps.active .n{background:var(--vani);color:#fff;box-shadow:0 2px 6px rgba(255,107,43,.3)}
+.prog .ps.done .n{background:var(--green-bg);color:var(--green)}
+
+/* Layout */
+.lay{display:grid;grid-template-columns:1fr 320px;max-width:1400px;margin:0 auto;min-height:calc(100vh - 114px)}
+
+/* Content */
+.cnt{padding:28px 36px;overflow-y:auto}
+
+/* VaNi bubble */
+.vb{display:flex;gap:12px;margin-bottom:20px;animation:bIn .4s ease}
+@keyframes bIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.vb .av{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--vani),#ff8f5a);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;color:#fff;flex-shrink:0;box-shadow:0 2px 6px rgba(255,107,43,.2)}
+.vb .msg{background:var(--white);border:1px solid var(--border);border-radius:3px 12px 12px 12px;padding:14px 18px;box-shadow:var(--shadow);max-width:680px;line-height:1.6;font-size:13px;color:var(--text-mid)}
+.vb .msg strong{color:var(--text)}
+.vb .msg .hl{color:var(--vani);font-weight:600}
+
+/* Step containers */
+.sc{display:none}.sc.active{display:block;animation:bIn .35s ease}
+
+/* Input */
+.eq-input{display:flex;gap:10px;margin-top:14px}
+.eq-input input{flex:1;padding:11px 16px;border:2px solid var(--border);border-radius:10px;font-family:inherit;font-size:14px;color:var(--text);background:var(--white)}
+.eq-input input:focus{outline:none;border-color:var(--vani)}
+
+/* Buttons */
+.btn{padding:9px 22px;border-radius:8px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:.2s;border:none}
+.btn-p{background:linear-gradient(135deg,var(--vani),#ff8f5a);color:#fff;box-shadow:0 2px 8px rgba(255,107,43,.25)}
+.btn-p:hover{box-shadow:0 4px 14px rgba(255,107,43,.35);transform:translateY(-1px)}
+.btn-s{background:var(--surface);color:var(--text-mid);border:1px solid var(--border)}
+.btn-s:hover{background:var(--bg)}
+.btn-g{background:transparent;color:var(--text-dim);font-size:12px}
+.btn-g:hover{color:var(--text)}
+.btn-add{background:var(--vani-soft);color:var(--vani);border:1px dashed var(--vani-border);font-size:12px;padding:7px 16px;border-radius:8px;cursor:pointer;font-family:inherit;font-weight:600;transition:.15s;display:inline-flex;align-items:center;gap:5px}
+.btn-add:hover{background:var(--vani-glow);border-style:solid}
+
+.acts{display:flex;gap:10px;margin-top:22px;padding-top:18px;border-top:1px solid var(--border)}
+
+/* Context animation */
+.ctx-lines{margin-top:16px}
+.ctx-line{display:flex;align-items:center;gap:10px;padding:8px 14px;font-size:13px;color:var(--text-mid);opacity:0;transform:translateX(-10px);transition:all .4s ease}
+.ctx-line.show{opacity:1;transform:translateX(0)}
+.ctx-line .ctx-icon{font-size:16px;width:24px;text-align:center;flex-shrink:0}
+.ctx-line .ctx-check{color:var(--green);font-weight:700;font-size:14px;width:20px;flex-shrink:0;opacity:0;transition:.3s}
+.ctx-line.checked .ctx-check{opacity:1}
+.ctx-line .ctx-label{color:var(--text-dim);min-width:140px}
+.ctx-line .ctx-val{font-weight:600;color:var(--text)}
+.ctx-spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--vani-border);border-top-color:var(--vani);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Disambiguation */
+.disamb-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);padding:18px 22px;margin-top:16px;box-shadow:var(--shadow)}
+.disamb-card h3{font-size:16px;font-weight:800;margin-bottom:4px;letter-spacing:-.3px}
+.disamb-card .dd{font-size:13px;color:var(--text-dim);line-height:1.6;margin-bottom:12px}
+.disamb-opts{display:flex;flex-direction:column;gap:8px}
+.disamb-opt{padding:10px 16px;border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:.15s;font-size:13px;display:flex;align-items:center;gap:10px}
+.disamb-opt:hover{border-color:var(--vani-border);background:var(--vani-soft)}
+.disamb-opt.selected{border-color:var(--vani);background:var(--vani-soft)}
+.disamb-opt .do-icon{font-size:16px}
+
+/* Variant cards */
+.vg{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.vc{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:13px 16px;display:flex;gap:10px;cursor:pointer;transition:.2s}
+.vc:hover{border-color:var(--vani-border);box-shadow:var(--shadow-md)}
+.vc.sel{border-color:var(--vani);background:var(--vani-soft)}
+.vc .ck{width:20px;height:20px;border-radius:5px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:11px;color:transparent;transition:.15s;margin-top:1px}
+.vc.sel .ck{background:var(--vani);border-color:var(--vani);color:#fff}
+.vc .vi{flex:1}
+.vc .vn{font-size:13px;font-weight:600;margin-bottom:1px}
+.vc .vd{font-size:11px;color:var(--text-dim);line-height:1.4}
+.vc .vs{font-size:10px;font-family:'IBM Plex Mono',monospace;color:var(--text-muted);margin-top:3px}
+
+/* Parts */
+.pg{background:var(--white);border:1px solid var(--border);border-radius:10px;margin-bottom:10px;overflow:hidden;box-shadow:var(--shadow)}
+.pgh{padding:11px 16px;display:flex;align-items:center;gap:9px;cursor:pointer;background:var(--surface);border-bottom:1px solid var(--border-lt)}
+.pgh:hover{background:var(--bg)}
+.pgh .pi{font-size:16px}.pgh .pn{font-size:13px;font-weight:600;flex:1}
+.pgh .pc{font-size:10px;font-family:'IBM Plex Mono',monospace;color:var(--text-dim);background:var(--border-lt);padding:2px 7px;border-radius:8px}
+.pgh .pt{font-size:13px;color:var(--text-muted);transition:transform .2s}.pgh .pt.open{transform:rotate(180deg)}
+.pgb{padding:2px 0}
+.pr{padding:7px 16px;display:grid;gap:3px;align-items:center;border-bottom:1px solid var(--border-lt);font-size:12px}
+.pr:last-child{border-bottom:none}.pr:hover{background:var(--surface)}
+.prt{width:28px;height:28px;border-radius:5px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;transition:.15s;background:transparent;color:var(--border)}
+.prt.on{background:var(--vani-glow);color:var(--vani)}
+.prt:hover{background:var(--vani-glow)}
+.pvh{padding:8px 16px;display:grid;gap:3px;align-items:center;border-bottom:1px solid var(--border);background:var(--bg);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;color:var(--text-dim)}
+.pvh span{text-align:center}
+
+/* Checkpoints */
+.cpc{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:10px;box-shadow:var(--shadow)}
+.cpc:hover{box-shadow:var(--shadow-md)}
+.cph{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.cph .cpn{font-size:13px;font-weight:600;flex:1}
+.cptb{font-size:9px;font-weight:700;padding:3px 9px;border-radius:4px;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.5px}
+.cptb.cond{background:var(--amber-bg);color:var(--amber)}.cptb.read{background:var(--blue-bg);color:var(--blue)}
+.cpv{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.cv{font-size:11px;padding:4px 10px;border-radius:5px;border:1px solid var(--border);background:var(--surface);color:var(--text-mid);display:flex;align-items:center;gap:4px}
+.sd{width:6px;height:6px;border-radius:50%}
+.sd.ok{background:var(--green)}.sd.w{background:var(--amber)}.sd.c{background:var(--red)}
+.cpr{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;font-size:12px}
+.cpr .ri{display:flex;align-items:center;gap:5px;color:var(--text-dim)}
+.cpr .ri .rl{font-weight:600;color:var(--text-mid)}
+.cpr input{width:60px;padding:3px 6px;border:1px solid var(--border);border-radius:4px;font-family:'IBM Plex Mono',monospace;font-size:11px;text-align:center}
+.cpr .u{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--text-muted)}
+
+/* Cycles */
+.cr{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:12px 18px;margin-bottom:8px;display:grid;grid-template-columns:1fr 110px 150px 1fr;gap:14px;align-items:center;box-shadow:var(--shadow)}
+.cr:hover{box-shadow:var(--shadow-md)}
+.cr .cn{font-size:13px;font-weight:600}
+.cr select{width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-family:inherit;font-size:12px;background:var(--surface);cursor:pointer}
+.cvr{display:flex;flex-wrap:wrap;gap:3px}
+.cvrc{font-size:9px;padding:2px 7px;border-radius:3px;font-family:'IBM Plex Mono',monospace;background:var(--surface);border:1px solid var(--border-lt);color:var(--text-dim)}
+.cr .ca{font-size:11px;color:var(--text-dim)}
+.cr .ca input{width:40px;padding:2px 5px;border:1px solid var(--border);border-radius:3px;font-family:'IBM Plex Mono',monospace;font-size:11px;text-align:center}
+
+/* Form Preview */
+.fp-toggle{display:flex;gap:0;background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:20px;width:fit-content}
+.fp-t{padding:8px 20px;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;color:var(--text-dim)}
+.fp-t.active{background:var(--white);color:var(--vani);box-shadow:var(--shadow)}
+.fp-web{max-width:100%}.fp-mob{max-width:390px;margin:0 auto}
+
+.ff-section{background:var(--white);border:1px solid var(--border);border-radius:10px;margin-bottom:12px;overflow:hidden;box-shadow:var(--shadow)}
+.ff-section.base{border-left:4px solid var(--blue)}
+.ff-section.equip{border-left:4px solid var(--teal)}
+.ff-sh{padding:13px 18px;display:flex;align-items:center;gap:10px;background:var(--surface);border-bottom:1px solid var(--border-lt)}
+.ff-sh .ff-icon{font-size:16px}.ff-sh .ff-title{font-size:13px;font-weight:700;flex:1}
+.ff-sh .ff-tag{font-size:9px;font-weight:700;padding:2px 8px;border-radius:3px;text-transform:uppercase;letter-spacing:.6px;font-family:'IBM Plex Mono',monospace}
+.ff-sh .ff-tag.base{background:var(--blue-bg);color:var(--blue)}.ff-sh .ff-tag.equip{background:var(--teal-bg);color:var(--teal)}
+.ff-body{padding:4px 0}
+.ff-field{padding:9px 18px;border-bottom:1px solid var(--border-lt);display:flex;align-items:center;gap:10px;font-size:13px}
+.ff-field:last-child{border-bottom:none}
+.ff-field .ff-label{flex:1;color:var(--text-mid)}
+.ff-field .ff-type{font-size:10px;font-family:'IBM Plex Mono',monospace;color:var(--text-muted);background:var(--surface);padding:2px 7px;border-radius:3px}
+.ff-field .ff-req{font-size:10px;color:var(--red);font-weight:700}
+.ff-toggle{display:flex;align-items:center;gap:8px}
+.ff-sw{width:38px;height:20px;background:var(--border);border-radius:10px;position:relative;cursor:pointer;transition:.2s}
+.ff-sw.on{background:var(--green)}
+.ff-sw::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border-radius:50%;box-shadow:0 1px 2px rgba(0,0,0,.15);transition:.2s}
+.ff-sw.on::after{transform:translateX(18px)}
+
+/* Summary */
+.sum-tree{background:var(--white);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-md)}
+.sum-hdr{background:linear-gradient(135deg,#1a1816,#2a2520);padding:14px 18px;color:#f0ece6;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px}
+.sum-lev{padding:12px 18px;border-bottom:1px solid var(--border-lt)}
+.sum-lev:last-child{border-bottom:none}
+.sum-lh{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:700;color:var(--text-mid)}
+.sum-lh .sn{width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;font-family:'IBM Plex Mono',monospace}
+.sum-items{padding:6px 0 2px 28px;font-size:11px;color:var(--text-dim);line-height:1.9}
+
+/* Right Panel */
+.rp{background:var(--white);border-left:1px solid var(--border);padding:24px 20px;overflow-y:auto}
+.rpc{background:var(--surface);border:1px solid var(--border-lt);border-radius:10px;padding:14px 16px;margin-bottom:12px}
+.rpc h4{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text-dim);margin-bottom:8px}
+.rps{display:flex;justify-content:space-between;padding:3px 0;font-size:12px}
+.rps .l{color:var(--text-dim)}.rps .v{font-weight:700;font-family:'IBM Plex Mono',monospace}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="logo"><div class="v-mark">V</div><div><span class="v-name">VaNi</span><span class="v-sub"> Knowledge Tree Builder</span></div></div>
+  <div class="h-r"><span class="badge">⚡ AI-Powered</span></div>
+</div>
+
+<div class="prog" id="prog"></div>
+
+<div class="lay">
+<div class="cnt" id="cnt"></div>
+<div class="rp" id="rp"></div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// DATA
+// ══════════════════════════════════════════════════════════
+const STEPS = ['Input & Context','Variants','Spare Parts','Checkpoints','Service Cycles','Form Preview','Review & Save'];
+const VARIANTS = [
+  {id:'split',name:'Split AC / Room AC',desc:'Wall-mounted, residential & small commercial',spec:'0.75–2.5 TR',sel:1},
+  {id:'cassette',name:'Cassette AC',desc:'Ceiling-mounted, 360° airflow, commercial',spec:'1.5–5 TR',sel:1},
+  {id:'ductable',name:'Ductable AC',desc:'Ducted system, false ceiling distribution',spec:'5.5–25 TR',sel:1},
+  {id:'vrf',name:'VRF / VRV System',desc:'Multi-zone, multiple indoor units',spec:'8–60 TR',sel:1},
+  {id:'chiller_w',name:'Chiller (Water-Cooled)',desc:'Centralized, cooling tower required',spec:'50–2000 TR',sel:1},
+  {id:'chiller_a',name:'Chiller (Air-Cooled)',desc:'Centralized, no cooling tower',spec:'30–500 TR',sel:1},
+  {id:'ahu',name:'AHU (Air Handling Unit)',desc:'Air distribution, filtration, humidity',spec:'Connected to chiller',sel:1},
+  {id:'fcu',name:'FCU (Fan Coil Unit)',desc:'Terminal unit on chilled water loop',spec:'Hotel/office rooms',sel:1},
+  {id:'package',name:'Package / Rooftop Unit',desc:'Self-contained, rooftop-mounted',spec:'3–25 TR',sel:1},
+  {id:'window',name:'Window AC',desc:'Single unit, legacy but serviced widely',spec:'0.75–2 TR',sel:1},
+];
+const SV=['Split','Cass','Duct','VRF','ChW','ChA','AHU','FCU','Pkg','Win'];
+
+const PARTS=[
+  {name:'Electrical',icon:'⚡',items:[
+    {n:'Capacitor (run/start)',m:[1,1,1,1,0,0,0,0,1,1]},{n:'Contactor / Relay',m:[1,1,1,1,1,1,0,0,1,1]},
+    {n:'PCB / Controller Board',m:[1,1,1,1,1,1,1,1,1,1]},{n:'Thermostat / Temp Sensor',m:[1,1,1,1,1,1,1,1,1,1]},
+    {n:'Thermistor',m:[1,1,1,1,0,0,0,1,1,1]},{n:'Fuse / MCB',m:[1,1,1,1,1,1,1,1,1,1]},
+  ]},
+  {name:'Mechanical',icon:'⚙️',items:[
+    {n:'Compressor (rotary)',m:[1,1,0,0,0,0,0,0,0,1]},{n:'Compressor (scroll)',m:[0,0,1,1,0,1,0,0,1,0]},
+    {n:'Compressor (screw/centrifugal)',m:[0,0,0,0,1,0,0,0,0,0]},{n:'Fan Motor (indoor)',m:[1,1,1,1,0,0,1,1,1,1]},
+    {n:'Fan Motor (outdoor)',m:[1,1,1,1,0,1,0,0,1,1]},{n:'Bearings',m:[0,0,1,1,1,1,1,1,1,0]},
+    {n:'Belt (V-belt)',m:[0,0,0,0,0,0,1,0,1,0]},{n:'Drain Pump',m:[0,1,1,1,0,0,0,1,0,0]},
+  ]},
+  {name:'Refrigerant & Gas',icon:'🧊',items:[
+    {n:'Refrigerant — R-32',m:[1,1,1,1,0,0,0,0,1,0]},{n:'Refrigerant — R-410A',m:[1,1,1,1,0,1,0,0,1,0]},
+    {n:'Refrigerant — R-134a (chiller)',m:[0,0,0,0,1,1,0,0,0,0]},{n:'Expansion Valve (TXV/EEV)',m:[1,1,1,1,1,1,0,0,1,1]},
+    {n:'Filter Drier',m:[1,1,1,1,1,1,0,0,1,1]},{n:'Copper Tubing / Flare Nuts',m:[1,1,1,1,1,1,0,0,1,1]},
+  ]},
+  {name:'Filters & Air-Side',icon:'🌀',items:[
+    {n:'Air Filter (washable)',m:[1,1,0,1,0,0,0,1,0,1]},{n:'Air Filter (disposable)',m:[0,0,1,0,0,0,1,0,1,0]},
+    {n:'HEPA Filter',m:[0,0,0,0,0,0,1,0,0,0]},{n:'Drain Tray / Pan',m:[1,1,1,1,0,0,1,1,1,1]},
+    {n:'Insulation (pipe/duct)',m:[1,1,1,1,1,1,1,1,1,1]},
+  ]},
+  {name:'Water-Side (Chiller/FCU)',icon:'💧',items:[
+    {n:'Condenser Tubes',m:[0,0,0,0,1,0,0,0,0,0]},{n:'Evaporator Tubes',m:[0,0,0,0,1,0,0,0,0,0]},
+    {n:'Chilled/Condenser Water Pump',m:[0,0,0,0,1,1,0,0,0,0]},{n:'Cooling Tower Fill Media',m:[0,0,0,0,1,0,0,0,0,0]},
+    {n:'Water Treatment Chemicals',m:[0,0,0,0,1,0,0,0,0,0]},{n:'Gaskets / Seals / O-Rings',m:[0,0,0,0,1,1,1,1,0,0]},
+  ]},
+  {name:'Controls & Electronics',icon:'🖥️',items:[
+    {n:'VFD / Variable Freq Drive',m:[0,0,1,1,1,1,1,0,0,0]},{n:'Remote Control Unit',m:[1,1,0,1,0,0,0,0,0,1]},
+    {n:'BMS Interface Module',m:[0,1,1,1,1,1,1,1,1,0]},{n:'Pressure Switch (HP/LP)',m:[1,1,1,1,1,1,0,0,1,1]},
+  ]},
+  {name:'Consumables',icon:'🧴',items:[
+    {n:'Coil Cleaner (chemical)',m:[1,1,1,1,1,1,1,1,1,1]},{n:'Insulation Tape',m:[1,1,1,1,1,1,1,1,1,1]},
+    {n:'Brazing Rods',m:[1,1,1,1,1,1,0,0,1,1]},{n:'Nitrogen (pressure test)',m:[1,1,1,1,1,1,0,0,1,1]},
+  ]},
+];
+
+const CPS=[
+  {n:'Air Filter Condition',t:'c',v:[{l:'Clean',s:'ok'},{l:'Dusty — cleaned',s:'ok'},{l:'Damaged — replaced',s:'w'}]},
+  {n:'Evaporator Coil',t:'c',v:[{l:'Clean',s:'ok'},{l:'Cleaned during service',s:'ok'},{l:'Chemical wash done',s:'w'},{l:'Damaged',s:'c'}]},
+  {n:'Condenser Coil',t:'c',v:[{l:'Clean',s:'ok'},{l:'Cleaned',s:'ok'},{l:'Fins bent — fixed',s:'w'},{l:'Damaged',s:'c'}]},
+  {n:'Drain Line',t:'c',v:[{l:'Clear',s:'ok'},{l:'Slow — flushed',s:'w'},{l:'Blocked — cleared',s:'c'}]},
+  {n:'Drain Tray',t:'c',v:[{l:'Clean',s:'ok'},{l:'Algae — cleaned',s:'w'},{l:'Rusted / cracked',s:'c'}]},
+  {n:'Vibration / Noise',t:'c',v:[{l:'Normal',s:'ok'},{l:'Slightly elevated',s:'w'},{l:'High — investigate',s:'c'}]},
+  {n:'Electrical Connections',t:'c',v:[{l:'Tight / OK',s:'ok'},{l:'Loose — tightened',s:'w'},{l:'Burnt / damaged',s:'c'}]},
+  {n:'Belt Condition',t:'c',v:[{l:'Good tension',s:'ok'},{l:'Loose — adjusted',s:'w'},{l:'Worn — replaced',s:'c'},{l:'N/A (direct drive)',s:'ok'}]},
+  {n:'Gas Pressure — Suction',t:'r',u:'PSI',min:55,max:130,am:50,rd:40},
+  {n:'Gas Pressure — Discharge',t:'r',u:'PSI',min:200,max:350,am:370,rd:400},
+  {n:'Compressor Amp Draw',t:'r',u:'Amps',min:2,max:25,am:null,rd:null,note:'Compare with nameplate'},
+  {n:'Supply Voltage',t:'r',u:'V',min:200,max:250,am:195,rd:190},
+  {n:'Outlet Air Temperature',t:'r',u:'°C',min:10,max:18,am:20,rd:24},
+  {n:'Approach Temp — Evaporator',t:'r',u:'°C',min:1,max:3,am:3.5,rd:5,note:'Chiller only'},
+  {n:'Approach Temp — Condenser',t:'r',u:'°C',min:1,max:2.5,am:3,rd:4,note:'Chiller only'},
+  {n:'Filter Differential Pressure',t:'r',u:'Pa',min:50,max:200,am:250,rd:350,note:'AHU only'},
+  {n:'Cooling Tower Water pH',t:'r',u:'pH',min:7.0,max:8.5,am:6.5,rd:6.0,note:'Water-cooled chiller'},
+];
+
+const CYCLES=[
+  {n:'Air Filter Check',f:'45 days',o:['30 days','45 days','60 days','90 days'],vr:['Environment','Season','Industry'],al:'7'},
+  {n:'Coil Cleaning',f:'90 days',o:['60 days','90 days','180 days'],vr:['Coastal','Dust level'],al:'14'},
+  {n:'Coil Chemical Wash',f:'180 days',o:['120 days','180 days','365 days'],vr:['Coastal','Usage'],al:'14'},
+  {n:'Refrigerant Level',f:'90 days',o:['60 days','90 days','180 days'],vr:['Equipment age','Leak history'],al:'7'},
+  {n:'Drain Line Flush',f:'90 days',o:['45 days','90 days','180 days'],vr:['Humidity','Monsoon'],al:'7'},
+  {n:'Electrical Check',f:'90 days',o:['90 days','180 days','365 days'],vr:['Load pattern'],al:'14'},
+  {n:'Compressor Oil (Chiller)',f:'1000 hrs',o:['500 hrs','1000 hrs','2000 hrs'],vr:['Manufacturer','Run hours'],al:'—'},
+  {n:'Belt Replacement',f:'365 days',o:['180 days','365 days'],vr:['Usage intensity'],al:'30'},
+  {n:'Water Treatment',f:'30 days',o:['15 days','30 days','60 days'],vr:['Water quality','Scale'],al:'7'},
+  {n:'Full System Inspection',f:'365 days',o:['180 days','365 days'],vr:['Regulatory','Contract'],al:'30'},
+];
+
+const CTX = {geo:'Hyderabad, Telangana, India',coords:'17.4°N, 78.5°E',climate:'Hot & Humid',monsoon:'Jun–Sep',industry:'Facility Management',serves:'Healthcare, Pharma, Commercial RE'};
+
+// ══════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════
+let step = 0;
+let equipName = 'HVAC';
+let disambiguated = false;
+let contextDone = false;
+
+// ══════════════════════════════════════════════════════════
+// RENDER ENGINE
+// ══════════════════════════════════════════════════════════
+function renderProg() {
+  const p = document.getElementById('prog');
+  p.innerHTML = STEPS.map((s,i) => `<div class="ps ${i===step?'active':i<step?'done':''}" onclick="go(${i})"><span class="n">${i<step?'✓':i+1}</span>${s}</div>`).join('');
+}
+
+function go(n) {
+  if(n>step+1) return;
+  step = n;
+  renderProg();
+  renderContent();
+  renderRP();
+  document.querySelector('.cnt').scrollTop = 0;
+}
+
+function renderContent() {
+  const c = document.getElementById('cnt');
+  const fns = [renderStep0,renderStep1,renderStep2,renderStep3,renderStep4,renderStep5,renderStep6];
+  c.innerHTML = '';
+  const div = document.createElement('div');
+  div.className = 'sc active';
+  div.innerHTML = fns[step]();
+  c.appendChild(div);
+  if(step === 0 && !contextDone) setTimeout(animateContext, 300);
+}
+
+// STEP 0: Input + Disambiguation + Context
+function renderStep0() {
+  if(!disambiguated) {
+    return `
+      <div class="vb"><div class="av">V</div><div class="msg">
+        <p><strong>Welcome to the Knowledge Tree Builder.</strong></p>
+        <p>I'll build a complete equipment knowledge base — variants, spare parts, checkpoints, service cycles — customized for your context.</p>
+        <p>What equipment or facility would you like to build?</p>
+      </div></div>
+      <div class="eq-input">
+        <input type="text" id="eqIn" placeholder="Type equipment name... e.g. HVAC, Elevator, MRI Scanner" value="${equipName}">
+        <button class="btn btn-p" onclick="doDisambiguate()">Research →</button>
+      </div>
+    `;
+  }
+  if(!contextDone) {
+    return `
+      <div class="vb"><div class="av">V</div><div class="msg">
+        <p>Before I research, let me confirm what we're working with and understand your context.</p>
+      </div></div>
+      <div class="disamb-card">
+        <h3>🔍 ${equipName}</h3>
+        <div class="dd"><strong>Heating, Ventilation, and Air Conditioning</strong> — climate control systems for commercial, industrial, and residential buildings. Includes split ACs, VRF systems, chillers, AHUs, and related cooling/heating equipment.</div>
+        <div class="disamb-opts">
+          <div class="disamb-opt selected" onclick="confirmDisamb(this)"><span class="do-icon">✅</span> Yes, this is what I mean — proceed with full HVAC</div>
+          <div class="disamb-opt" onclick="confirmDisamb(this)"><span class="do-icon">🔍</span> I mean something more specific (only Split ACs, only Chillers, etc.)</div>
+          <div class="disamb-opt" onclick="confirmDisamb(this)"><span class="do-icon">❌</span> No, I mean something different — let me clarify</div>
+        </div>
+      </div>
+      <div class="ctx-lines" id="ctxLines">
+        <div class="ctx-line" id="cx0"><span class="ctx-check">✓</span><span class="ctx-icon">📍</span><span class="ctx-label">Your location</span><span class="ctx-val">${CTX.geo} (${CTX.coords})</span></div>
+        <div class="ctx-line" id="cx1"><span class="ctx-check">✓</span><span class="ctx-icon">🌤️</span><span class="ctx-label">Climate profile</span><span class="ctx-val">${CTX.climate} · Monsoon: ${CTX.monsoon}</span></div>
+        <div class="ctx-line" id="cx2"><span class="ctx-check">✓</span><span class="ctx-icon">🏢</span><span class="ctx-label">Your industry</span><span class="ctx-val">${CTX.industry}</span></div>
+        <div class="ctx-line" id="cx3"><span class="ctx-check">✓</span><span class="ctx-icon">🎯</span><span class="ctx-label">Industries you serve</span><span class="ctx-val">${CTX.serves}</span></div>
+        <div class="ctx-line" id="cx4"><span class="ctx-check">✓</span><span class="ctx-icon">⚡</span><span class="ctx-label">Research status</span><span class="ctx-val">Researching HVAC for your context... <span class="ctx-spinner"></span></span></div>
+      </div>
+      <div class="acts" id="ctxActs" style="display:none">
+        <button class="btn btn-p" onclick="contextDone=true;go(1)">Continue → Variants</button>
+      </div>
+    `;
+  }
+  return renderStep0Done();
+}
+
+function renderStep0Done() {
+  return `
+    <div class="vb"><div class="av">V</div><div class="msg">
+      <p>✅ <strong>${equipName}</strong> confirmed. Context loaded: <span class="hl">${CTX.geo}</span> (${CTX.climate}), industry: <span class="hl">${CTX.industry}</span>, serving: <span class="hl">${CTX.serves}</span>.</p>
+      <p>Knowledge tree research complete. Proceed to review variants.</p>
+    </div></div>
+    <div class="acts"><button class="btn btn-p" onclick="go(1)">Continue → Variants</button></div>
+  `;
+}
+
+function doDisambiguate() {
+  equipName = document.getElementById('eqIn').value.trim() || 'HVAC';
+  disambiguated = true;
+  renderContent();
+}
+
+function confirmDisamb(el) {
+  el.parentElement.querySelectorAll('.disamb-opt').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function animateContext() {
+  const lines = document.querySelectorAll('.ctx-line');
+  lines.forEach((line, i) => {
+    setTimeout(() => {
+      line.classList.add('show');
+      setTimeout(() => line.classList.add('checked'), 400);
+      if(i === lines.length - 1) {
+        setTimeout(() => {
+          line.querySelector('.ctx-val').innerHTML = `<span style="color:var(--green);font-weight:700">Ready! Knowledge tree built with ${CTX.climate.toLowerCase()} climate adjustments.</span>`;
+          line.classList.add('checked');
+          const acts = document.getElementById('ctxActs');
+          if(acts) acts.style.display = 'flex';
+        }, 800);
+      }
+    }, i * 600);
+  });
+}
+
+// STEP 1: Variants
+function renderStep1() {
+  const selCount = VARIANTS.filter(v=>v.sel).length;
+  let cards = VARIANTS.map((v,i) => `
+    <div class="vc ${v.sel?'sel':''}" onclick="VARIANTS[${i}].sel=VARIANTS[${i}].sel?0:1;renderContent();renderRP()">
+      <div class="ck">${v.sel?'✓':''}</div>
+      <div class="vi"><div class="vn">${v.name}</div><div class="vd">${v.desc}</div><div class="vs">${v.spec}</div></div>
+    </div>
+  `).join('');
+  return `
+    <div class="vb"><div class="av">V</div><div class="msg">
+      <p>I identified <strong>${VARIANTS.length} HVAC variants</strong> relevant to the Indian commercial market, adjusted for <span class="hl">${CTX.climate.toLowerCase()}</span> climate conditions.</p>
+      <p>Select which variants to include. You can also <strong>add your own</strong> if something is missing.</p>
+    </div></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <h3 style="font-size:15px;font-weight:700">HVAC Variants</h3>
+      <span style="font-size:11px;font-family:'IBM Plex Mono',monospace;padding:2px 10px;border-radius:16px;background:var(--vani-glow);color:var(--vani);border:1px solid var(--vani-border)">${selCount}/${VARIANTS.length} selected</span>
+      <button class="btn-g" onclick="VARIANTS.forEach(v=>v.sel=v.sel?0:1);renderContent();renderRP()">Toggle All</button>
+      <button class="btn-add" style="margin-left:auto" onclick="alert('Opens modal: Add custom variant\\n\\nFields: Name, Description, Capacity Range')">+ Add Variant</button>
+    </div>
+    <div class="vg">${cards}</div>
+    <div class="acts">
+      <button class="btn btn-s" onclick="go(0)">← Back</button>
+      <button class="btn btn-p" onclick="go(2)">Confirm → Spare Parts</button>
+    </div>
+  `;
+}
+
+// STEP 2: Spare Parts
+function renderStep2() {
+  const si = VARIANTS.map((v,i)=>v.sel?i:-1).filter(i=>i>=0);
+  const gc = si.length;
+  let groups = PARTS.map((g,gi) => {
+    let colH = `<span>Part Name</span>` + si.map(i=>`<span>${SV[i]}</span>`).join('');
+    let rows = g.items.map((p,pi) => {
+      let togs = si.map(vi => `<button class="prt ${p.m[vi]?'on':''}" onclick="PARTS[${gi}].items[${pi}].m[${vi}]=PARTS[${gi}].items[${pi}].m[${vi}]?0:1;this.classList.toggle('on');this.textContent=this.classList.contains('on')?'●':'○'" title="${SV[vi]}">${p.m[vi]?'●':'○'}</button>`).join('');
+      return `<div class="pr" style="grid-template-columns:1fr repeat(${gc},30px)"><span>${p.n}</span>${togs}</div>`;
+    }).join('');
+    return `
+      <div class="pg">
+        <div class="pgh" onclick="let b=this.nextElementSibling;let t=this.querySelector('.pt');if(b.style.display==='none'){b.style.display='';t.classList.add('open')}else{b.style.display='none';t.classList.remove('open')}">
+          <span class="pi">${g.icon}</span><span class="pn">${g.name}</span><span class="pc">${g.items.length}</span><span class="pt open">▾</span>
+        </div>
+        <div class="pgb">
+          <div class="pvh" style="grid-template-columns:1fr repeat(${gc},30px)">${colH}</div>
+          ${rows}
+          <div style="padding:6px 16px"><button class="btn-add" onclick="alert('Add custom part to ${g.name}')">+ Add Part</button></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+  return `
+    <div class="vb"><div class="av">V</div><div class="msg">
+      <p>Spare parts mapped across <strong>${si.length} variants</strong>, grouped by component type. <span class="hl">●</span> = recommended for that variant. Toggle as needed.</p>
+      <p>You can <strong>add your own parts</strong> to any group.</p>
+    </div></div>
+    ${groups}
+    <div class="acts">
+      <button class="btn btn-s" onclick="go(1)">← Variants</button>
+      <button class="btn btn-p" onclick="go(3)">Confirm → Checkpoints</button>
+    </div>
+  `;
+}
+
+// STEP 3: Checkpoints
+function renderStep3() {
+  let cards = CPS.map((cp,i) => {
+    if(cp.t==='c') {
+      let vals = cp.v.map(v => `<span class="cv"><span class="sd ${v.s==='ok'?'ok':v.s==='w'?'w':'c'}"></span>${v.l}</span>`).join('');
+      return `<div class="cpc"><div class="cph"><span class="cpn">${cp.n}</span><span class="cptb cond">Condition</span></div>
+        <div style="font-size:11px;color:var(--text-dim);margin-bottom:4px">Valid values (🟢 OK · 🟡 Attention · 🔴 Critical):</div>
+        <div class="cpv">${vals}</div>
+        <div style="margin-top:6px"><button class="btn-add" style="font-size:10px;padding:4px 10px" onclick="alert('Add custom value to: ${cp.n}')">+ Add Value</button></div>
+      </div>`;
+    } else {
+      return `<div class="cpc"><div class="cph"><span class="cpn">${cp.n}</span><span class="cptb read">Reading</span></div>
+        <div class="cpr">
+          <div class="ri"><span class="rl">Unit:</span><span class="u">${cp.u}</span></div>
+          <div class="ri"><span class="rl">Normal:</span><input value="${cp.min}">–<input value="${cp.max}"><span class="u">${cp.u}</span></div>
+          ${cp.am!==null?`<div class="ri"><span class="rl" style="color:var(--amber)">⚠</span><input value="${cp.am}" style="border-color:var(--amber)"><span class="u">${cp.u}</span></div>`:''}
+          ${cp.rd!==null?`<div class="ri"><span class="rl" style="color:var(--red)">🔴</span><input value="${cp.rd}" style="border-color:var(--red)"><span class="u">${cp.u}</span></div>`:''}
+        </div>
+        ${cp.note?`<div style="font-size:10px;color:var(--text-dim);margin-top:4px;font-style:italic">${cp.note}</div>`:''}
+      </div>`;
+    }
+  }).join('');
+  return `
+    <div class="vb"><div class="av">V</div><div class="msg">
+      <p><strong>${CPS.length} checkpoints</strong> — what the technician checks and records. Two types: <span style="background:var(--amber-bg);color:var(--amber);padding:1px 6px;border-radius:3px;font-size:11px;font-weight:600">CONDITION</span> (qualitative) and <span style="background:var(--blue-bg);color:var(--blue);padding:1px 6px;border-radius:3px;font-size:11px;font-weight:600">READING</span> (quantitative).</p>
+      <p>Thresholds adjusted for <span class="hl">${CTX.climate.toLowerCase()}</span> climate. Add your own checkpoints or values.</p>
+    </div></div>
+    ${cards}
+    <div style="margin-top:8px"><button class="btn-add" onclick="alert('Add custom checkpoint\\n\\nFields: Name, Type (Condition/Reading), Values or Unit+Thresholds')">+ Add Checkpoint</button></div>
+    <div class="acts">
+      <button class="btn btn-s" onclick="go(2)">← Spare Parts</button>
+      <button class="btn btn-p" onclick="go(4)">Confirm → Service Cycles</button>
+    </div>
+  `;
+}
+
+// STEP 4: Cycles
+function renderStep4() {
+  let rows = CYCLES.map(c => {
+    let opts = c.o.map(o=>`<option ${o===c.f?'selected':''}>${o}</option>`).join('');
+    let vars = c.vr.map(v=>`<span class="cvrc">${v}</span>`).join('');
+    return `<div class="cr">
+      <div class="cn">${c.n}</div>
+      <div><select>${opts}</select></div>
+      <div class="cvr">${vars}</div>
+      <div class="ca">${c.al!=='—'?`<input value="${c.al}"> days → alert`:'<span style="color:var(--text-muted)">Run-hour based</span>'}</div>
+    </div>`;
+  }).join('');
+  return `
+    <div class="vb"><div class="av">V</div><div class="msg">
+      <p><strong>${CYCLES.length} service cycles</strong> with frequencies adjusted for <span class="hl">${CTX.geo}</span> (${CTX.climate.toLowerCase()}, monsoon ${CTX.monsoon}).</p>
+      <p>Drain line flush shortened to 45 days (monsoon humidity). Coil cleaning at 90 days (dust environment). Adjust as needed.</p>
+    </div></div>
+    <div style="display:grid;grid-template-columns:1fr 110px 150px 1fr;gap:14px;padding:6px 18px;font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">
+      <span>Checkpoint</span><span>Frequency</span><span>Varies By</span><span>Alert if Overdue</span>
+    </div>
+    ${rows}
+    <div style="margin-top:8px"><button class="btn-add" onclick="alert('Add custom service cycle')">+ Add Cycle</button></div>
+    <div class="acts">
+      <button class="btn btn-s" onclick="go(3)">← Checkpoints</button>
+      <button class="btn btn-p" onclick="go(5)">Generate Form Preview →</button>
+    </div>
+  `;
+}
+
+// STEP 5: Form Preview
+function renderStep5() {
+  const sections = [
+    {layer:'base',icon:'🔒',title:'Pre-Service Safety Checks',fields:[
+      {l:'Power supply isolated',t:'toggle',r:1},{l:'Work area cleared',t:'toggle',r:1},{l:'PPE available',t:'toggle',r:1},{l:'LOTO applied',t:'toggle',r:0},{l:'Previous report reviewed',t:'toggle',r:0}
+    ]},
+    {layer:'base',icon:'📋',title:'General Information',fields:[
+      {l:'Equipment ID / Asset Tag',t:'text',r:1},{l:'Location / Zone',t:'text',r:1},{l:'Make / Brand',t:'select',r:1},{l:'Model Number',t:'text',r:0},{l:'Serial Number',t:'text',r:0},{l:'Capacity (TR)',t:'number',r:1}
+    ]},
+    {layer:'equip',icon:'🌀',title:'Filter, Coils & Drainage',fields:[
+      {l:'Air Filter Condition',t:'select',r:1},{l:'Evaporator Coil',t:'select',r:1},{l:'Condenser Coil',t:'select',r:0},{l:'Drain Line',t:'select',r:1},{l:'Drain Tray',t:'select',r:0}
+    ]},
+    {layer:'equip',icon:'⚡',title:'Refrigerant & Electrical Readings',fields:[
+      {l:'Refrigerant Type',t:'select',r:1},{l:'Gas Pressure — Suction (PSI)',t:'number',r:1},{l:'Gas Pressure — Discharge (PSI)',t:'number',r:1},{l:'Compressor Amps',t:'number',r:1},{l:'Fan Motor Amps',t:'number',r:0},{l:'Supply Voltage (V)',t:'number',r:1},{l:'Outlet Air Temp (°C)',t:'number',r:1}
+    ]},
+    {layer:'equip',icon:'⚙️',title:'Mechanical Checks',fields:[
+      {l:'Vibration / Noise',t:'select',r:0},{l:'Electrical Connections',t:'select',r:0},{l:'Insulation Check',t:'select',r:0}
+    ]},
+    {layer:'base',icon:'🔧',title:'Parts & Materials Used',fields:[
+      {l:'Parts Replaced',t:'multi-select',r:0},{l:'Consumables Used',t:'textarea',r:0},{l:'Remarks',t:'textarea',r:0}
+    ]},
+    {layer:'base',icon:'✅',title:'Post-Service Checks',fields:[
+      {l:'System running normally',t:'toggle',r:1},{l:'Cooling output verified',t:'toggle',r:1},{l:'No abnormal noise',t:'toggle',r:0},{l:'Customer walkthrough done',t:'toggle',r:1}
+    ]},
+    {layer:'base',icon:'✍️',title:'Sign-off & Handover',fields:[
+      {l:'Technician Name',t:'text',r:1},{l:'Service Date',t:'date',r:1},{l:'Next Service Due',t:'date',r:1},{l:'Equipment Status',t:'select',r:1},{l:'Photo Evidence',t:'photo',r:0},{l:'Customer Signature',t:'signature',r:1}
+    ]},
+  ];
+
+  let secs = sections.map(s => {
+    let fields = s.fields.map(f => `
+      <div class="ff-field">
+        <span class="ff-label">${f.r?'<span class="ff-req">*</span> ':''}${f.l}</span>
+        <span class="ff-type">${f.t}</span>
+      </div>
+    `).join('');
+    return `
+      <div class="ff-section ${s.layer}">
+        <div class="ff-sh">
+          <span class="ff-icon">${s.icon}</span>
+          <span class="ff-title">${s.title}</span>
+          <span class="ff-tag ${s.layer}">${s.layer==='base'?'Base':'Equipment'}</span>
+          <span style="font-size:11px;color:var(--text-dim)">${s.fields.length} fields</span>
+        </div>
+        <div class="ff-body">${fields}</div>
+      </div>
+    `;
+  }).join('');
+
+  const totalFields = sections.reduce((a,s)=>a+s.fields.length,0);
+  const reqFields = sections.reduce((a,s)=>a+s.fields.filter(f=>f.r).length,0);
+
+  return `
+    <div class="vb"><div class="av">V</div><div class="msg">
+      <p>Here's your auto-generated <strong>HVAC PM Checklist</strong> — composed from the knowledge tree. <span class="hl">${totalFields} fields</span> across ${sections.length} sections (${reqFields} mandatory).</p>
+      <p><span style="background:var(--blue-bg);color:var(--blue);padding:1px 6px;border-radius:3px;font-size:11px;font-weight:600">BLUE</span> = base layer (all HVAC) · <span style="background:var(--teal-bg);color:var(--teal);padding:1px 6px;border-radius:3px;font-size:11px;font-weight:600">TEAL</span> = equipment-specific (changes per variant). Click <strong>Customize</strong> to open the visual editor.</p>
+    </div></div>
+
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
+      <div class="fp-toggle">
+        <div class="fp-t active" onclick="setView('web',this)">🖥 Web View</div>
+        <div class="fp-t" onclick="setView('mob',this)">📱 Mobile View</div>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:8px">
+        <button class="btn btn-s" onclick="alert('Opens Visual Editor\\n\\n• Drag sections to reorder\\n• Toggle fields on/off\\n• Add custom sections/fields\\n• Change field types\\n• Set mandatory/optional')">✏️ Customize</button>
+      </div>
+    </div>
+
+    <div id="formPreview" class="fp-web">${secs}</div>
+
+    <div class="acts">
+      <button class="btn btn-s" onclick="go(4)">← Service Cycles</button>
+      <button class="btn btn-p" onclick="go(6)">Review & Save →</button>
+    </div>
+  `;
+}
+
+// STEP 6: Review & Save
+function renderStep6() {
+  const sv = VARIANTS.filter(v=>v.sel);
+  let tp=0; PARTS.forEach(g=>g.items.forEach(p=>{if(p.m.some(m=>m))tp++}));
+  return `
+    <div class="vb"><div class="av">V</div><div class="msg">
+      <p>Your <span class="hl">HVAC Knowledge Tree</span> is complete. Here's a summary of everything that will be saved to master data.</p>
+      <p>Context: <strong>${CTX.geo}</strong> · ${CTX.climate} · ${CTX.industry} → ${CTX.serves}</p>
+    </div></div>
+
+    <div class="sum-tree">
+      <div class="sum-hdr"><span style="font-size:16px">🌳</span> HVAC — Complete Knowledge Tree</div>
+      <div class="sum-lev">
+        <div class="sum-lh"><span class="sn" style="background:var(--vani-glow);color:var(--vani)">L1</span> Equipment: HVAC</div>
+        <div class="sum-items">Heating, Ventilation, and Air Conditioning · Context: ${CTX.climate}, ${CTX.geo}</div>
+      </div>
+      <div class="sum-lev">
+        <div class="sum-lh"><span class="sn" style="background:var(--blue-bg);color:var(--blue)">L2</span> Variants: <span style="color:var(--vani)">${sv.length}</span></div>
+        <div class="sum-items">${sv.map(v=>'→ '+v.name+' ('+v.spec+')').join('<br>')}</div>
+      </div>
+      <div class="sum-lev">
+        <div class="sum-lh"><span class="sn" style="background:var(--teal-bg);color:var(--teal)">L3</span> Spare Parts: <span style="color:var(--vani)">${tp}</span> across ${PARTS.length} groups</div>
+        <div class="sum-items">${PARTS.map(g=>'→ '+g.icon+' '+g.name+' — '+g.items.length+' parts').join('<br>')}</div>
+      </div>
+      <div class="sum-lev">
+        <div class="sum-lh"><span class="sn" style="background:var(--amber-bg);color:var(--amber)">L4</span> Checkpoints: <span style="color:var(--vani)">${CPS.length}</span> (${CPS.filter(c=>c.t==='c').length} condition + ${CPS.filter(c=>c.t==='r').length} readings)</div>
+        <div class="sum-items">${CPS.slice(0,5).map(c=>'→ '+c.n+' ('+({c:'condition',r:'reading'}[c.t])+')').join('<br>')}<br>→ ... +${CPS.length-5} more</div>
+      </div>
+      <div class="sum-lev">
+        <div class="sum-lh"><span class="sn" style="background:var(--green-bg);color:var(--green)">L5</span> Service Cycles: <span style="color:var(--vani)">${CYCLES.length}</span> with alert rules</div>
+        <div class="sum-items">${CYCLES.slice(0,4).map(c=>'→ '+c.n+' — '+c.f).join('<br>')}<br>→ ... +${CYCLES.length-4} more</div>
+      </div>
+    </div>
+
+    <div style="margin-top:16px;background:var(--green-bg);border:1px solid var(--green-border);border-radius:10px;padding:14px 18px">
+      <div style="font-size:12px;font-weight:700;color:var(--green);margin-bottom:4px">What happens on save:</div>
+      <div style="font-size:12px;color:var(--text-mid);line-height:1.8">
+        → Knowledge tree stored in master data (cached for future requests)<br>
+        → Smart Forms auto-generated for PM, Inspection, Installation, Breakdown, Decommission<br>
+        → Available to all tenants who add HVAC equipment<br>
+        → Context overlays applied per tenant (geography, industry, climate)
+      </div>
+    </div>
+
+    <div class="acts">
+      <button class="btn btn-s" onclick="go(5)">← Form Preview</button>
+      <button class="btn btn-p" style="padding:11px 30px;font-size:14px" onclick="alert('✅ Knowledge Tree saved to master data!\\n\\nHVAC is now fully configured with:\\n• ${sv.length} variants\\n• ${tp} spare parts\\n• ${CPS.length} checkpoints\\n• ${CYCLES.length} service cycles\\n\\nSmart Forms are ready for all tenants.')">✓ Save to Master Data</button>
+    </div>
+  `;
+}
+
+function setView(mode, el) {
+  el.parentElement.querySelectorAll('.fp-t').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  const fp = document.getElementById('formPreview');
+  fp.className = mode==='web'?'fp-web':'fp-mob';
+}
+
+// Right Panel
+function renderRP() {
+  const sv = VARIANTS.filter(v=>v.sel).length;
+  let tp=0; PARTS.forEach(g=>g.items.forEach(p=>{if(p.m.some(m=>m))tp++}));
+  document.getElementById('rp').innerHTML = `
+    <div class="rpc" style="background:linear-gradient(135deg,#1a1816,#2a2520);border-color:#333">
+      <h4 style="color:#6a6460">VaNi Intelligence</h4>
+      <div style="font-size:11px;color:#8a847a;line-height:1.6">
+        AI-researched, context-aware. Customized for <strong style="color:#f0ece6">${CTX.climate}</strong> climate, <strong style="color:#f0ece6">${CTX.industry}</strong> context.<br><br>
+        <span style="color:var(--vani)">You review and decide. Add your own at every step.</span>
+      </div>
+    </div>
+    <div class="rpc">
+      <h4>Knowledge Tree</h4>
+      <div class="rps"><span class="l">Equipment</span><span class="v" style="color:var(--vani)">${equipName}</span></div>
+      <div class="rps"><span class="l">Variants</span><span class="v">${sv}</span></div>
+      <div class="rps"><span class="l">Spare Parts</span><span class="v">${tp}</span></div>
+      <div class="rps"><span class="l">Checkpoints</span><span class="v">${CPS.length}</span></div>
+      <div class="rps"><span class="l">Service Cycles</span><span class="v">${CYCLES.length}</span></div>
+    </div>
+    <div class="rpc">
+      <h4>Context Applied</h4>
+      <div class="rps"><span class="l">📍 Location</span><span class="v" style="font-size:10px">${CTX.geo}</span></div>
+      <div class="rps"><span class="l">🌤️ Climate</span><span class="v" style="font-size:10px">${CTX.climate}</span></div>
+      <div class="rps"><span class="l">🏢 Industry</span><span class="v" style="font-size:10px">${CTX.industry}</span></div>
+      <div class="rps"><span class="l">🎯 Serves</span><span class="v" style="font-size:10px">${CTX.serves}</span></div>
+    </div>
+    <div class="rpc">
+      <h4>Service Activities</h4>
+      <div style="font-size:11px;line-height:1.9">
+        <div style="color:var(--green)">✓ Preventive Maintenance</div>
+        <div style="color:var(--green)">✓ Breakdown / Repair</div>
+        <div style="color:var(--green)">✓ Inspection / Audit</div>
+        <div style="color:var(--green)">✓ Installation</div>
+        <div style="color:var(--green)">✓ Decommissioning</div>
+        <div style="color:var(--text-muted)">✗ Calibration (N/A)</div>
+      </div>
+    </div>
+    <div class="rpc">
+      <h4>Nomenclatures</h4>
+      <div style="display:flex;flex-wrap:wrap;gap:3px">
+        ${['AMC','CMC','CAMC','PMC','BMC','FMC','O&M','SLA'].map(n=>`<span style="font-size:9px;padding:3px 7px;border-radius:4px;font-family:'IBM Plex Mono',monospace;font-weight:600;background:var(--vani-glow);color:var(--vani);border:1px solid var(--vani-border)">${n}</span>`).join('')}
+      </div>
+    </div>
+  `;
+}
+
+// Init
+renderProg(); renderContent(); renderRP();
+</script>
+</body>
+</html>
