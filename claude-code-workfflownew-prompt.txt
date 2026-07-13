@@ -8,8 +8,7 @@
   ├── contractnest-edge/          ← Submodule (main)
   ├── ClaudeDocumentation/        ← Submodule (master)
   ├── ContractNest-Mobile/        ← Submodule (main)
-  ├── FamilyKnows/                ← Submodule (main)
-  └── FK-New/                     ← Submodule (main)
+  
   ```
 
   ---
